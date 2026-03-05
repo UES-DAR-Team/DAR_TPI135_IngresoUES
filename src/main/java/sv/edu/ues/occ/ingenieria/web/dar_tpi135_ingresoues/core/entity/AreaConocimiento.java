@@ -1,0 +1,73 @@
+package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import java.time.OffsetDateTime;
+
+@Entity
+@Table(name = "area_conocimiento", schema = "public")
+public class AreaConocimiento {
+    @Id
+    @Column(name = "id_area_conocimiento", nullable = false)
+    private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_auto_referencia_area")
+    private AreaConocimiento idAutoReferenciaArea;
+
+    @Size(max = 250)
+    @NotNull
+    @Column(name = "nombre", nullable = false, length = 250)
+    private String nombre;
+
+    @NotNull
+    @Column(name = "fecha_creacion", nullable = false)
+    private OffsetDateTime fechaCreacion;
+
+    @NotNull
+    @Column(name = "activo", nullable = false)
+    private Boolean activo = false;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public AreaConocimiento getIdAutoReferenciaArea() {
+        return idAutoReferenciaArea;
+    }
+
+    public void setIdAutoReferenciaArea(AreaConocimiento idAutoReferenciaArea) {
+        this.idAutoReferenciaArea = idAutoReferenciaArea;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public OffsetDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(OffsetDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
+
+    public Boolean getActivo() {
+        return activo;
+    }
+
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
+    }
+
+}

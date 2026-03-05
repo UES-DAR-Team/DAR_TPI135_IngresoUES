@@ -1,0 +1,61 @@
+package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+
+import java.time.OffsetDateTime;
+
+@Entity
+@Table(name = "jornada_aula", schema = "public")
+public class JornadaAula {
+    @Id
+    @Column(name = "id_jornada_aula", nullable = false)
+    private Integer id;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_jornada", nullable = false)
+    private Jornada idJornada;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_aula", nullable = false)
+    private Aula idAula;
+
+    @NotNull
+    @Column(name = "fecha_asignacion", nullable = false)
+    private OffsetDateTime fechaAsignacion;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Jornada getIdJornada() {
+        return idJornada;
+    }
+
+    public void setIdJornada(Jornada idJornada) {
+        this.idJornada = idJornada;
+    }
+
+    public Aula getIdAula() {
+        return idAula;
+    }
+
+    public void setIdAula(Aula idAula) {
+        this.idAula = idAula;
+    }
+
+    public OffsetDateTime getFechaAsignacion() {
+        return fechaAsignacion;
+    }
+
+    public void setFechaAsignacion(OffsetDateTime fechaAsignacion) {
+        this.fechaAsignacion = fechaAsignacion;
+    }
+
+}

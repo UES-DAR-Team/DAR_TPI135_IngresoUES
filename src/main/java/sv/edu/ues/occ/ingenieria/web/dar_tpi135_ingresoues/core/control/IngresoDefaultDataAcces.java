@@ -122,4 +122,41 @@ public abstract class IngresoDefaultDataAcces<T, ID> implements IngresoDAOInterf
     }
 
 
+    public int count() throws IllegalStateException {
+        EntityManager em = null;
+        try {
+            em = getEntityManager();
+            if (em == null) {
+                throw new IllegalStateException("Error al acceder al repositorio");
+            }
+
+        } catch (Exception ex) {
+            throw new IllegalStateException("No se pudo acceder al repositorio", ex);
+        }
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+        Root<T> root = cq.from(getEntityClass());
+        cq.select(cb.count(root));
+        return em.createQuery(cq).getSingleResult().intValue();
+    }
+
+    public T findById(final Object id) throws IllegalArgumentException, IllegalStateException{
+        EntityManager em = null;
+
+        if(id==null){
+            throw new IllegalArgumentException("Parametro no valido: ID");
+        }
+        try {
+            em = getEntityManager();
+            if(em == null){
+                throw new IllegalStateException("Error al acceder al repositorio");
+            }
+
+        }catch (Exception ex){
+            throw new  IllegalStateException("Error al acceder al repositorio",ex);
+        }
+        return em.find(TipoDato, id);
+    }
+
+
 }

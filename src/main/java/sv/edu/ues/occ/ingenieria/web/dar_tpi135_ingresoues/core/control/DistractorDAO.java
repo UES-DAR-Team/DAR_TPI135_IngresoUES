@@ -28,4 +28,8 @@ public class DistractorDAO extends IngresoDefaultDataAcces<Distractor, Object> i
     protected Class<Distractor> getEntityClass() {
         return Distractor.class;
     }
+
+//No va a llevar mucho mas
+
+
 }

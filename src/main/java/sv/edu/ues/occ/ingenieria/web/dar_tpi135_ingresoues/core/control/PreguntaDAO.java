@@ -28,4 +28,7 @@ public class PreguntaDAO extends IngresoDefaultDataAcces<Pregunta, Object> imple
     protected Class<Pregunta> getEntityClass() {
         return Pregunta.class;
     }
+
+    //luego necesitamos un metodo para buscar pregunta por coincidencia de nombre o contenido de texto
+
 }

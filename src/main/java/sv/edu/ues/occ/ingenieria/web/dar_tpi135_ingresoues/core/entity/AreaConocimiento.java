@@ -8,6 +8,12 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "area_conocimiento", schema = "public")
+@NamedQueries({
+        @NamedQuery(name = "AreaConocimiento.findByNameLike", query = "SELECT a FROM AreaConocimiento a WHERE upper(a.nombre) like :name"),
+        @NamedQuery(name = "AreaConocimiento.findByAreaPadre", query = "SELECT a FROM AreaConocimiento a WHERE a.idAutoReferenciaArea IS NULL ORDER BY a.nombre"),
+        @NamedQuery(name = "AreaConocimiento.findHijosByPadre", query = "SELECT a FROM AreaConocimiento a WHERE a.idAutoReferenciaArea.id = :idPadre ORDER BY a.nombre")
+
+})
 public class AreaConocimiento {
     @Id
     @Column(name = "id_area_conocimiento", nullable = false)

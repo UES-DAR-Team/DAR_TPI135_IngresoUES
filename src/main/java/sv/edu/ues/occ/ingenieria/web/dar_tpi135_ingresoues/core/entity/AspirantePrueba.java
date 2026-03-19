@@ -7,6 +7,16 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "aspirante_prueba", schema = "public")
+@NamedQueries({
+        @NamedQuery(
+                name = "AspirantePrueba.buscarPorAspirante",
+                query = "SELECT ap FROM AspirantePrueba ap WHERE ap.idAspirante.id = :idAspirante"
+        ),
+        @NamedQuery(
+                name = "AspirantePrueba.buscarPorPrueba",
+                query = "SELECT ap FROM AspirantePrueba ap WHERE ap.idPrueba.id = :idPrueba"
+        )
+})
 public class AspirantePrueba {
     @Id
     @Column(name = "id_aspirante_prueba", nullable = false)

@@ -8,6 +8,20 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "jornada_aula_aspirante_resultado", schema = "public")
+@NamedQueries({
+        @NamedQuery(
+                name = "JornadaAulaAspiranteResultado.buscarPorJornadaAulaAspirante",
+                query = "SELECT r FROM JornadaAulaAspiranteResultado r WHERE r.idJornadaAulaAspirante.id = :idJornadaAulaAspirante"
+        ),
+        @NamedQuery(
+                name = "JornadaAulaAspiranteResultado.buscarPorAprobado",
+                query = "SELECT r FROM JornadaAulaAspiranteResultado r WHERE r.aprobado = :aprobado"
+        ),
+        @NamedQuery(
+                name = "JornadaAulaAspiranteResultado.buscarPorRangoPuntaje",
+                query = "SELECT r FROM JornadaAulaAspiranteResultado r WHERE r.puntajeObtenido BETWEEN :min AND :max"
+        )
+})
 public class JornadaAulaAspiranteResultado {
     @Id
     @Column(name = "id_jornada_aula_aspirante_resultado", nullable = false)

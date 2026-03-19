@@ -11,7 +11,7 @@ import java.io.Serializable;
 @Stateless
 @LocalBean
 public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> implements Serializable {
-
+// Prueba
     @PersistenceContext(unitName = "IngresoPU")
     private EntityManager em;
 

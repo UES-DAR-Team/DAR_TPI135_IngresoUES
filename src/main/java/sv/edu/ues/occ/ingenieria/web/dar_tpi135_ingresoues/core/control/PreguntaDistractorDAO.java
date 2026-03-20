@@ -28,4 +28,6 @@ public class PreguntaDistractorDAO extends IngresoDefaultDataAcces<PreguntaDistr
     protected Class<PreguntaDistractor> getEntityClass() {
         return PreguntaDistractor.class;
     }
+
+
 }

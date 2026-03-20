@@ -1,9 +1,6 @@
 package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -11,15 +8,21 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "pregunta", schema = "public")
+@NamedQueries({
+    @NamedQuery(name = "Pregunta.findByCoincidenciaTexto",
+            query = "SELECT p FROM Pregunta p WHERE UPPER(p.pregunta) LIKE :texto")
+
+})
 public class Pregunta {
     @Id
     @Column(name = "id_pregunta", nullable = false)
     private Integer id;
 
+    //Luego cambiar este campo por pregunta directamente
     @Size(max = 250)
     @NotNull
     @Column(name = "nombre_pregunta", nullable = false, length = 250)
-    private String nombrePregunta;
+    private String pregunta;
 
     @NotNull
     @Column(name = "fecha_creacion", nullable = false)
@@ -37,12 +40,12 @@ public class Pregunta {
         this.id = id;
     }
 
-    public String getNombrePregunta() {
-        return nombrePregunta;
+    public String getPregunta() {
+        return pregunta;
     }
 
-    public void setNombrePregunta(String nombrePregunta) {
-        this.nombrePregunta = nombrePregunta;
+    public void setPregunta(String pregunta) {
+        this.pregunta = pregunta;
     }
 
     public OffsetDateTime getFechaCreacion() {

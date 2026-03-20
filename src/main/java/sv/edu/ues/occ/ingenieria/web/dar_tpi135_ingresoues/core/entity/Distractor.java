@@ -1,9 +1,6 @@
 package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -11,6 +8,10 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "distractor", schema = "public")
+@NamedQueries({
+        @NamedQuery(name = "Distractor.findByCoincidenciaTexto",
+                query ="SELECT d FROM Distractor d WHERE UPPER(d.distractor) LIKE :text")
+})
 public class Distractor {
     @Id
     @Column(name = "id_distractor", nullable = false)
@@ -19,7 +20,7 @@ public class Distractor {
     @Size(max = 250)
     @NotNull
     @Column(name = "nombre_distractor", nullable = false, length = 250)
-    private String nombreDistractor;
+    private String distractor;
 
     @NotNull
     @Column(name = "es_correcto", nullable = false)
@@ -41,12 +42,12 @@ public class Distractor {
         this.id = id;
     }
 
-    public String getNombreDistractor() {
-        return nombreDistractor;
+    public String getDistractor() {
+        return distractor;
     }
 
-    public void setNombreDistractor(String nombreDistractor) {
-        this.nombreDistractor = nombreDistractor;
+    public void setDistractor(String nombreDistractor) {
+        this.distractor = distractor;
     }
 
     public Boolean getEsCorrecto() {

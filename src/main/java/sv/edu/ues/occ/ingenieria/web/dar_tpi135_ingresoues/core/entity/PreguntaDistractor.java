@@ -7,6 +7,9 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "pregunta_distractor", schema = "public")
+@NamedQueries({
+
+})
 public class PreguntaDistractor {
     @Id
     @Column(name = "id_pregunta_distractor", nullable = false)

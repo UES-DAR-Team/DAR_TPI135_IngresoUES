@@ -1,9 +1,6 @@
 package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -13,6 +10,12 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "aspirante", schema = "public")
+@NamedQueries({
+        @NamedQuery(
+                name = "Aspirante.buscarAspirantePorNombre",
+                query = "SELECT a FROM Aspirante a WHERE upper(a.nombreAspirante) LIKE :nombre"
+        )
+})
 public class Aspirante {
     @Id
     @Column(name = "id_aspirante", nullable = false)

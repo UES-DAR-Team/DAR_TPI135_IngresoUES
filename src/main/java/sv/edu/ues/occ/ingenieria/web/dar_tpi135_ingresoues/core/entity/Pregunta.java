@@ -9,6 +9,8 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "pregunta", schema = "public")
 @NamedQueries({
+    @NamedQuery(name = "Pregunta.findByCoincidenciaTexto",
+            query = "SELECT p FROM Pregunta p WHERE UPPER(p.pregunta) LIKE :texto")
 
 })
 public class Pregunta {
@@ -38,11 +40,11 @@ public class Pregunta {
         this.id = id;
     }
 
-    public String getNombrePregunta() {
+    public String getPregunta() {
         return pregunta;
     }
 
-    public void setNombrePregunta(String pregunta) {
+    public void setPregunta(String pregunta) {
         this.pregunta = pregunta;
     }
 

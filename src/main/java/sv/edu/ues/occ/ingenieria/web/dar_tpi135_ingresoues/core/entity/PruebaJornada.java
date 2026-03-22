@@ -6,6 +6,11 @@ import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 
 @Entity
+@NamedQueries({
+        @NamedQuery(name = "PruebaJornada.findByPrueba", query = "SELECT pj FROM PruebaJornada pj WHERE pj.idPrueba.id = :idPrueba"),
+        @NamedQuery(name = "PruebaJornada.findByJornada", query = "SELECT pj FROM PruebaJornada pj WHERE pj.idJornada.id = :idJornada"),
+        @NamedQuery(name = "PruebaJornada.findByPruebaAndJornada", query = "SELECT pj FROM PruebaJornada pj WHERE pj.idPrueba.id = :idPrueba AND pj.idJornada.id = :idJornada")
+})
 @Table(name = "prueba_jornada", schema = "public")
 public class PruebaJornada {
     @Id

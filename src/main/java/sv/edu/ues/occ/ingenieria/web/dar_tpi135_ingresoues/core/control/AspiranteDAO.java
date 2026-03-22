@@ -25,7 +25,6 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
     public EntityManager getEntityManager() {
         return em;
     }
-
     @Override
     protected Class<Aspirante> getEntityClass() {
         return Aspirante.class;

@@ -28,4 +28,5 @@ public class PruebaDAO extends IngresoDefaultDataAcces<Prueba,Object> implements
     protected Class<Prueba> getEntityClass() {
         return Prueba.class;
     }
+    //coment
 }

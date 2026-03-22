@@ -1,9 +1,6 @@
 package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -11,6 +8,11 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "aula", schema = "public")
+@NamedQueries({
+        @NamedQuery(name = "Aula.findByCapacidadMin", query = "SELECT a FROM Aula a WHERE a.capacidad >= :capacidad"),
+        @NamedQuery(name = "Aula.findByNombre", query = "SELECT a FROM Aula a WHERE LOWER(a.nombreAula) LIKE LOWER(CONCAT('%', :nombre, '%'))"),
+        @NamedQuery(name = "Aula.findActivos", query = "SELECT a FROM Aula a WHERE a.activo = true")
+})
 public class Aula {
     @Id
     @Column(name = "id_aula", nullable = false)

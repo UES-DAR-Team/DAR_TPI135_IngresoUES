@@ -4,9 +4,11 @@ import jakarta.ejb.LocalBean;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAreaPregunta;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Stateless
 @LocalBean
@@ -27,5 +29,45 @@ public class PruebaAreaPreguntaDAO extends IngresoDefaultDataAcces<PruebaAreaPre
     @Override
     protected Class<PruebaAreaPregunta> getEntityClass() {
         return PruebaAreaPregunta.class;
+    }
+
+//Busca todas las preguntas asignadas a un área específica de una prueba
+    public List<PruebaAreaPregunta> findByPruebaArea(Integer idPruebaArea, int first, int max) {
+    if (idPruebaArea == null) {
+        throw new IllegalArgumentException("idPruebaArea inválido");
+    }
+    if (first < 0 || max <= 0) {
+        throw new IllegalArgumentException("Parámetros de paginación inválidos");
+    }
+    try {
+        TypedQuery<PruebaAreaPregunta> q = getEntityManager().createNamedQuery(
+                "PruebaAreaPregunta.findByPruebaArea", PruebaAreaPregunta.class);
+        q.setParameter("idPruebaArea", idPruebaArea);
+        q.setFirstResult(first);
+        q.setMaxResults(max);
+        return q.getResultList();
+    } catch (Exception ex) {
+        throw new IllegalStateException("Error al buscar preguntas por área de prueba", ex);
+    }
+}
+
+    // en que areas de prueba aparece una pregunta especifica
+    public List<PruebaAreaPregunta> findByPregunta(Integer idPregunta, int first, int max) {
+        if (idPregunta == null) {
+            throw new IllegalArgumentException("idPregunta inválido");
+        }
+        if (first < 0 || max <= 0) {
+            throw new IllegalArgumentException("Parámetros de paginación inválidos");
+        }
+        try {
+            TypedQuery<PruebaAreaPregunta> q = getEntityManager().createNamedQuery(
+                    "PruebaAreaPregunta.findByPregunta", PruebaAreaPregunta.class);
+            q.setParameter("idPregunta", idPregunta);
+            q.setFirstResult(first);
+            q.setMaxResults(max);
+            return q.getResultList();
+        } catch (Exception ex) {
+            throw new IllegalStateException("Error al buscar áreas de prueba por pregunta", ex);
+        }
     }
 }

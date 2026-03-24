@@ -7,6 +7,9 @@ import jakarta.persistence.PersistenceContext;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.DistractorAreaConocimiento;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -27,4 +30,37 @@ public class DistractorAreaConocimientoDAO extends IngresoDefaultDataAcces<Distr
     protected Class<DistractorAreaConocimiento> getEntityClass() {
         return DistractorAreaConocimiento.class;
     }
+
+    public List<DistractorAreaConocimiento> findByIdDistractor(final Integer idDistractor, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
+        if (idDistractor != null && idDistractor > 0 && first >= 0 && max >= 0) {
+            try {
+                return em.createNamedQuery("DistractorAreaConocimiento.findByIdDistractor", DistractorAreaConocimiento.class)
+                        .setParameter("idDistractor", idDistractor)
+                        .setFirstResult(first)
+                        .setMaxResults(max)
+                        .getResultList();
+            } catch (Exception ex) {
+                Logger.getLogger(DistractorAreaConocimientoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            }
+        }
+        return List.of();
+    }
+
+   public List<DistractorAreaConocimiento> findByIdAreaConocimiento(final Integer idAreaConocimiento, int first, int max)
+           throws IllegalArgumentException, IllegalStateException {
+        if (idAreaConocimiento != null && idAreaConocimiento > 0 && first >= 0 && max >= 0) {
+            try {
+                return em.createNamedQuery("DistractorAreaConocimiento.findByIdAreaConocimiento", DistractorAreaConocimiento.class)
+                        .setParameter("idAreaConocimiento", idAreaConocimiento)
+                        .setFirstResult(first)
+                        .setMaxResults(max)
+                        .getResultList();
+            } catch (Exception ex) {
+                Logger.getLogger(DistractorAreaConocimientoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            }
+        }
+        return List.of();
+    }
+
 }

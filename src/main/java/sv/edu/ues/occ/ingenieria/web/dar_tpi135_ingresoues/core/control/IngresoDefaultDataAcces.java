@@ -53,11 +53,7 @@ public abstract class IngresoDefaultDataAcces<T, ID> implements IngresoDAOInterf
             if (em == null) {
                 throw new IllegalArgumentException("Parametro no valido:entity manager nulo");
             }
-            //merge para obtener la entidad gestionada,
-            // esto es necesario para evitar problemas de transaccionalidad y manejo de entidades no gestionadas
             T managedEntity = em.merge(obj);
-            //remover la entidad gestionada directamente,
-            // evitando problemas de transaccionalidad y manejo de entidades no gestionadas
             em.remove(managedEntity);
         } catch (Exception ex) {
             if (ex instanceof IllegalArgumentException) {

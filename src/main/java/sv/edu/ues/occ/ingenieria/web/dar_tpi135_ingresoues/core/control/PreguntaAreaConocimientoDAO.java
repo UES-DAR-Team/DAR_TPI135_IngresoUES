@@ -32,27 +32,37 @@ public class PreguntaAreaConocimientoDAO extends IngresoDefaultDataAcces<Pregunt
         return PreguntaAreaConocimiento.class;
     }
 
-    //buscar pregunta por  idAreaConocimiento
-    public List<PreguntaAreaConocimiento> findPreguntaByIdAreaConocimiento(final Integer idAreaConocimiento, int first, int max) {
-        //capturar excepciones
+    public List<PreguntaAreaConocimiento> findPreguntaByIdAreaConocimiento(final Integer idAreaConocimiento, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
         try {
-            //validacion de parametros
-            if (idAreaConocimiento != null) {
+            if (idAreaConocimiento != null && idAreaConocimiento > 0 && first >= 0 && max >= 0) {
                 TypedQuery<PreguntaAreaConocimiento> q = em.createNamedQuery("PreguntaAreaConocimiento.findByIdAreaConocimiento", PreguntaAreaConocimiento.class)
                         .setParameter("idAreaConocimiento", idAreaConocimiento)
                         .setFirstResult(first)
                         .setMaxResults(max);
                 return q.getResultList();
             }
-        }catch (Exception ex){
+        } catch (Exception ex) {
             Logger.getLogger(PreguntaAreaConocimientoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
         return List.of();
     }
 
-
-
-
+    public List<PreguntaAreaConocimiento> findByIdPregunta(final Integer idPregunta, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
+        try {
+            if (idPregunta != null && idPregunta > 0 && first >= 0 && max >= 0) {
+                TypedQuery<PreguntaAreaConocimiento> q = em.createNamedQuery("PreguntaAreaConocimiento.findByIdPregunta", PreguntaAreaConocimiento.class)
+                        .setParameter("idPregunta", idPregunta)
+                        .setFirstResult(first)
+                        .setMaxResults(max);
+                return q.getResultList();
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(PreguntaAreaConocimientoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        return List.of();
+    }
 
 
 }

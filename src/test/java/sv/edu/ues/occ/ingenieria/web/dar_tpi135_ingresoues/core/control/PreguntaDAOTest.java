@@ -35,10 +35,8 @@ class PreguntaDAOTest {
         pregunta.setId(1);
     }
 
-    //======================pruebas de coincidencia de texto========================
-    //prueba de coincidencia de texto valido
     @Test
-    void findByCoincidenciaTextoValido() {
+    void testFindByCoincidenciaTextoValido() {
         when(em.createNamedQuery("Pregunta.findByCoincidenciaTexto", Pregunta.class))
                 .thenReturn(query);
         when(query.setParameter("texto", "%TEXTO%")).thenReturn(query);
@@ -56,44 +54,37 @@ class PreguntaDAOTest {
         verify(query).getResultList();
     }
 
-    //validacion de parametro
-    //nulo
     @Test
-    void findByCoincidenciaTextoNulo(){
+    void testFindByCoincidenciaTextoNulo(){
         List<Pregunta> resultado = dao.findByCoincidenciaTexto(null, 0, 10);
         assertTrue(resultado.isEmpty());
     }
 
-    //vacio
     @Test
-    void findByCoincidenciaTextoVacio(){
+    void testFindByCoincidenciaTextoVacio(){
         List<Pregunta> resultado = dao.findByCoincidenciaTexto("", 0, 10);
         assertTrue(resultado.isEmpty());
     }
 
-    // first negativo
     @Test
-    void findByCoincidenciaTextoFirstNegativo(){
+    void testFindByCoincidenciaTextoFirstNegativo(){
         List<Pregunta> resultado = dao.findByCoincidenciaTexto("texto", -1, 10);
         assertTrue(resultado.isEmpty());
     }
 
-    // max negativo
     @Test
-    void findByCoincidenciaTextoMaxNegativo(){
+    void testFindByCoincidenciaTextoMaxNegativo(){
         List<Pregunta> resultado = dao.findByCoincidenciaTexto("texto", 0, -1);
         assertTrue(resultado.isEmpty());
     }
 
-    // prueba de captura de excepcion
     @Test
-    void findByCoincidenciaTextoException() {
+    void testFindByCoincidenciaTextoException() {
         when(em.createNamedQuery("Pregunta.findByCoincidenciaTexto", Pregunta.class))
                 .thenThrow(new RuntimeException("DB error"));
         List<Pregunta> resultado = dao.findByCoincidenciaTexto("texto",0 , 10);
         assertTrue(resultado.isEmpty());
         verify(em).createNamedQuery("Pregunta.findByCoincidenciaTexto", Pregunta.class);
     }
-
 
 }

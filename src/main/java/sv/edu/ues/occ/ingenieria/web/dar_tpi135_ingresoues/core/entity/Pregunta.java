@@ -18,7 +18,7 @@ public class Pregunta {
     @Column(name = "id_pregunta", nullable = false)
     private Integer id;
 
-    //Luego cambiar este campo por pregunta directamente
+    //Luego cambiar este campo por pregunta directamente en la bd
     @Size(max = 250)
     @NotNull
     @Column(name = "nombre_pregunta", nullable = false, length = 250)

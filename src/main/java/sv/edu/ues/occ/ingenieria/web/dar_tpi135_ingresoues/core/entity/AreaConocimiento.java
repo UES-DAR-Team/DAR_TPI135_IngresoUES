@@ -12,7 +12,6 @@ import java.time.OffsetDateTime;
         @NamedQuery(name = "AreaConocimiento.findByNameLike", query = "SELECT a FROM AreaConocimiento a WHERE upper(a.nombre) like :name"),
         @NamedQuery(name = "AreaConocimiento.findByAreaPadre", query = "SELECT a FROM AreaConocimiento a WHERE a.idAutoReferenciaArea IS NULL ORDER BY a.nombre"),
         @NamedQuery(name = "AreaConocimiento.findHijosByPadre", query = "SELECT a FROM AreaConocimiento a WHERE a.idAutoReferenciaArea.id = :idPadre ORDER BY a.nombre")
-
 })
 public class AreaConocimiento {
     @Id

@@ -33,12 +33,9 @@ public class PreguntaDAO extends IngresoDefaultDataAcces<Pregunta, Object> imple
         return Pregunta.class;
     }
 
-    //luego necesitamos un metodo para buscar pregunta por coincidencia de contenido de texto
-    public List<Pregunta> findByCoincidenciaTexto(final String texto, int first, int max){
-
-        //capturar excepciones
+    public List<Pregunta> findByCoincidenciaTexto(final String texto, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
         try {
-            //validacion de parametros
             if (texto != null && !texto.isBlank() && first >= 0 && max > 0) {
                 TypedQuery<Pregunta> q = em.createNamedQuery("Pregunta.findByCoincidenciaTexto", Pregunta.class);
                 q.setParameter("texto", "%" + texto.trim().toUpperCase() + "%");
@@ -51,15 +48,6 @@ public class PreguntaDAO extends IngresoDefaultDataAcces<Pregunta, Object> imple
         }
         return List.of();
     }
-
-    //buscar por id con super find
-    //este metodo ya se comprobo en el test de la clase abstracta
-    public Pregunta findById(Object id) {
-        return super.findById(id);
-    }
-
-
-
 
 
 }

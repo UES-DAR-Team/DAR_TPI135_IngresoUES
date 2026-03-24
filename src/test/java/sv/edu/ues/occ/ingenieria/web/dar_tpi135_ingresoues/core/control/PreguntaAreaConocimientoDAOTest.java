@@ -36,10 +36,8 @@ class PreguntaAreaConocimientoDAOTest {
         pac.setId(1);
     }
 
-    //=======================pruebas de busqueda por idAreaConocimiento=======================
-    //metodo valido
     @Test
-    void findPreguntaByIdAreaConocimientoValido(){
+    void testFindPreguntaByIdAreaConocimientoValido(){
         when(em.createNamedQuery("PreguntaAreaConocimiento.findByIdAreaConocimiento", PreguntaAreaConocimiento.class))
                 .thenReturn(query);
         when(query.setParameter("idAreaConocimiento", 1)).thenReturn(query);
@@ -58,21 +56,92 @@ class PreguntaAreaConocimientoDAOTest {
         verify(query).getResultList();
     }
 
-    //parametros invalidos/nulos
     @Test
-    void findPreguntaByIdAreaConocimientoNulo() {
+    void testfindPreguntaByIdAreaConocimientoIdNulo() {
         List<PreguntaAreaConocimiento> resultado = dao.findPreguntaByIdAreaConocimiento(null, 0, 10);
         assertTrue(resultado.isEmpty());
     }
 
-    //captura de excepciones
     @Test
-    void findPreguntaByIdAreaConocimientoException() {
+    void testFindPreguntaByIdAreaConocimientoIdNegativo() {
+        List<PreguntaAreaConocimiento> resultado = dao.findPreguntaByIdAreaConocimiento(-1, 0, 10);
+        assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    void testFindPreguntaByIdAreaConocimientoFirstNegativo() {
+        List<PreguntaAreaConocimiento> resultado = dao.findPreguntaByIdAreaConocimiento(1, -1, 10);
+        assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    void testFindPreguntaByIdAreaConocimientoIdMaxNegativo() {
+        List<PreguntaAreaConocimiento> resultado = dao.findPreguntaByIdAreaConocimiento(1, 0, -1);
+        assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    void testFindPreguntaByIdAreaConocimientoException() {
         when(em.createNamedQuery("PreguntaAreaConocimiento.findByIdAreaConocimiento", PreguntaAreaConocimiento.class))
                 .thenThrow(new RuntimeException("DB Error"));
         List<PreguntaAreaConocimiento> resultado = dao.findPreguntaByIdAreaConocimiento(1, 0, 10);
         assertTrue(resultado.isEmpty());
         verify(em).createNamedQuery("PreguntaAreaConocimiento.findByIdAreaConocimiento", PreguntaAreaConocimiento.class);
     }
+
+    @Test
+    void testFindByIdPreguntaValido() {
+        when(em.createNamedQuery("PreguntaAreaConocimiento.findByIdPregunta", PreguntaAreaConocimiento.class))
+                .thenReturn(query);
+        when(query.setParameter("idPregunta", 1)).thenReturn(query);
+        when(query.setFirstResult(0)).thenReturn(query);
+        when(query.setMaxResults(10)).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(pac));
+
+        List<PreguntaAreaConocimiento> resultado = dao.findByIdPregunta(1, 0, 10);
+
+        assertFalse(resultado.isEmpty());
+        assertTrue(resultado.contains(pac));
+        verify(em).createNamedQuery("PreguntaAreaConocimiento.findByIdPregunta", PreguntaAreaConocimiento.class);
+        verify(query).setParameter("idPregunta", 1);
+        verify(query).setFirstResult(0);
+        verify(query).setMaxResults(10);
+        verify(query).getResultList();
+    }
+
+    @Test
+    void testFindByIdPreguntaIdNulo(){
+        List<PreguntaAreaConocimiento> resultado = dao.findByIdPregunta(null, 10, 10);
+        assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    void testFindBiIdPreguntaIdNegativo(){
+        List<PreguntaAreaConocimiento> resultado = dao.findByIdPregunta(-1, 10, 10);
+        assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    void testFindByIdPreguntaFirstNegativo(){
+        List<PreguntaAreaConocimiento> resultado = dao.findByIdPregunta(1, -1, 10);
+        assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    void testFindByIdPreguntaMaxNegativo() {
+        List<PreguntaAreaConocimiento> resultado = dao.findByIdPregunta(1, 0, -1);
+        assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    void testFindByIdPreguntaException() {
+        when(em.createNamedQuery("PreguntaAreaConocimiento.findByIdPregunta", PreguntaAreaConocimiento.class))
+                .thenThrow(new RuntimeException("DB Error"));
+        List<PreguntaAreaConocimiento> resultado = dao.findByIdPregunta(1, 0, 10);
+        assertNotNull(resultado);
+        assertTrue(resultado.isEmpty());
+        verify(em).createNamedQuery("PreguntaAreaConocimiento.findByIdPregunta", PreguntaAreaConocimiento.class);
+    }
+
 
 }

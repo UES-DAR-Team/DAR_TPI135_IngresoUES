@@ -8,7 +8,12 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "pregunta_distractor", schema = "public")
 @NamedQueries({
-
+        @NamedQuery(name = "PreguntaDistractor.findByIdPregunta",
+                query = "SELECT pd FROM PreguntaDistractor pd WHERE pd.idPregunta.id = :idPregunta"),
+        @NamedQuery(name = "PreguntaDistractor.findByIdDistractor",
+                query = "SELECT pd FROM PreguntaDistractor pd WHERE pd.idDistractor.id = :idDistractor"),
+        @NamedQuery(name = "PreguntaDistractor.findByOrden",
+                query = "SELECT pd FROM PreguntaDistractor pd WHERE pd.orden = :orden")
 })
 public class PreguntaDistractor {
     @Id

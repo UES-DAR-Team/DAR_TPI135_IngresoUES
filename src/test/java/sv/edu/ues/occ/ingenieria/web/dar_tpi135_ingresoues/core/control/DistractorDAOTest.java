@@ -37,11 +37,9 @@ class DistractorDAOTest {
         distractor.setId(1);
     }
 
-    //=======================================pruebas de coincidencia de texto=========================================
 
-    //prueba de coincidencia de texto valido
     @Test
-    void findByCoincidenciaTexto(){
+    void testFindByCoincidenciaTexto(){
         when(em.createNamedQuery("Distractor.findByCoincidenciaTexto", Distractor.class))
                 .thenReturn(query);
         when(query.setParameter("text", "%TEXT%")).thenReturn(query);
@@ -59,61 +57,36 @@ class DistractorDAOTest {
         verify(query).getResultList();
     }
 
-    //validacion de parametros
-    //nulo
     @Test
-    void findByCoincidenciaTextoNulo(){
+    void testFindByCoincidenciaTextoNulo(){
         List<Distractor> resultado = dao.findByCoincidenciaTexto(null, 0, 10);
         assertTrue(resultado.isEmpty());
     }
 
-    //vacio
     @Test
-    void findByCoincidenciaTextVacio(){
+    void testFindByCoincidenciaTextVacio(){
         List<Distractor> resutlado = dao.findByCoincidenciaTexto(" ", 0, 10);
         assertTrue(resutlado.isEmpty());
     }
 
-    //first negativo
     @Test
-    void findByCoincidenciaTextoFirstNegativo(){
+    void testFindByCoincidenciaTextoFirstNegativo(){
         List<Distractor> resultado = dao.findByCoincidenciaTexto("text", -1, 10);
         assertTrue(resultado.isEmpty());
     }
 
-    //max negativo
     @Test
-    void findByCoincidenciaTextoMaxNegativo(){
+    void testFindByCoincidenciaTextoMaxNegativo(){
         List<Distractor> resultado =dao.findByCoincidenciaTexto("text", 10, -1);
         assertTrue(resultado.isEmpty());
     }
 
-    //prueba de captura de excepcion
     @Test
-    void findByCoincidenciaTextoExcepcion(){
+    void testFindByCoincidenciaTextoExcepcion(){
         when(em.createNamedQuery("Distractor.findByCoincidenciaTexto", Distractor.class))
                 .thenThrow(new RuntimeException("DB Error"));
         List<Distractor> resultado = dao.findByCoincidenciaTexto("text", 0, 10);
         assertTrue(resultado.isEmpty());
         verify(em).createNamedQuery("Distractor.findByCoincidenciaTexto", Distractor.class);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

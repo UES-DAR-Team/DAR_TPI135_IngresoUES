@@ -31,8 +31,8 @@ public class AulaDAO extends IngresoDefaultDataAcces<Aula, Object> implements Se
         return Aula.class;
     }
 
-    //Retorna aulas donde la capacidad sea mayor o igual al valor indicado
-    public List<Aula> findByCapacidadMin(Integer capacidad, int first, int max) {
+    public List<Aula> findByCapacidadMin(Integer capacidad, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
         if (capacidad == null) {
             throw new IllegalArgumentException("Capacidad inválida");
         }
@@ -50,8 +50,8 @@ public class AulaDAO extends IngresoDefaultDataAcces<Aula, Object> implements Se
         }
     }
 
-    //Busca aulas por nombre
-    public List<Aula> findByNombre(String nombre, int first, int max) {
+    public List<Aula> findByNombre(String nombre, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
         if (nombre == null || nombre.isBlank()) {
             throw new IllegalArgumentException("Nombre inválido");
         }
@@ -69,8 +69,8 @@ public class AulaDAO extends IngresoDefaultDataAcces<Aula, Object> implements Se
         }
     }
 
-    //devuelve todas las aulas activas
-    public List<Aula> findActivos(int first, int max) {
+    public List<Aula> findActivos(int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
         if (first < 0 || max <= 0) {
             throw new IllegalArgumentException("Parámetros de paginación inválidos");
         }

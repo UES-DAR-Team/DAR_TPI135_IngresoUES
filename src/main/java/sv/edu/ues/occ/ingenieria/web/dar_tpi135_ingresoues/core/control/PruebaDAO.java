@@ -31,8 +31,8 @@ public class PruebaDAO extends IngresoDefaultDataAcces<Prueba,Object> implements
         return Prueba.class;
     }
 
-    //devuelve todas las pruebas que estan activas
-    public List<Prueba> findActivas(int first, int max) {
+    public List<Prueba> findActivas(int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
         if (first < 0 || max <= 0) {
             throw new IllegalArgumentException("Parámetros de paginación inválidos");
         }
@@ -47,8 +47,8 @@ public class PruebaDAO extends IngresoDefaultDataAcces<Prueba,Object> implements
         }
     }
 
-    //para buscar por nombres
-    public List<Prueba> findByNombre(String nombre, int first, int max) {
+    public List<Prueba> findByNombre(String nombre, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
         if (nombre == null || nombre.isBlank()) {
             throw new IllegalArgumentException("Nombre inválido");
         }

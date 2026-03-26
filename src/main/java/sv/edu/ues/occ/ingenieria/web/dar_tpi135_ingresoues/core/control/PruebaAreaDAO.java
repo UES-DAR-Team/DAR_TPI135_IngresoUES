@@ -31,8 +31,8 @@ public class PruebaAreaDAO extends IngresoDefaultDataAcces<PruebaArea,Object> im
         return PruebaArea.class;
     }
 
-    // Retorna todas las áreas de conocimiento asignadas a una prueba específica
-    public List<PruebaArea> findByPrueba(Integer idPrueba, int first, int max) {
+    public List<PruebaArea> findByPrueba(Integer idPrueba, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
         if (idPrueba == null) {
             throw new IllegalArgumentException("idPrueba inválido");
         }
@@ -50,8 +50,8 @@ public class PruebaAreaDAO extends IngresoDefaultDataAcces<PruebaArea,Object> im
         }
     }
 
-    // Retorna todas las pruebas asignadas a un área de conocimiento específica
-    public List<PruebaArea> findByAreaConocimiento(Integer idAreaConocimiento, int first, int max) {
+    public List<PruebaArea> findByAreaConocimiento(Integer idAreaConocimiento, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
         if (idAreaConocimiento == null) {
             throw new IllegalArgumentException("idAreaConocimiento inválido");
         }
@@ -69,8 +69,8 @@ public class PruebaAreaDAO extends IngresoDefaultDataAcces<PruebaArea,Object> im
         }
     }
 
-    // Retorna asignaciones cuyo número de preguntas sea mayor o igual al valor indicado
-    public List<PruebaArea> findByNumPreguntasMin(Short numPreguntas, int first, int max) {
+    public List<PruebaArea> findByNumPreguntasMin(Short numPreguntas, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
         if (numPreguntas == null) {
             throw new IllegalArgumentException("numPreguntas inválido");
         }

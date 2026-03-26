@@ -39,8 +39,7 @@ class PruebaJornadaDAOTest {
         };
     }
 
-    // Retorna un DAO donde el EntityManager es nulo, simulando un fallo de inyeccion
-    private PruebaJornadaDAO daoConEmNulo() {
+    private PruebaJornadaDAO daoConEntityNulo() {
         return new PruebaJornadaDAO() {
             @Override
             public EntityManager getEntityManager() {
@@ -49,7 +48,6 @@ class PruebaJornadaDAOTest {
         };
     }
 
-    // Construye una PruebaJornada valida para los tests con resultados esperados
     private PruebaJornada pruebaJornadaValida() {
         Prueba prueba = new Prueba();
         prueba.setId(1);
@@ -65,32 +63,26 @@ class PruebaJornadaDAOTest {
         return pj;
     }
 
-    // findByJornada ----------------------------------
-
-    // El id de la jornada es nulo, el DAO debe rechazarlo antes de consultar la BD
     @Test
-    void findByJornada_cuandoIdNulo_deberiaLanzarIAE() {
+    void testFindByJornadaIdNulo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByJornada(null, 0, 10));
     }
 
-    // El parametro first es negativo, cada condicion se prueba por separado
     @Test
-    void findByJornada_cuandoFirstNegativo_deberiaLanzarIAE() {
+    void testFindByJornadaFirstNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByJornada(1, -1, 10));
     }
 
-    // El parametro max es cero, separado del anterior para identificar cual falla
     @Test
-    void findByJornada_cuandoMaxCeroONegativo_deberiaLanzarIAE() {
+    void testFindByJornadaMaxCeroNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByJornada(1, 0, 0));
     }
 
-    // Todos los parametros son validos, se verifica que la query se ejecute correctamente
     @Test
-    void findByJornada_cuandoParametrosValidos_deberiaRetornarLista() {
+    void testFindByJornadaParametrosValidosRetornaLista() {
         when(em.createNamedQuery("PruebaJornada.findByJornada", PruebaJornada.class)).thenReturn(query);
         when(query.setParameter("idJornada", 1)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
@@ -108,9 +100,8 @@ class PruebaJornadaDAOTest {
         verify(query).getResultList();
     }
 
-    // No hay pruebas asignadas a esa jornada, se devuelve lista vacia sin excepcion
     @Test
-    void findByJornada_cuandoNoHayResultados_deberiaRetornarListaVacia() {
+    void testFindByJornadaRetornaListaVacia() {
         when(em.createNamedQuery("PruebaJornada.findByJornada", PruebaJornada.class)).thenReturn(query);
         when(query.setParameter("idJornada", 1)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
@@ -123,9 +114,8 @@ class PruebaJornadaDAOTest {
         assertTrue(resultado.isEmpty());
     }
 
-    // La BD falla, el DAO debe envolver el error en ISE
     @Test
-    void findByJornada_cuandoErrorInterno_deberiaLanzarISE() {
+    void testFindByJornadaErrorInterno() {
         when(em.createNamedQuery("PruebaJornada.findByJornada", PruebaJornada.class))
                 .thenThrow(new RuntimeException("Fallo en la Base de Datos"));
 
@@ -133,39 +123,32 @@ class PruebaJornadaDAOTest {
                 () -> dao.findByJornada(1, 0, 10));
     }
 
-    // El EntityManager es nulo, el DAO debe capturar el error y lanzar ISE
     @Test
-    void findByJornada_cuandoEmNulo_deberiaLanzarISE() {
+    void testFindByJornadaEntityManagerNulo() {
         assertThrows(IllegalStateException.class,
-                () -> daoConEmNulo().findByJornada(1, 0, 10));
+                () -> daoConEntityNulo().findByJornada(1, 0, 10));
     }
 
-    // findByPrueba ----------------------------------
-
-    // El id de la prueba es nulo, el DAO debe rechazarlo antes de consultar la BD
     @Test
-    void findByPrueba_cuandoIdNulo_deberiaLanzarIAE() {
+    void testFindByPruebaParametroNulo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPrueba(null, 0, 10));
     }
 
-    // El parametro first es negativo, cada condicion se prueba por separado
     @Test
-    void findByPrueba_cuandoFirstNegativo_deberiaLanzarIAE() {
+    void testFindByPruebaFirstNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPrueba(1, -1, 10));
     }
 
-    // El parametro max es cero, separado del anterior para identificar cual falla
     @Test
-    void findByPrueba_cuandoMaxCeroONegativo_deberiaLanzarIAE() {
+    void testFindByPruebaMaxCeroNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPrueba(1, 0, 0));
     }
 
-    // Todos los parametros son validos, se verifica que la query se ejecute correctamente
     @Test
-    void findByPrueba_cuandoParametrosValidos_deberiaRetornarLista() {
+    void testFindByPruebaParametrosValidosRetornaLista() {
         when(em.createNamedQuery("PruebaJornada.findByPrueba", PruebaJornada.class)).thenReturn(query);
         when(query.setParameter("idPrueba", 1)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
@@ -183,9 +166,8 @@ class PruebaJornadaDAOTest {
         verify(query).getResultList();
     }
 
-    // No hay jornadas que contengan esa prueba, se devuelve lista vacia sin excepcion
     @Test
-    void findByPrueba_cuandoNoHayResultados_deberiaRetornarListaVacia() {
+    void testFindByPruebaRetornaListaVacia() {
         when(em.createNamedQuery("PruebaJornada.findByPrueba", PruebaJornada.class)).thenReturn(query);
         when(query.setParameter("idPrueba", 1)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
@@ -198,9 +180,8 @@ class PruebaJornadaDAOTest {
         assertTrue(resultado.isEmpty());
     }
 
-    // La BD falla, el DAO debe envolver el error en ISE
     @Test
-    void findByPrueba_cuandoErrorInterno_deberiaLanzarISE() {
+    void testFindByPruebaErrorInterno() {
         when(em.createNamedQuery("PruebaJornada.findByPrueba", PruebaJornada.class))
                 .thenThrow(new RuntimeException("Fallo en la Base de Datos"));
 
@@ -208,47 +189,44 @@ class PruebaJornadaDAOTest {
                 () -> dao.findByPrueba(1, 0, 10));
     }
 
-    // El EntityManager es nulo, el DAO debe capturar el error y lanzar ISE
     @Test
-    void findByPrueba_cuandoEmNulo_deberiaLanzarISE() {
+    void testFindByPruebaEntityManagerNulo() {
         assertThrows(IllegalStateException.class,
-                () -> daoConEmNulo().findByPrueba(1, 0, 10));
+                () -> daoConEntityNulo().findByPrueba(1, 0, 10));
     }
 
-    // findByPruebaAndJornada ----------------------------------
-    // tiene dos parametros de filtro
+    /**
+     * Verifica el comportamiento del metodo al filtrar por prueba y jornada
+     * asegurando que ambos parametros se envían correctamente a la consulta
+     * y que la paginación se aplica adecuadamente.
+     */
 
-    // El id de la prueba es nulo, se valida antes del id de la jornada
     @Test
-    void findByPruebaAndJornada_cuandoIdPruebaNulo_deberiaLanzarIAE() {
+    void testFindByPruebaAndJornadaIdPruebaNulo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPruebaAndJornada(null, 1, 0, 10));
     }
 
-    // El id de la jornada es nulo con prueba valida
     @Test
-    void findByPruebaAndJornada_cuandoIdJornadaNulo_deberiaLanzarIAE() {
+    void testFindByPruebaAndJornadaIdJornadaNulo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPruebaAndJornada(1, null, 0, 10));
     }
 
-    // El parametro first es negativo, cada condicion se prueba por separado
     @Test
-    void findByPruebaAndJornada_cuandoFirstNegativo_deberiaLanzarIAE() {
+    void testFindByPruebaAndJornadaFirstNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPruebaAndJornada(1, 1, -1, 10));
     }
 
-    // El parametro max es cero, separado del anterior para identificar cual falla
     @Test
-    void findByPruebaAndJornada_cuandoMaxCeroONegativo_deberiaLanzarIAE() {
+    void testfFindByPruebaAndJornadaMaxCeroNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPruebaAndJornada(1, 1, 0, 0));
     }
 
-    // Todos los parametros son validos, se verifica que ambos parametros lleguen al mock
     @Test
-    void findByPruebaAndJornada_cuandoParametrosValidos_deberiaRetornarLista() {
+    void testFindByPruebaAndJornadaParametrosValidosRetornaLista() {
         when(em.createNamedQuery("PruebaJornada.findByPruebaAndJornada", PruebaJornada.class)).thenReturn(query);
         when(query.setParameter("idPrueba", 1)).thenReturn(query);
         when(query.setParameter("idJornada", 1)).thenReturn(query);
@@ -268,9 +246,8 @@ class PruebaJornadaDAOTest {
         verify(query).getResultList();
     }
 
-    // La combinacion prueba y jornada no existe, se devuelve lista vacia sin excepcion
     @Test
-    void findByPruebaAndJornada_cuandoNoHayResultados_deberiaRetornarListaVacia() {
+    void testFindByPruebaAndJornadaRetornaListaVacia() {
         when(em.createNamedQuery("PruebaJornada.findByPruebaAndJornada", PruebaJornada.class)).thenReturn(query);
         when(query.setParameter("idPrueba", 1)).thenReturn(query);
         when(query.setParameter("idJornada", 1)).thenReturn(query);
@@ -284,9 +261,8 @@ class PruebaJornadaDAOTest {
         assertTrue(resultado.isEmpty());
     }
 
-    // La BD falla, el DAO debe envolver el error en ISE
     @Test
-    void findByPruebaAndJornada_cuandoErrorInterno_deberiaLanzarISE() {
+    void testFindByPruebaAndJornadaErrorInterno() {
         when(em.createNamedQuery("PruebaJornada.findByPruebaAndJornada", PruebaJornada.class))
                 .thenThrow(new RuntimeException("Fallo en la Base de Datos"));
 
@@ -294,10 +270,9 @@ class PruebaJornadaDAOTest {
                 () -> dao.findByPruebaAndJornada(1, 1, 0, 10));
     }
 
-    // El EntityManager es nulo, el DAO debe capturar el error y lanzar ISE
     @Test
-    void findByPruebaAndJornada_cuandoEmNulo_deberiaLanzarISE() {
+    void testFindByPruebaAndJornadaEntityManagerNulo() {
         assertThrows(IllegalStateException.class,
-                () -> daoConEmNulo().findByPruebaAndJornada(1, 1, 0, 10));
+                () -> daoConEntityNulo().findByPruebaAndJornada(1, 1, 0, 10));
     }
 }

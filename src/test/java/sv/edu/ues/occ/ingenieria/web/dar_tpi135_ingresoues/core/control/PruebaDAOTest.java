@@ -37,8 +37,7 @@ class PruebaDAOTest {
         };
     }
 
-    // devuelve un DAO donde el EntityManager es nulo, simulando un fallo de inyeccion
-    private PruebaDAO daoConEmNulo() {
+    private PruebaDAO daoConEntityNulo() {
         return new PruebaDAO() {
             @Override
             public EntityManager getEntityManager() {
@@ -47,7 +46,6 @@ class PruebaDAOTest {
         };
     }
 
-    // Construye una Prueba con todos los campos validos para los tests con resultados esperados
     private Prueba pruebaValida() {
         Prueba p = new Prueba();
         p.setId(1);
@@ -58,25 +56,20 @@ class PruebaDAOTest {
         return p;
     }
 
-    // findActivas ----------------------------------
-
-    // El parametro first es negativo, se prueba solo para saber exactamente que condicion falla
     @Test
-    void findActivas_cuandoFirstNegativo_deberiaLanzarIAE() {
+    void testFindActivasFirstNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findActivas(-1, 10));
     }
 
-    // El parametro max es cero, se prueba solo separado para saber en que condicion falla
     @Test
-    void findActivas_cuandoMaxCeroONegativo_deberiaLanzarIAE() {
+    void testFindActivasMaxCeroNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findActivas(0, 0));
     }
 
-    // paginacion valida, se verifica que la query se ejecute correctamente
     @Test
-    void findActivas_cuandoPaginacionValida_deberiaRetornarLista() {
+    void testFindActivasParametroValidosRetornaLista() {
         when(em.createNamedQuery("Prueba.findActivas", Prueba.class)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
@@ -92,9 +85,8 @@ class PruebaDAOTest {
         verify(query).getResultList();
     }
 
-    // No hay pruebas activas en el sistema, se devuelve lista vacia sin excepcion
     @Test
-    void findActivas_cuandoNoHayActivas_deberiaRetornarListaVacia() {
+    void testFindActivasRetornaListaVacia() {
         when(em.createNamedQuery("Prueba.findActivas", Prueba.class)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
@@ -106,9 +98,8 @@ class PruebaDAOTest {
         assertTrue(resultado.isEmpty());
     }
 
-    // La BD falla, el DAO debe envolver el error en ISE
     @Test
-    void findActivas_cuandoErrorInterno_deberiaLanzarISE() {
+    void testFindActivasErrorInterno() {
         when(em.createNamedQuery("Prueba.findActivas", Prueba.class))
                 .thenThrow(new RuntimeException("fallo en la Base de Datos"));
 
@@ -116,46 +107,39 @@ class PruebaDAOTest {
                 () -> dao.findActivas(0, 10));
     }
 
-    // El EntityManager es nulo, el DAO debe capturar el error y lanzar ISE
     @Test
-    void findActivas_cuandoEmNulo_deberiaLanzarISE() {
+    void testFindActivasEntityManagerNulo() {
         assertThrows(IllegalStateException.class,
-                () -> daoConEmNulo().findActivas(0, 10));
+                () -> daoConEntityNulo().findActivas(0, 10));
     }
 
-    // findByNombre ----------------------------------
-
-    // El nombre es nulo, el DAO debe rechazarlo antes de consultar la BD
     @Test
-    void findByNombre_cuandoNombreNulo_deberiaLanzarIAE() {
+    void testFindByNombreParametroNulo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByNombre(null, 0, 10));
     }
 
-    // El nombre tiene solo espacios, isBlank lo detecta como invalido igual que nulo
     @Test
-    void findByNombre_cuandoNombreBlank_deberiaLanzarIAE() {
+    void testFindByNombreParametroVacio() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByNombre("   ", 0, 10));
     }
 
-    // El parametro first es negativo con nombre valido
     @Test
-    void findByNombre_cuandoFirstNegativo_deberiaLanzarIAE() {
+    void testFindByNombreFirstNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByNombre("Matematica", -1, 10));
     }
 
-    // El parametro max es cero con nombre valido
+
     @Test
-    void findByNombre_cuandoMaxCeroONegativo_deberiaLanzarIAE() {
+    void testFindByNombreMaxCeroNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByNombre("Matematica", 0, 0));
     }
 
-    // Todos los parametros son validos, el mock recibe el nombre sin porcentajes
     @Test
-    void findByNombre_cuandoParametrosValidos_deberiaRetornarLista() {
+    void testFindByNombreParametrosValidos() {
         when(em.createNamedQuery("Prueba.findByNombre", Prueba.class)).thenReturn(query);
         when(query.setParameter("nombre", "Matematica")).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
@@ -173,11 +157,13 @@ class PruebaDAOTest {
         verify(query).getResultList();
     }
 
+    /**
+     * Verifica que el DAO aplica trim al parámetro nombre,
+     * asegurando que la consulta reciba el valor sin espacios externos.
+     */
 
-    //verifica que el DAO limpia los espacios del nombre antes de enviarlo a la base.
-    // el nombre entra con espacios y el verify confirma que llego limpio al mock
     @Test
-    void findByNombre_cuandoNombreConEspacios_deberiaAplicarTrim() {
+    void testFindByNombreAplicaTrimAlParametro() {
         when(em.createNamedQuery("Prueba.findByNombre", Prueba.class)).thenReturn(query);
         when(query.setParameter("nombre", "Matematica")).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
@@ -189,9 +175,8 @@ class PruebaDAOTest {
         verify(query).setParameter("nombre", "Matematica");
     }
 
-    // Cuando la base no encuentra ninguna prueba con ese nombre, se devuelve lista vacia sin excepcion
     @Test
-    void findByNombre_cuandoNoHayResultados_deberiaRetornarListaVacia() {
+    void testFindByNombreRetornaListaVacia() {
         when(em.createNamedQuery("Prueba.findByNombre", Prueba.class)).thenReturn(query);
         when(query.setParameter("nombre", "XYZ")).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
@@ -204,9 +189,8 @@ class PruebaDAOTest {
         assertTrue(resultado.isEmpty());
     }
 
-    // La BD falla, el DAO envuelve el error en ISE
     @Test
-    void findByNombre_cuandoErrorInterno_deberiaLanzarISE() {
+    void testFindByNombreErrorInterno() {
         when(em.createNamedQuery("Prueba.findByNombre", Prueba.class))
                 .thenThrow(new RuntimeException("fallo en la Base de Datos"));
 
@@ -214,10 +198,9 @@ class PruebaDAOTest {
                 () -> dao.findByNombre("Matematica", 0, 10));
     }
 
-    // El EntityManager es nulo, el DAO captura el error y lanza ISE
     @Test
-    void findByNombre_cuandoEmNulo_deberiaLanzarISE() {
+    void testFindByNombreEntityManagerNulo() {
         assertThrows(IllegalStateException.class,
-                () -> daoConEmNulo().findByNombre("Matematica", 0, 10));
+                () -> daoConEntityNulo().findByNombre("Matematica", 0, 10));
     }
 }

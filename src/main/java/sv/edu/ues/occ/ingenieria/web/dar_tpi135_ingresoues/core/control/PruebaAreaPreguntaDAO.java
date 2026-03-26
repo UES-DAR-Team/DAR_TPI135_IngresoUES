@@ -31,8 +31,8 @@ public class PruebaAreaPreguntaDAO extends IngresoDefaultDataAcces<PruebaAreaPre
         return PruebaAreaPregunta.class;
     }
 
-//Busca todas las preguntas asignadas a un área específica de una prueba
-    public List<PruebaAreaPregunta> findByPruebaArea(Integer idPruebaArea, int first, int max) {
+    public List<PruebaAreaPregunta> findByPruebaArea(Integer idPruebaArea, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
     if (idPruebaArea == null) {
         throw new IllegalArgumentException("idPruebaArea inválido");
     }
@@ -51,8 +51,8 @@ public class PruebaAreaPreguntaDAO extends IngresoDefaultDataAcces<PruebaAreaPre
     }
 }
 
-    // en que areas de prueba aparece una pregunta especifica
-    public List<PruebaAreaPregunta> findByPregunta(Integer idPregunta, int first, int max) {
+    public List<PruebaAreaPregunta> findByPregunta(Integer idPregunta, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
         if (idPregunta == null) {
             throw new IllegalArgumentException("idPregunta inválido");
         }

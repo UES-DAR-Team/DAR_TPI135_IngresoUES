@@ -31,7 +31,7 @@ class PruebaAreaPreguntaDistractorDAOTest {
     PruebaAreaPreguntaDistractorDAO dao;
 
     @BeforeEach
-    void setup() {
+    void setUp() {
         dao = new PruebaAreaPreguntaDistractorDAO() {
             @Override
             public EntityManager getEntityManager() {
@@ -40,8 +40,7 @@ class PruebaAreaPreguntaDistractorDAOTest {
         };
     }
 
-    // Retorna un DAO donde el EntityManager es nulo, haciendo simular un fallo de inyeccion
-    private PruebaAreaPreguntaDistractorDAO daoConEmNulo() {
+    private PruebaAreaPreguntaDistractorDAO daoConEntityNulo() {
         return new PruebaAreaPreguntaDistractorDAO() {
             @Override
             public EntityManager getEntityManager() {
@@ -50,8 +49,6 @@ class PruebaAreaPreguntaDistractorDAOTest {
         };
     }
 
-    // construye un PruebaAreaPreguntaDistractor valido para los tests con resultados esperados
-    // necesita instanciar PruebaAreaPregunta y Distractor primero porq son relaciones obligatorias
     private PruebaAreaPreguntaDistractor distractorValido() {
         PruebaAreaPregunta pap = new PruebaAreaPregunta();
         pap.setId(1);
@@ -68,32 +65,26 @@ class PruebaAreaPreguntaDistractorDAOTest {
         return d;
     }
 
-    // findByPruebaAreaPregunta ----------------------------------
-
-    // El id de la pregunta es nulo, el DAO debe rechazarlo antes de consultar la BD
     @Test
-    void findByPruebaAreaPregunta_cuandoIdNulo_deberiaLanzarIAE() {
+    void testFindByPruebaAreaPreguntaParametroNulo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPruebaAreaPregunta(null, 0, 10));
     }
 
-    // El parametro first es negativo, cada condicion se prueba por separado
     @Test
-    void findByPruebaAreaPregunta_cuandoFirstNegativo_deberiaLanzarIAE() {
+    void testFindByPruebaAreaPreguntaFirstNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPruebaAreaPregunta(1, -1, 10));
     }
 
-    // El parametro max es cero, separado del anterior para identificar cual falla
     @Test
-    void findByPruebaAreaPregunta_cuandoMaxCeroONegativo_deberiaLanzarIAE() {
+    void testFindByPruebaAreaPreguntaMaxCeroNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPruebaAreaPregunta(1, 0, 0));
     }
 
-    // Todos los parametros son validos, se verifica que la query se ejecute correctamente
     @Test
-    void findByPruebaAreaPregunta_cuandoParametrosValidos_deberiaRetornarLista() {
+    void testFindByPruebaAreaPreguntaParametrosValidosRetornaLista() {
         when(em.createNamedQuery("PruebaAreaPreguntaDistractor.findByPruebaAreaPregunta",
                 PruebaAreaPreguntaDistractor.class)).thenReturn(query);
         when(query.setParameter("idPruebaAreaPregunta", 1)).thenReturn(query);
@@ -113,9 +104,8 @@ class PruebaAreaPreguntaDistractorDAOTest {
         verify(query).getResultList();
     }
 
-    // No hay distractores para esa pregunta, se devuelve lista vacia sin excepcion
     @Test
-    void findByPruebaAreaPregunta_cuandoNoHayResultados_deberiaRetornarListaVacia() {
+    void testFindByPruebaAreaPreguntaRetornaListaVacia() {
         when(em.createNamedQuery("PruebaAreaPreguntaDistractor.findByPruebaAreaPregunta",
                 PruebaAreaPreguntaDistractor.class)).thenReturn(query);
         when(query.setParameter("idPruebaAreaPregunta", 1)).thenReturn(query);
@@ -130,9 +120,8 @@ class PruebaAreaPreguntaDistractorDAOTest {
         assertTrue(resultado.isEmpty());
     }
 
-    // La BD falla, el DAO debe envolver el error en ISE
     @Test
-    void findByPruebaAreaPregunta_cuandoErrorInterno_deberiaLanzarISE() {
+    void testFindByPruebaAreaPreguntaErrorInterno() {
         when(em.createNamedQuery("PruebaAreaPreguntaDistractor.findByPruebaAreaPregunta",
                 PruebaAreaPreguntaDistractor.class))
                 .thenThrow(new RuntimeException("fallo en la Base de Datos"));
@@ -141,27 +130,23 @@ class PruebaAreaPreguntaDistractorDAOTest {
                 () -> dao.findByPruebaAreaPregunta(1, 0, 10));
     }
 
-    // El EntityManager es nulo, el DAO debe capturar el error y lanzar ISE
     @Test
-    void findByPruebaAreaPregunta_cuandoEmNulo_deberiaLanzarISE() {
+    void testFindByPruebaAreaPreguntaEntityManagerNulo() {
         assertThrows(IllegalStateException.class,
-                () -> daoConEmNulo().findByPruebaAreaPregunta(1, 0, 10));
+                () -> daoConEntityNulo().findByPruebaAreaPregunta(1, 0, 10));
     }
 
-    // findRespuestaCorrecta ----------------------------------
-    // Devuelve un solo objeto con getSingleResult en lugar de una lista si no hay respuesta correcta lanza NoResultException que el DAO captura y retorna null
-    // Solo hay una respuesta correcta por pregunta
-
-    // El id de la pregunta es nulo, el DAO debe rechazarlo antes de consultar la BD
+    // Verifica el uso de getSingleResult para obtener la respuesta correcta.
+    // Si no existe una respuesta, se lanza NoResultException, la cual es capturada por el DAO
+    // retornando null. Se asume que solo existe una respuesta correcta por pregunta.
     @Test
-    void findRespuestaCorrecta_cuandoIdNulo_deberiaLanzarIAE() {
+    void testFindRespuestaCorrectaParametroNulo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findRespuestaCorrecta(null));
     }
 
-    // Hay una respuesta correcta, se devuelve el objeto encontrado
     @Test
-    void findRespuestaCorrecta_cuandoExisteRespuesta_deberiaRetornarObjeto() {
+    void testFindRespuestaCorrectaRetornaObjeto() {
         when(em.createNamedQuery("PruebaAreaPreguntaDistractor.findRespuestaCorrecta",
                 PruebaAreaPreguntaDistractor.class)).thenReturn(query);
         when(query.setParameter("idPruebaAreaPregunta", 1)).thenReturn(query);
@@ -176,9 +161,9 @@ class PruebaAreaPreguntaDistractorDAOTest {
         verify(query).getSingleResult();
     }
 
-    // La pregunta no tiene respuesta correcta asignada, el DAO captura NoResultException y retorna null
+
     @Test
-    void findRespuestaCorrecta_cuandoNoHayRespuesta_deberiaRetornarNull() {
+    void testFindRespuestaCorrectaRetornaNull() {
         when(em.createNamedQuery("PruebaAreaPreguntaDistractor.findRespuestaCorrecta",
                 PruebaAreaPreguntaDistractor.class)).thenReturn(query);
         when(query.setParameter("idPruebaAreaPregunta", 1)).thenReturn(query);
@@ -189,9 +174,8 @@ class PruebaAreaPreguntaDistractorDAOTest {
         assertNull(resultado);
     }
 
-    // La BD falla con un error distinto a NoResultException, el DAO lanza ISE
     @Test
-    void findRespuestaCorrecta_cuandoErrorInterno_deberiaLanzarISE() {
+    void testFindRespuestaCorrectaErrorInterno() {
         when(em.createNamedQuery("PruebaAreaPreguntaDistractor.findRespuestaCorrecta",
                 PruebaAreaPreguntaDistractor.class))
                 .thenThrow(new RuntimeException("fallo en la Base de Datos"));
@@ -200,39 +184,32 @@ class PruebaAreaPreguntaDistractorDAOTest {
                 () -> dao.findRespuestaCorrecta(1));
     }
 
-    // El EntityManager es nulo, el DAO debe capturar el error y lanzar ISE
     @Test
-    void findRespuestaCorrecta_cuandoEmNulo_deberiaLanzarISE() {
+    void testFindRespuestaCorrectaEntityManagerNulo() {
         assertThrows(IllegalStateException.class,
-                () -> daoConEmNulo().findRespuestaCorrecta(1));
+                () -> daoConEntityNulo().findRespuestaCorrecta(1));
     }
 
-    // findByDistractor ----------------------------------
-
-    // El id del distractor es nulo, el DAO debe rechazarlo antes de consultar la BD
     @Test
-    void findByDistractor_cuandoIdNulo_deberiaLanzarIAE() {
+    void testFindByDistractorParametroNulo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByDistractor(null, 0, 10));
     }
 
-    // El parametro first es negativo, cada condicion se prueba por separado
     @Test
-    void findByDistractor_cuandoFirstNegativo_deberiaLanzarIAE() {
+    void testFindByDistractorFirstNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByDistractor(1, -1, 10));
     }
 
-    // El parametro max es cero, separado del anterior para identificar cual falla
     @Test
-    void findByDistractor_cuandoMaxCeroONegativo_deberiaLanzarIAE() {
+    void testFindByDistractorMaxCeroNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByDistractor(1, 0, 0));
     }
 
-    // Todos los parametros son validos, se verifica que la query se ejecute correctamente
     @Test
-    void findByDistractor_cuandoParametrosValidos_deberiaRetornarLista() {
+    void testFindByDistractorParametrosValidosRetornaLista() {
         when(em.createNamedQuery("PruebaAreaPreguntaDistractor.findByDistractor",
                 PruebaAreaPreguntaDistractor.class)).thenReturn(query);
         when(query.setParameter("idDistractor", 1)).thenReturn(query);
@@ -253,9 +230,8 @@ class PruebaAreaPreguntaDistractorDAOTest {
         verify(query).getResultList();
     }
 
-    // No hay preguntas que usen ese distractor, se devuelve lista vacia sin excepcion
     @Test
-    void findByDistractor_cuandoNoHayResultados_deberiaRetornarListaVacia() {
+    void testFindByDistractorRetornarListaVacia() {
         when(em.createNamedQuery("PruebaAreaPreguntaDistractor.findByDistractor",
                 PruebaAreaPreguntaDistractor.class)).thenReturn(query);
         when(query.setParameter("idDistractor", 1)).thenReturn(query);
@@ -270,9 +246,8 @@ class PruebaAreaPreguntaDistractorDAOTest {
         assertTrue(resultado.isEmpty());
     }
 
-    // La base falla, el DAO debe envolver el error en ISE
     @Test
-    void findByDistractor_cuandoErrorInterno_deberiaLanzarISE() {
+    void testFindByDistractorErrorInterno() {
         when(em.createNamedQuery("PruebaAreaPreguntaDistractor.findByDistractor",
                 PruebaAreaPreguntaDistractor.class))
                 .thenThrow(new RuntimeException("fallo en la Base de Datos"));
@@ -281,10 +256,9 @@ class PruebaAreaPreguntaDistractorDAOTest {
                 () -> dao.findByDistractor(1, 0, 10));
     }
 
-    // El EntityManager es nulo, el DAO debe capturar el error y lanzar ISE
     @Test
-    void findByDistractor_cuandoEmNulo_deberiaLanzarISE() {
+    void testFindByDistractorEntityManagerNulo() {
         assertThrows(IllegalStateException.class,
-                () -> daoConEmNulo().findByDistractor(1, 0, 10));
+                () -> daoConEntityNulo().findByDistractor(1, 0, 10));
     }
 }

@@ -32,8 +32,8 @@ public class PruebaAreaPreguntaDistractorDAO extends IngresoDefaultDataAcces<Pru
         return PruebaAreaPreguntaDistractor.class;
     }
 
-    //para buscar distractores de una pregunta ordenados por id
-    public List<PruebaAreaPreguntaDistractor> findByPruebaAreaPregunta(Integer idPruebaAreaPregunta, int first, int max) {
+    public List<PruebaAreaPreguntaDistractor> findByPruebaAreaPregunta(Integer idPruebaAreaPregunta, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
         if (idPruebaAreaPregunta == null) {
             throw new IllegalArgumentException("idPruebaAreaPregunta inválido");
         }
@@ -52,8 +52,16 @@ public class PruebaAreaPreguntaDistractorDAO extends IngresoDefaultDataAcces<Pru
         }
     }
 
-    //para obtener la respuesta correcta de una pregunta, retorna null si la pregunta no tiene respuesta correcta asignada
-    public PruebaAreaPreguntaDistractor findRespuestaCorrecta(Integer idPruebaAreaPregunta) {
+    /**
+     * Obtiene la respuesta correcta de una pregunta específica. Si la pregunta no tiene respuesta correcta asignada, retorna null.
+     *
+     * @param idPruebaAreaPregunta ID de la pregunta a consultar. No debe ser null.
+     * @return La respuesta correcta de la pregunta, o null si no tiene ninguna asignada.
+     * @throws IllegalArgumentException si idPruebaAreaPregunta es null.
+     * @throws IllegalStateException si ocurre un error al consultar la base de datos.
+     */
+    public PruebaAreaPreguntaDistractor findRespuestaCorrecta(Integer idPruebaAreaPregunta)
+            throws IllegalArgumentException, IllegalStateException {
         if (idPruebaAreaPregunta == null) {
             throw new IllegalArgumentException("idPruebaAreaPregunta inválido");
         }
@@ -69,8 +77,8 @@ public class PruebaAreaPreguntaDistractorDAO extends IngresoDefaultDataAcces<Pru
         }
     }
 
-    //en que preguntas aparece un distractor especifico
-    public List<PruebaAreaPreguntaDistractor> findByDistractor(Integer idDistractor, int first, int max) {
+    public List<PruebaAreaPreguntaDistractor> findByDistractor(Integer idDistractor, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
         if (idDistractor == null) {
             throw new IllegalArgumentException("idDistractor inválido");
         }

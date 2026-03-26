@@ -30,7 +30,7 @@ class PruebaAreaPreguntaDAOTest {
     PruebaAreaPreguntaDAO dao;
 
     @BeforeEach
-    void setup() {
+    void setUp() {
         dao = new PruebaAreaPreguntaDAO() {
             @Override
             public EntityManager getEntityManager() {
@@ -39,8 +39,7 @@ class PruebaAreaPreguntaDAOTest {
         };
     }
 
-    // Retorna un DAO cuyo EntityManager es nulo, que simule un fallo de inyeccion
-    private PruebaAreaPreguntaDAO daoConEmNulo() {
+    private PruebaAreaPreguntaDAO daoConEntityManagerNulo() {
         return new PruebaAreaPreguntaDAO() {
             @Override
             public EntityManager getEntityManager() {
@@ -49,8 +48,6 @@ class PruebaAreaPreguntaDAOTest {
         };
     }
 
-    // Construye una PruebaAreaPregunta valida para los tests con resultados esperados
-    // Necesita instanciar PruebaArea y Pregunta primero porque son relaciones obligatorias
     private PruebaAreaPregunta pruebaAreaPreguntaValida() {
         PruebaArea pruebaArea = new PruebaArea();
         pruebaArea.setId(1);
@@ -67,32 +64,26 @@ class PruebaAreaPreguntaDAOTest {
         return pap;
     }
 
-    // findByPruebaArea ----------------------------------
-
-    // El id del area de prueba es nulo, el DAO debe rechazarlo antes de consultar la BD
     @Test
-    void findByPruebaArea_cuandoIdNulo_deberiaLanzarIAE() {
+    void testFindByPruebaAreaIdNulo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPruebaArea(null, 0, 10));
     }
 
-    // El parametro first es negativo, cada condicion se prueba por separado
     @Test
-    void findByPruebaArea_cuandoFirstNegativo_deberiaLanzarIAE() {
+    void testFindByPruebaAreaFirstNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPruebaArea(1, -1, 10));
     }
 
-    // El parametro max es cero, separado del anterior para identificar cual falla
     @Test
-    void findByPruebaArea_cuandoMaxCeroONegativo_deberiaLanzarIAE() {
+    void testFindByPruebaAreaMaxCeroNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPruebaArea(1, 0, 0));
     }
 
-    // Todos los parametros son validos, se verifica que la query se ejecute correctamente
     @Test
-    void findByPruebaArea_cuandoParametrosValidos_deberiaRetornarLista() {
+    void testFindByPruebaAreaParametrosValidosRetornaLista() {
         when(em.createNamedQuery("PruebaAreaPregunta.findByPruebaArea", PruebaAreaPregunta.class)).thenReturn(query);
         when(query.setParameter("idPruebaArea", 1)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
@@ -110,9 +101,8 @@ class PruebaAreaPreguntaDAOTest {
         verify(query).getResultList();
     }
 
-    // No hay preguntas asignadas a ese area, se devuelve lista vacia sin excepcion
     @Test
-    void findByPruebaArea_cuandoNoHayResultados_deberiaRetornarListaVacia() {
+    void testFindByPruebaAreaRetornaListaVacia() {
         when(em.createNamedQuery("PruebaAreaPregunta.findByPruebaArea", PruebaAreaPregunta.class)).thenReturn(query);
         when(query.setParameter("idPruebaArea", 1)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
@@ -125,9 +115,8 @@ class PruebaAreaPreguntaDAOTest {
         assertTrue(resultado.isEmpty());
     }
 
-    // La BD falla, el DAO debe envolver el error en ISE
     @Test
-    void findByPruebaArea_cuandoErrorInterno_deberiaLanzarISE() {
+    void testFindByPruebaAreaErrorInterno() {
         when(em.createNamedQuery("PruebaAreaPregunta.findByPruebaArea", PruebaAreaPregunta.class))
                 .thenThrow(new RuntimeException("fallo en la Base de Datos"));
 
@@ -135,39 +124,32 @@ class PruebaAreaPreguntaDAOTest {
                 () -> dao.findByPruebaArea(1, 0, 10));
     }
 
-    // El EntityManager es nulo, el DAO debe capturar el error y lanzar ISE
     @Test
-    void findByPruebaArea_cuandoEmNulo_deberiaLanzarISE() {
+    void testFindByPruebaAreaEntityManagerNulo() {
         assertThrows(IllegalStateException.class,
-                () -> daoConEmNulo().findByPruebaArea(1, 0, 10));
+                () -> daoConEntityManagerNulo().findByPruebaArea(1, 0, 10));
     }
 
-    // findByPregunta ----------------------------------
-
-    // El id de la pregunta es nulo, el DAO debe rechazarlo antes de consultar la BD
     @Test
-    void findByPregunta_cuandoIdNulo_deberiaLanzarIAE() {
+    void testFindByPreguntaIdNulo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPregunta(null, 0, 10));
     }
 
-    // El parametro first es negativo, cada condicion se prueba por separado
     @Test
-    void findByPregunta_cuandoFirstNegativo_deberiaLanzarIAE() {
+    void testFindByPreguntaFirstNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPregunta(1, -1, 10));
     }
 
-    // El parametro max es cero, separado del anterior para identificar cual falla
     @Test
-    void findByPregunta_cuandoMaxCeroONegativo_deberiaLanzarIAE() {
+    void testFindByPreguntaMaxCeroNegativo() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByPregunta(1, 0, 0));
     }
 
-    // Todos los parametros son validos, se verifica que la query se ejecute correctamente
     @Test
-    void findByPregunta_cuandoParametrosValidos_deberiaRetornarLista() {
+    void testFindByPreguntaParametrosValidosRetornaLista() {
         when(em.createNamedQuery("PruebaAreaPregunta.findByPregunta", PruebaAreaPregunta.class)).thenReturn(query);
         when(query.setParameter("idPregunta", 1)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
@@ -185,9 +167,8 @@ class PruebaAreaPreguntaDAOTest {
         verify(query).getResultList();
     }
 
-    // No hay areas de prueba que contengan esa pregunta, se devuelve lista vacia sin excepcion
     @Test
-    void findByPregunta_cuandoNoHayResultados_deberiaRetornarListaVacia() {
+    void testFindByPreguntaRetornaListaVacia() {
         when(em.createNamedQuery("PruebaAreaPregunta.findByPregunta", PruebaAreaPregunta.class)).thenReturn(query);
         when(query.setParameter("idPregunta", 1)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
@@ -200,9 +181,8 @@ class PruebaAreaPreguntaDAOTest {
         assertTrue(resultado.isEmpty());
     }
 
-    // La BD falla, el DAO debe envolver el error en ISE
     @Test
-    void findByPregunta_cuandoErrorInterno_deberiaLanzarISE() {
+    void testFindByPreguntaErrorInterno() {
         when(em.createNamedQuery("PruebaAreaPregunta.findByPregunta", PruebaAreaPregunta.class))
                 .thenThrow(new RuntimeException("fallo en la Base de Datos"));
 
@@ -210,10 +190,9 @@ class PruebaAreaPreguntaDAOTest {
                 () -> dao.findByPregunta(1, 0, 10));
     }
 
-    // El EntityManager es nulo, el DAO debe capturar el error y lanzar ISE
     @Test
-    void findByPregunta_cuandoEmNulo_deberiaLanzarISE() {
+    void testFindByPreguntaEntityManagerNulo() {
         assertThrows(IllegalStateException.class,
-                () -> daoConEmNulo().findByPregunta(1, 0, 10));
+                () -> daoConEntityManagerNulo().findByPregunta(1, 0, 10));
     }
 }

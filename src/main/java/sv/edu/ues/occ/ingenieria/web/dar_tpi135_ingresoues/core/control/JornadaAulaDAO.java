@@ -31,47 +31,103 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
         return JornadaAula.class;
     }
 
-    public List<JornadaAula> buscarPorJornada(Integer idJornada, int first, int max) {
+    public List<JornadaAula> findByJornada(Integer idJornada, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (idJornada == null) {
+            throw new IllegalArgumentException("Id de jornada inválido");
+        }
+
+        if (first < 0 || max <= 0) {
+            throw new IllegalArgumentException("Parámetros de paginación inválidos");
+        }
+
         try {
-            if (idJornada != null && first >= 0 && max > 0) {
+            TypedQuery<JornadaAula> q = getEntityManager().createNamedQuery(
+                    "JornadaAula.buscarPorJornada",
+                    JornadaAula.class
+            );
 
-                TypedQuery<JornadaAula> q = em.createNamedQuery(
-                        "JornadaAula.buscarPorJornada",
-                        JornadaAula.class
-                );
+            q.setParameter("idJornada", idJornada);
+            q.setFirstResult(first);
+            q.setMaxResults(max);
 
-                q.setParameter("idJornada", idJornada);
-                q.setFirstResult(first);
-                q.setMaxResults(max);
+            return q.getResultList();
 
-                return q.getResultList();
-            }
         } catch (Exception ex) {
             throw new IllegalStateException("Error al buscar aulas por jornada", ex);
         }
-
-        return List.of();
     }
 
-    public List<JornadaAula> buscarPorAula(Integer idAula, int first, int max) {
+    public List<JornadaAula> findByAula(Integer idAula, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (idAula == null) {
+            throw new IllegalArgumentException("Id de aula inválido");
+        }
+
+        if (first < 0 || max <= 0) {
+            throw new IllegalArgumentException("Parámetros de paginación inválidos");
+        }
+
         try {
-            if (idAula != null && first >= 0 && max > 0) {
+            TypedQuery<JornadaAula> q = getEntityManager().createNamedQuery(
+                    "JornadaAula.buscarPorAula",
+                    JornadaAula.class
+            );
 
-                TypedQuery<JornadaAula> q = em.createNamedQuery(
-                        "JornadaAula.buscarPorAula",
-                        JornadaAula.class
-                );
+            q.setParameter("idAula", idAula);
+            q.setFirstResult(first);
+            q.setMaxResults(max);
 
-                q.setParameter("idAula", idAula);
-                q.setFirstResult(first);
-                q.setMaxResults(max);
+            return q.getResultList();
 
-                return q.getResultList();
-            }
         } catch (Exception ex) {
             throw new IllegalStateException("Error al buscar jornadas por aula", ex);
         }
+    }
 
-        return List.of();
+    public Long countByJornada(Integer idJornada)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (idJornada == null) {
+            throw new IllegalArgumentException("Id de jornada inválido");
+        }
+
+        try {
+            TypedQuery<Long> q = getEntityManager().createQuery(
+                    "SELECT COUNT(ja) FROM JornadaAula ja WHERE ja.idJornada.id = :idJornada",
+                    Long.class
+            );
+
+            q.setParameter("idJornada", idJornada);
+
+            return q.getSingleResult();
+
+        } catch (Exception ex) {
+            throw new IllegalStateException("Error al contar aulas por jornada", ex);
+        }
+    }
+
+    public Long countByAula(Integer idAula)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (idAula == null) {
+            throw new IllegalArgumentException("Id de aula inválido");
+        }
+
+        try {
+            TypedQuery<Long> q = getEntityManager().createQuery(
+                    "SELECT COUNT(ja) FROM JornadaAula ja WHERE ja.idAula.id = :idAula",
+                    Long.class
+            );
+
+            q.setParameter("idAula", idAula);
+
+            return q.getSingleResult();
+
+        } catch (Exception ex) {
+            throw new IllegalStateException("Error al contar jornadas por aula", ex);
+        }
     }
 }

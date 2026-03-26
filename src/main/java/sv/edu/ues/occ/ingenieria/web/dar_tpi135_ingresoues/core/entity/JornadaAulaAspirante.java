@@ -20,6 +20,14 @@ import java.time.OffsetDateTime;
         @NamedQuery(
                 name = "JornadaAulaAspirante.buscarPorAsistencia",
                 query = "SELECT jaa FROM JornadaAulaAspirante jaa WHERE jaa.asistio = :asistio"
+        ),
+        @NamedQuery(
+                name = "JornadaAulaAspirante.countByJornadaAula",
+                query = "SELECT COUNT(jaa) FROM JornadaAulaAspirante jaa WHERE jaa.idJornadaAula.id = :idJornadaAula"
+        ),
+        @NamedQuery(
+                name = "JornadaAulaAspirante.countByAsistencia",
+                query = "SELECT COUNT(jaa) FROM JornadaAulaAspirante jaa WHERE jaa.asistio = :asistio"
         )
 })
 public class JornadaAulaAspirante {

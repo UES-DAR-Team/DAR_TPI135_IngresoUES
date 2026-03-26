@@ -25,30 +25,139 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
     public EntityManager getEntityManager() {
         return em;
     }
+
     @Override
     protected Class<Aspirante> getEntityClass() {
         return Aspirante.class;
     }
 
-    public List<Aspirante> buscarAspirantePorNombre(String nombre, int first, int max) {
+    // 🔹 Buscar por nombre
+    public List<Aspirante> findByNombre(String nombre, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("Nombre inválido");
+        }
+
+        if (first < 0 || max <= 0) {
+            throw new IllegalArgumentException("Parámetros de paginación inválidos");
+        }
+
         try {
-            if (nombre != null && !nombre.isBlank() && first >= 0 && max > 0) {
+            TypedQuery<Aspirante> q = getEntityManager().createNamedQuery(
+                    "Aspirante.buscarAspirantePorNombre",
+                    Aspirante.class
+            );
 
-                TypedQuery<Aspirante> q = em.createNamedQuery(
-                        "Aspirante.buscarAspirantePorNombre",
-                        Aspirante.class
-                );
+            q.setParameter("nombre", "%" + nombre.trim().toUpperCase() + "%");
+            q.setFirstResult(first);
+            q.setMaxResults(max);
 
-                q.setParameter("nombre", "%" + nombre.toUpperCase() + "%");
-                q.setFirstResult(first);
-                q.setMaxResults(max);
+            return q.getResultList();
 
-                return q.getResultList();
-            }
         } catch (Exception ex) {
             throw new IllegalStateException("Error al buscar aspirantes por nombre", ex);
         }
+    }
 
-        return List.of();
+    public List<Aspirante> findActivos(int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (first < 0 || max <= 0) {
+            throw new IllegalArgumentException("Parámetros de paginación inválidos");
+        }
+
+        try {
+            TypedQuery<Aspirante> q = getEntityManager().createNamedQuery(
+                    "Aspirante.findActivos",
+                    Aspirante.class
+            );
+
+            q.setFirstResult(first);
+            q.setMaxResults(max);
+
+            return q.getResultList();
+
+        } catch (Exception ex) {
+            throw new IllegalStateException("Error al buscar aspirantes activos", ex);
+        }
+    }
+
+    public List<Aspirante> findByDocumento(String documento, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (documento == null || documento.isBlank()) {
+            throw new IllegalArgumentException("Documento inválido");
+        }
+
+        if (first < 0 || max <= 0) {
+            throw new IllegalArgumentException("Parámetros de paginación inválidos");
+        }
+
+        try {
+            TypedQuery<Aspirante> q = getEntityManager().createNamedQuery(
+                    "Aspirante.findByDocumento",
+                    Aspirante.class
+            );
+
+            q.setParameter("documento", documento.trim());
+            q.setFirstResult(first);
+            q.setMaxResults(max);
+
+            return q.getResultList();
+
+        } catch (Exception ex) {
+            throw new IllegalStateException("Error al buscar aspirantes por documento", ex);
+        }
+    }
+
+    public List<Aspirante> findByEstado(String estado, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (estado == null || estado.isBlank()) {
+            throw new IllegalArgumentException("Estado inválido");
+        }
+
+        if (first < 0 || max <= 0) {
+            throw new IllegalArgumentException("Parámetros de paginación inválidos");
+        }
+
+        try {
+            TypedQuery<Aspirante> q = getEntityManager().createNamedQuery(
+                    "Aspirante.findByEstado",
+                    Aspirante.class
+            );
+
+            q.setParameter("estado", estado.trim());
+            q.setFirstResult(first);
+            q.setMaxResults(max);
+
+            return q.getResultList();
+
+        } catch (Exception ex) {
+            throw new IllegalStateException("Error al buscar aspirantes por estado", ex);
+        }
+    }
+
+    public Long countByNombre(String nombre)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("Nombre inválido");
+        }
+
+        try {
+            TypedQuery<Long> q = getEntityManager().createNamedQuery(
+                    "Aspirante.countByNombre",
+                    Long.class
+            );
+
+            q.setParameter("nombre", "%" + nombre.trim().toUpperCase() + "%");
+
+            return q.getSingleResult();
+
+        } catch (Exception ex) {
+            throw new IllegalStateException("Error al contar aspirantes por nombre", ex);
+        }
     }
 }

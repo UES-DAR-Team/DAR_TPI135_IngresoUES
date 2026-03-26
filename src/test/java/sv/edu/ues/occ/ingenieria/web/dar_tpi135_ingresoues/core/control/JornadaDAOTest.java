@@ -2,7 +2,6 @@ package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -25,15 +24,14 @@ class JornadaDAOTest {
     @Mock
     private TypedQuery<Jornada> query;
 
+    @Mock
+    private TypedQuery<Long> queryLong;
+
     @InjectMocks
     private JornadaDAO dao;
 
-    @BeforeEach
-    void setUp() {
-    }
-
     @Test
-    void debeRetornarLista_buscarPorNombre() {
+    void debeRetornarLista_findByNombre() {
 
         List<Jornada> lista = List.of(new Jornada());
 
@@ -43,12 +41,11 @@ class JornadaDAOTest {
         when(query.setMaxResults(anyInt())).thenReturn(query);
         when(query.getResultList()).thenReturn(lista);
 
-        List<Jornada> result = dao.buscarPorNombre("mañana", 0, 10);
+        List<Jornada> result = dao.findByNombre("mañana", 0, 10);
 
         assertNotNull(result);
         assertEquals(1, result.size());
 
-        // 🔥 Validar que convierte a MAYÚSCULA y usa LIKE
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(query).setParameter(eq("nombre"), captor.capture());
 
@@ -56,50 +53,35 @@ class JornadaDAOTest {
     }
 
     @Test
-    void retornaVacio_siNombreNull() {
-        assertTrue(dao.buscarPorNombre(null, 0, 10).isEmpty());
+    void lanzaException_nombreNull_findByNombre() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.findByNombre(null, 0, 10));
     }
 
     @Test
-    void retornaVacio_siNombreVacio() {
-        assertTrue(dao.buscarPorNombre("   ", 0, 10).isEmpty());
+    void lanzaException_nombreVacio_findByNombre() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.findByNombre("   ", 0, 10));
     }
 
     @Test
-    void retornaVacio_siFirstNegativo_buscarPorNombre() {
-        assertTrue(dao.buscarPorNombre("test", -1, 10).isEmpty());
+    void lanzaException_paginacionInvalida_findByNombre() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.findByNombre("test", -1, 10));
     }
 
     @Test
-    void retornaVacio_siMaxInvalido_buscarPorNombre() {
-        assertTrue(dao.buscarPorNombre("test", 0, 0).isEmpty());
-    }
-
-    @Test
-    void lanzaIllegalState_siFallaCreateNamedQuery_buscarPorNombre() {
+    void lanzaIllegalState_findByNombre() {
 
         when(em.createNamedQuery(anyString(), eq(Jornada.class)))
                 .thenThrow(new RuntimeException());
 
         assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorNombre("test", 0, 10));
+                () -> dao.findByNombre("test", 0, 10));
     }
 
     @Test
-    void lanzaIllegalState_siFallaGetResultList_buscarPorNombre() {
-
-        when(em.createNamedQuery(anyString(), eq(Jornada.class))).thenReturn(query);
-        when(query.setParameter(anyString(), any())).thenReturn(query);
-        when(query.setFirstResult(anyInt())).thenReturn(query);
-        when(query.setMaxResults(anyInt())).thenReturn(query);
-        when(query.getResultList()).thenThrow(new RuntimeException());
-
-        assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorNombre("test", 0, 10));
-    }
-
-    @Test
-    void debeRetornarLista_buscarPorActivo() {
+    void debeRetornarLista_findByActivo() {
 
         List<Jornada> lista = List.of(new Jornada());
 
@@ -109,48 +91,88 @@ class JornadaDAOTest {
         when(query.setMaxResults(anyInt())).thenReturn(query);
         when(query.getResultList()).thenReturn(lista);
 
-        List<Jornada> result = dao.buscarPorActivo(true, 0, 10);
+        List<Jornada> result = dao.findByActivo(true, 0, 10);
 
         assertNotNull(result);
         assertEquals(1, result.size());
     }
 
     @Test
-    void retornaVacio_siActivoNull() {
-        assertTrue(dao.buscarPorActivo(null, 0, 10).isEmpty());
+    void lanzaException_activoNull_findByActivo() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.findByActivo(null, 0, 10));
     }
 
     @Test
-    void retornaVacio_siFirstNegativo_buscarPorActivo() {
-        assertTrue(dao.buscarPorActivo(true, -1, 10).isEmpty());
+    void lanzaException_paginacionInvalida_findByActivo() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.findByActivo(true, -1, 10));
     }
 
     @Test
-    void retornaVacio_siMaxInvalido_buscarPorActivo() {
-        assertTrue(dao.buscarPorActivo(true, 0, 0).isEmpty());
-    }
-
-    @Test
-    void lanzaIllegalState_siFallaCreateNamedQuery_buscarPorActivo() {
+    void lanzaIllegalState_findByActivo() {
 
         when(em.createNamedQuery(anyString(), eq(Jornada.class)))
                 .thenThrow(new RuntimeException());
 
         assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorActivo(true, 0, 10));
+                () -> dao.findByActivo(true, 0, 10));
     }
 
     @Test
-    void lanzaIllegalState_siFallaGetResultList_buscarPorActivo() {
+    void debeContarPorNombre() {
 
-        when(em.createNamedQuery(anyString(), eq(Jornada.class))).thenReturn(query);
-        when(query.setParameter(anyString(), any())).thenReturn(query);
-        when(query.setFirstResult(anyInt())).thenReturn(query);
-        when(query.setMaxResults(anyInt())).thenReturn(query);
-        when(query.getResultList()).thenThrow(new RuntimeException());
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(anyString(), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(5L);
+
+        Long result = dao.countByNombre("test");
+
+        assertEquals(5L, result);
+    }
+
+    @Test
+    void lanzaException_nombreNull_countByNombre() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.countByNombre(null));
+    }
+
+    @Test
+    void lanzaIllegalState_countByNombre() {
+
+        when(em.createNamedQuery(anyString(), eq(Long.class)))
+                .thenThrow(new RuntimeException());
 
         assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorActivo(true, 0, 10));
+                () -> dao.countByNombre("test"));
+    }
+
+    @Test
+    void debeContarPorActivo() {
+
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(anyString(), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(3L);
+
+        Long result = dao.countByActivo(true);
+
+        assertEquals(3L, result);
+    }
+
+    @Test
+    void lanzaException_activoNull_countByActivo() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.countByActivo(null));
+    }
+
+    @Test
+    void lanzaIllegalState_countByActivo() {
+
+        when(em.createNamedQuery(anyString(), eq(Long.class)))
+                .thenThrow(new RuntimeException());
+
+        assertThrows(IllegalStateException.class,
+                () -> dao.countByActivo(true));
     }
 
     @Test

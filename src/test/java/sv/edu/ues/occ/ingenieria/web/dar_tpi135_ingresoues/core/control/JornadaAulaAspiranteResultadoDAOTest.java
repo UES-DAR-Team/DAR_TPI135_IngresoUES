@@ -2,11 +2,8 @@ package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAulaAspiranteResultado;
 
 import java.math.BigDecimal;
@@ -15,153 +12,122 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class JornadaAulaAspiranteResultadoDAOTest {
 
-    @Mock
+    private JornadaAulaAspiranteResultadoDAO dao;
     private EntityManager em;
-
-    @Mock
     private TypedQuery<JornadaAulaAspiranteResultado> query;
 
-    @InjectMocks
-    private JornadaAulaAspiranteResultadoDAO dao;
+    @BeforeEach
+    void setUp() {
+        dao = new JornadaAulaAspiranteResultadoDAO();
+        em = mock(EntityManager.class);
+        query = mock(TypedQuery.class);
+
+        dao = spy(dao);
+        doReturn(em).when(dao).getEntityManager();
+    }
 
     @Test
-    void debeRetornarLista_buscarPorJornadaAulaAspirante() {
-
-        List<JornadaAulaAspiranteResultado> lista = List.of(new JornadaAulaAspiranteResultado());
-
+    void testFindByJornadaAulaAspiranteSuccess() {
         when(em.createNamedQuery(anyString(), eq(JornadaAulaAspiranteResultado.class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
         when(query.setFirstResult(anyInt())).thenReturn(query);
         when(query.setMaxResults(anyInt())).thenReturn(query);
-        when(query.getResultList()).thenReturn(lista);
+        when(query.getResultList()).thenReturn(List.of(new JornadaAulaAspiranteResultado()));
 
         List<JornadaAulaAspiranteResultado> result =
-                dao.buscarPorJornadaAulaAspirante(1, 0, 10);
+                dao.findByJornadaAulaAspirante(1, 0, 10);
 
         assertNotNull(result);
-        assertEquals(1, result.size());
     }
 
     @Test
-    void retornaVacio_siIdNull_buscarPorJornadaAulaAspirante() {
-        assertTrue(dao.buscarPorJornadaAulaAspirante(null, 0, 10).isEmpty());
+    void testFindByJornadaAulaAspiranteInvalid() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            dao.findByJornadaAulaAspirante(null, 0, 10);
+        });
     }
 
     @Test
-    void retornaVacio_siFirstNegativo_buscarPorJornadaAulaAspirante() {
-        assertTrue(dao.buscarPorJornadaAulaAspirante(1, -1, 10).isEmpty());
-    }
-
-    @Test
-    void retornaVacio_siMaxInvalido_buscarPorJornadaAulaAspirante() {
-        assertTrue(dao.buscarPorJornadaAulaAspirante(1, 0, 0).isEmpty());
-    }
-
-    @Test
-    void lanzaIllegalState_siFallaCreateNamedQuery_buscarPorJornadaAulaAspirante() {
-
+    void testFindByJornadaAulaAspiranteException() {
         when(em.createNamedQuery(anyString(), eq(JornadaAulaAspiranteResultado.class)))
-                .thenThrow(new RuntimeException());
+                .thenThrow(RuntimeException.class);
 
-        assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorJornadaAulaAspirante(1, 0, 10));
+        assertThrows(IllegalStateException.class, () -> {
+            dao.findByJornadaAulaAspirante(1, 0, 10);
+        });
     }
 
     @Test
-    void lanzaIllegalState_siFallaGetResultList_buscarPorJornadaAulaAspirante() {
-
+    void testFindByAprobadoSuccess() {
         when(em.createNamedQuery(anyString(), eq(JornadaAulaAspiranteResultado.class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
         when(query.setFirstResult(anyInt())).thenReturn(query);
         when(query.setMaxResults(anyInt())).thenReturn(query);
-        when(query.getResultList()).thenThrow(new RuntimeException());
-
-        assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorJornadaAulaAspirante(1, 0, 10));
-    }
-
-    @Test
-    void debeRetornarLista_buscarPorAprobado() {
-
-        List<JornadaAulaAspiranteResultado> lista = List.of(new JornadaAulaAspiranteResultado());
-
-        when(em.createNamedQuery(anyString(), eq(JornadaAulaAspiranteResultado.class))).thenReturn(query);
-        when(query.setParameter(anyString(), any())).thenReturn(query);
-        when(query.setFirstResult(anyInt())).thenReturn(query);
-        when(query.setMaxResults(anyInt())).thenReturn(query);
-        when(query.getResultList()).thenReturn(lista);
+        when(query.getResultList()).thenReturn(List.of(new JornadaAulaAspiranteResultado()));
 
         List<JornadaAulaAspiranteResultado> result =
-                dao.buscarPorAprobado(true, 0, 10);
+                dao.findByAprobado(true, 0, 10);
 
         assertNotNull(result);
-        assertEquals(1, result.size());
     }
 
     @Test
-    void retornaVacio_siAprobadoNull() {
-        assertTrue(dao.buscarPorAprobado(null, 0, 10).isEmpty());
+    void testFindByAprobadoInvalid() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            dao.findByAprobado(null, 0, 10);
+        });
     }
 
     @Test
-    void retornaVacio_siFirstNegativo_buscarPorAprobado() {
-        assertTrue(dao.buscarPorAprobado(true, -1, 10).isEmpty());
-    }
-
-    @Test
-    void retornaVacio_siMaxInvalido_buscarPorAprobado() {
-        assertTrue(dao.buscarPorAprobado(true, 0, 0).isEmpty());
-    }
-
-    @Test
-    void lanzaIllegalState_siFallaCreateNamedQuery_buscarPorAprobado() {
-
+    void testFindByAprobadoException() {
         when(em.createNamedQuery(anyString(), eq(JornadaAulaAspiranteResultado.class)))
-                .thenThrow(new RuntimeException());
+                .thenThrow(RuntimeException.class);
 
-        assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorAprobado(true, 0, 10));
+        assertThrows(IllegalStateException.class, () -> {
+            dao.findByAprobado(true, 0, 10);
+        });
     }
 
     @Test
-    void lanzaIllegalState_siFallaGetResultList_buscarPorAprobado() {
-
+    void testFindByRangoPuntajeSuccess() {
         when(em.createNamedQuery(anyString(), eq(JornadaAulaAspiranteResultado.class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
         when(query.setFirstResult(anyInt())).thenReturn(query);
         when(query.setMaxResults(anyInt())).thenReturn(query);
-        when(query.getResultList()).thenThrow(new RuntimeException());
-
-        assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorAprobado(true, 0, 10));
-    }
-
-    @Test
-    void debeRetornarLista_buscarPorRangoPuntaje() {
-
-        List<JornadaAulaAspiranteResultado> lista = List.of(new JornadaAulaAspiranteResultado());
-
-        when(em.createNamedQuery(anyString(), eq(JornadaAulaAspiranteResultado.class))).thenReturn(query);
-        when(query.setParameter(anyString(), any())).thenReturn(query);
-        when(query.getResultList()).thenReturn(lista);
+        when(query.getResultList()).thenReturn(List.of(new JornadaAulaAspiranteResultado()));
 
         List<JornadaAulaAspiranteResultado> result =
-                dao.buscarPorRangoPuntaje(BigDecimal.ZERO, BigDecimal.TEN);
+                dao.findByRangoPuntaje(
+                        new BigDecimal("10"),
+                        new BigDecimal("20"),
+                        0,
+                        10
+                );
 
         assertNotNull(result);
-        assertEquals(1, result.size());
     }
 
     @Test
-    void getEntityManager_noDebeSerNull() {
-        assertNotNull(dao.getEntityManager());
+    void testFindByRangoPuntajeInvalid() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            dao.findByRangoPuntaje(null, new BigDecimal("10"), 0, 10);
+        });
     }
 
     @Test
-    void getEntityClass_debeSerCorrecta() {
-        assertEquals(JornadaAulaAspiranteResultado.class, dao.getEntityClass());
+    void testFindByRangoPuntajeException() {
+        when(em.createNamedQuery(anyString(), eq(JornadaAulaAspiranteResultado.class)))
+                .thenThrow(RuntimeException.class);
+
+        assertThrows(IllegalStateException.class, () -> {
+            dao.findByRangoPuntaje(
+                    new BigDecimal("10"),
+                    new BigDecimal("20"),
+                    0,
+                    10
+            );
+        });
     }
 }

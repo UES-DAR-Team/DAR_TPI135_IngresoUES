@@ -2,7 +2,6 @@ package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,15 +23,14 @@ class JornadaAulaDAOTest {
     @Mock
     private TypedQuery<JornadaAula> query;
 
+    @Mock
+    private TypedQuery<Long> queryLong;
+
     @InjectMocks
     private JornadaAulaDAO dao;
 
-    @BeforeEach
-    void setUp() {
-    }
-
     @Test
-    void debeRetornarLista_buscarPorJornada() {
+    void debeRetornarLista_findByJornada() {
 
         List<JornadaAula> lista = List.of(new JornadaAula());
 
@@ -42,52 +40,36 @@ class JornadaAulaDAOTest {
         when(query.setMaxResults(anyInt())).thenReturn(query);
         when(query.getResultList()).thenReturn(lista);
 
-        List<JornadaAula> result = dao.buscarPorJornada(1, 0, 10);
+        List<JornadaAula> result = dao.findByJornada(1, 0, 10);
 
         assertNotNull(result);
         assertEquals(1, result.size());
     }
 
     @Test
-    void retornaVacio_siIdJornadaNull() {
-        assertTrue(dao.buscarPorJornada(null, 0, 10).isEmpty());
+    void lanzaException_idNull_findByJornada() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.findByJornada(null, 0, 10));
     }
 
     @Test
-    void retornaVacio_siFirstNegativo_buscarPorJornada() {
-        assertTrue(dao.buscarPorJornada(1, -1, 10).isEmpty());
+    void lanzaException_paginacionInvalida_findByJornada() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.findByJornada(1, -1, 10));
     }
 
     @Test
-    void retornaVacio_siMaxInvalido_buscarPorJornada() {
-        assertTrue(dao.buscarPorJornada(1, 0, 0).isEmpty());
-    }
-
-    @Test
-    void lanzaIllegalState_siFallaCreateNamedQuery_buscarPorJornada() {
+    void lanzaIllegalState_findByJornada() {
 
         when(em.createNamedQuery(anyString(), eq(JornadaAula.class)))
                 .thenThrow(new RuntimeException());
 
         assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorJornada(1, 0, 10));
+                () -> dao.findByJornada(1, 0, 10));
     }
 
     @Test
-    void lanzaIllegalState_siFallaGetResultList_buscarPorJornada() {
-
-        when(em.createNamedQuery(anyString(), eq(JornadaAula.class))).thenReturn(query);
-        when(query.setParameter(anyString(), any())).thenReturn(query);
-        when(query.setFirstResult(anyInt())).thenReturn(query);
-        when(query.setMaxResults(anyInt())).thenReturn(query);
-        when(query.getResultList()).thenThrow(new RuntimeException());
-
-        assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorJornada(1, 0, 10));
-    }
-
-    @Test
-    void debeRetornarLista_buscarPorAula() {
+    void debeRetornarLista_findByAula() {
 
         List<JornadaAula> lista = List.of(new JornadaAula());
 
@@ -97,48 +79,88 @@ class JornadaAulaDAOTest {
         when(query.setMaxResults(anyInt())).thenReturn(query);
         when(query.getResultList()).thenReturn(lista);
 
-        List<JornadaAula> result = dao.buscarPorAula(1, 0, 10);
+        List<JornadaAula> result = dao.findByAula(1, 0, 10);
 
         assertNotNull(result);
         assertEquals(1, result.size());
     }
 
     @Test
-    void retornaVacio_siIdAulaNull() {
-        assertTrue(dao.buscarPorAula(null, 0, 10).isEmpty());
+    void lanzaException_idNull_findByAula() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.findByAula(null, 0, 10));
     }
 
     @Test
-    void retornaVacio_siFirstNegativo_buscarPorAula() {
-        assertTrue(dao.buscarPorAula(1, -1, 10).isEmpty());
+    void lanzaException_paginacionInvalida_findByAula() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.findByAula(1, -1, 10));
     }
 
     @Test
-    void retornaVacio_siMaxInvalido_buscarPorAula() {
-        assertTrue(dao.buscarPorAula(1, 0, 0).isEmpty());
-    }
-
-    @Test
-    void lanzaIllegalState_siFallaCreateNamedQuery_buscarPorAula() {
+    void lanzaIllegalState_findByAula() {
 
         when(em.createNamedQuery(anyString(), eq(JornadaAula.class)))
                 .thenThrow(new RuntimeException());
 
         assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorAula(1, 0, 10));
+                () -> dao.findByAula(1, 0, 10));
     }
 
     @Test
-    void lanzaIllegalState_siFallaGetResultList_buscarPorAula() {
+    void debeContarPorJornada() {
 
-        when(em.createNamedQuery(anyString(), eq(JornadaAula.class))).thenReturn(query);
-        when(query.setParameter(anyString(), any())).thenReturn(query);
-        when(query.setFirstResult(anyInt())).thenReturn(query);
-        when(query.setMaxResults(anyInt())).thenReturn(query);
-        when(query.getResultList()).thenThrow(new RuntimeException());
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(anyString(), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(5L);
+
+        Long result = dao.countByJornada(1);
+
+        assertEquals(5L, result);
+    }
+
+    @Test
+    void lanzaException_idNull_countByJornada() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.countByJornada(null));
+    }
+
+    @Test
+    void lanzaIllegalState_countByJornada() {
+
+        when(em.createQuery(anyString(), eq(Long.class)))
+                .thenThrow(new RuntimeException());
 
         assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorAula(1, 0, 10));
+                () -> dao.countByJornada(1));
+    }
+
+    @Test
+    void debeContarPorAula() {
+
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(anyString(), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(3L);
+
+        Long result = dao.countByAula(1);
+
+        assertEquals(3L, result);
+    }
+
+    @Test
+    void lanzaException_idNull_countByAula() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.countByAula(null));
+    }
+
+    @Test
+    void lanzaIllegalState_countByAula() {
+
+        when(em.createQuery(anyString(), eq(Long.class)))
+                .thenThrow(new RuntimeException());
+
+        assertThrows(IllegalStateException.class,
+                () -> dao.countByAula(1));
     }
 
     @Test

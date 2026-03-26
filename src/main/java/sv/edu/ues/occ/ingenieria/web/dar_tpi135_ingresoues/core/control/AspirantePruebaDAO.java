@@ -32,48 +32,81 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
         return AspirantePrueba.class;
     }
 
-    public List<AspirantePrueba> buscarPorAspirante(UUID idAspirante, int first, int max) {
+    public List<AspirantePrueba> findByAspirante(UUID idAspirante, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (idAspirante == null) {
+            throw new IllegalArgumentException("Id de aspirante inválido");
+        }
+
+        if (first < 0 || max <= 0) {
+            throw new IllegalArgumentException("Parámetros de paginación inválidos");
+        }
+
         try {
-            if (idAspirante != null && first >= 0 && max > 0) {
+            TypedQuery<AspirantePrueba> q = getEntityManager().createNamedQuery(
+                    "AspirantePrueba.buscarPorAspirante",
+                    AspirantePrueba.class
+            );
 
-                TypedQuery<AspirantePrueba> q = em.createNamedQuery(
-                        "AspirantePrueba.buscarPorAspirante",
-                        AspirantePrueba.class
-                );
+            q.setParameter("idAspirante", idAspirante);
+            q.setFirstResult(first);
+            q.setMaxResults(max);
 
-                q.setParameter("idAspirante", idAspirante);
-                q.setFirstResult(first);
-                q.setMaxResults(max);
+            return q.getResultList();
 
-                return q.getResultList();
-            }
         } catch (Exception ex) {
             throw new IllegalStateException("Error al buscar pruebas por aspirante", ex);
         }
-
-        return List.of();
     }
 
-    public List<AspirantePrueba> buscarPorPrueba(Integer idPrueba, int first, int max) {
+    public List<AspirantePrueba> findByPrueba(Integer idPrueba, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (idPrueba == null) {
+            throw new IllegalArgumentException("Id de prueba inválido");
+        }
+
+        if (first < 0 || max <= 0) {
+            throw new IllegalArgumentException("Parámetros de paginación inválidos");
+        }
+
         try {
-            if (idPrueba != null && first >= 0 && max > 0) {
+            TypedQuery<AspirantePrueba> q = getEntityManager().createNamedQuery(
+                    "AspirantePrueba.buscarPorPrueba",
+                    AspirantePrueba.class
+            );
 
-                TypedQuery<AspirantePrueba> q = em.createNamedQuery(
-                        "AspirantePrueba.buscarPorPrueba",
-                        AspirantePrueba.class
-                );
+            q.setParameter("idPrueba", idPrueba);
+            q.setFirstResult(first);
+            q.setMaxResults(max);
 
-                q.setParameter("idPrueba", idPrueba);
-                q.setFirstResult(first);
-                q.setMaxResults(max);
+            return q.getResultList();
 
-                return q.getResultList();
-            }
         } catch (Exception ex) {
             throw new IllegalStateException("Error al buscar aspirantes por prueba", ex);
         }
-
-        return List.of();
     }
 
+    public Long countByAspirante(UUID idAspirante)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (idAspirante == null) {
+            throw new IllegalArgumentException("Id de aspirante inválido");
+        }
+
+        try {
+            TypedQuery<Long> q = getEntityManager().createQuery(
+                    "SELECT COUNT(ap) FROM AspirantePrueba ap WHERE ap.idAspirante.id = :idAspirante",
+                    Long.class
+            );
+
+            q.setParameter("idAspirante", idAspirante);
+
+            return q.getSingleResult();
+
+        } catch (Exception ex) {
+            throw new IllegalStateException("Error al contar pruebas por aspirante", ex);
+        }
+    }
 }

@@ -12,7 +12,7 @@ import java.util.List;
 
 @Stateless
 @LocalBean
-public class JornadaDAO extends  IngresoDefaultDataAcces<Jornada, Object> implements Serializable {
+public class JornadaDAO extends IngresoDefaultDataAcces<Jornada, Object> implements Serializable {
 
     @PersistenceContext(unitName = "IngresoPU")
     private EntityManager em;
@@ -31,47 +31,103 @@ public class JornadaDAO extends  IngresoDefaultDataAcces<Jornada, Object> implem
         return Jornada.class;
     }
 
-    public List<Jornada> buscarPorNombre(String nombre, int first, int max) {
+    public List<Jornada> findByNombre(String nombre, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("Nombre inválido");
+        }
+
+        if (first < 0 || max <= 0) {
+            throw new IllegalArgumentException("Parámetros de paginación inválidos");
+        }
+
         try {
-            if (nombre != null && !nombre.isBlank() && first >= 0 && max > 0) {
+            TypedQuery<Jornada> q = getEntityManager().createNamedQuery(
+                    "Jornada.buscarPorNombre",
+                    Jornada.class
+            );
 
-                TypedQuery<Jornada> q = em.createNamedQuery(
-                        "Jornada.buscarPorNombre",
-                        Jornada.class
-                );
+            q.setParameter("nombre", "%" + nombre.trim().toUpperCase() + "%");
+            q.setFirstResult(first);
+            q.setMaxResults(max);
 
-                q.setParameter("nombre", "%" + nombre.toUpperCase() + "%");
-                q.setFirstResult(first);
-                q.setMaxResults(max);
+            return q.getResultList();
 
-                return q.getResultList();
-            }
         } catch (Exception ex) {
             throw new IllegalStateException("Error al buscar jornadas por nombre", ex);
         }
-
-        return List.of();
     }
 
-    public List<Jornada> buscarPorActivo(Boolean activo, int first, int max) {
+    public List<Jornada> findByActivo(Boolean activo, int first, int max)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (activo == null) {
+            throw new IllegalArgumentException("Estado inválido");
+        }
+
+        if (first < 0 || max <= 0) {
+            throw new IllegalArgumentException("Parámetros de paginación inválidos");
+        }
+
         try {
-            if (activo != null && first >= 0 && max > 0) {
+            TypedQuery<Jornada> q = getEntityManager().createNamedQuery(
+                    "Jornada.buscarPorActivo",
+                    Jornada.class
+            );
 
-                TypedQuery<Jornada> q = em.createNamedQuery(
-                        "Jornada.buscarPorActivo",
-                        Jornada.class
-                );
+            q.setParameter("activo", activo);
+            q.setFirstResult(first);
+            q.setMaxResults(max);
 
-                q.setParameter("activo", activo);
-                q.setFirstResult(first);
-                q.setMaxResults(max);
+            return q.getResultList();
 
-                return q.getResultList();
-            }
         } catch (Exception ex) {
             throw new IllegalStateException("Error al buscar jornadas por estado", ex);
         }
+    }
 
-        return List.of();
+    public Long countByNombre(String nombre)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("Nombre inválido");
+        }
+
+        try {
+            TypedQuery<Long> q = getEntityManager().createNamedQuery(
+                    "Jornada.countByNombre",
+                    Long.class
+            );
+
+            q.setParameter("nombre", "%" + nombre.trim().toUpperCase() + "%");
+
+            return q.getSingleResult();
+
+        } catch (Exception ex) {
+            throw new IllegalStateException("Error al contar jornadas por nombre", ex);
+        }
+    }
+
+    public Long countByActivo(Boolean activo)
+            throws IllegalArgumentException, IllegalStateException {
+
+        if (activo == null) {
+            throw new IllegalArgumentException("Estado inválido");
+        }
+
+        try {
+            TypedQuery<Long> q = getEntityManager().createNamedQuery(
+                    "Jornada.countByActivo",
+                    Long.class
+            );
+
+            q.setParameter("activo", activo);
+
+            return q.getSingleResult();
+
+        } catch (Exception ex) {
+            throw new IllegalStateException("Error al contar jornadas por estado", ex);
+        }
     }
 }

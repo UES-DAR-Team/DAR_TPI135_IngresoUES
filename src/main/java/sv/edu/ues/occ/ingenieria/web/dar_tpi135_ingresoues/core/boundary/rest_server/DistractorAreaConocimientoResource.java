@@ -45,4 +45,5 @@ public class DistractorAreaConocimientoResource implements Serializable {
 
         return Response.status(422).header("Missing-parameter", "first,max").build();
     }
+
 }

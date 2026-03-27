@@ -35,7 +35,7 @@ public class DistractorDAO extends IngresoDefaultDataAcces<Distractor, Object> i
     public List<Distractor> findByCoincidenciaTexto(final String text, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         try {
-            if (text != null && !text.isBlank() && first >= 0 && max > 0) {
+            if (text != null && !text.isBlank() && first >= 0 && max >= 0) {
                 TypedQuery<Distractor> q = em.createNamedQuery("Distractor.findByCoincidenciaTexto", Distractor.class);
                 q.setParameter("text", "%" + text.trim().toUpperCase() + "%");
                 q.setFirstResult(first);

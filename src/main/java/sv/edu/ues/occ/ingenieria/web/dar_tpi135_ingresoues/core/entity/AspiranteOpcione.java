@@ -32,9 +32,6 @@ public class AspiranteOpcione {
     @Column(name = "nombre_programa", length = 250)
     private String nombrePrograma;
 
-    @Column(name = "orden_preferencia")
-    private Short ordenPreferencia;
-
     @NotNull
     @Column(name = "fecha_seleccion", nullable = false)
     private OffsetDateTime fechaSeleccion;
@@ -69,14 +66,6 @@ public class AspiranteOpcione {
 
     public void setNombrePrograma(String nombrePrograma) {
         this.nombrePrograma = nombrePrograma;
-    }
-
-    public Short getOrdenPreferencia() {
-        return ordenPreferencia;
-    }
-
-    public void setOrdenPreferencia(Short ordenPreferencia) {
-        this.ordenPreferencia = ordenPreferencia;
     }
 
     public OffsetDateTime getFechaSeleccion() {

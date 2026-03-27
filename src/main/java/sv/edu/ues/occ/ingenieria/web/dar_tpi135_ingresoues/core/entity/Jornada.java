@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "jornada", schema = "public")
@@ -23,7 +24,7 @@ import java.time.OffsetDateTime;
 public class Jornada {
     @Id
     @Column(name = "id_jornada", nullable = false)
-    private Integer id;
+    private UUID id;
 
     @Size(max = 150)
     @NotNull
@@ -47,11 +48,11 @@ public class Jornada {
     @Column(name = "activo", nullable = false)
     private Boolean activo = false;
 
-    public Integer getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

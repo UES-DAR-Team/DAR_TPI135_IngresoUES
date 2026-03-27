@@ -36,7 +36,7 @@ public class PreguntaDAO extends IngresoDefaultDataAcces<Pregunta, Object> imple
     public List<Pregunta> findByCoincidenciaTexto(final String texto, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         try {
-            if (texto != null && !texto.isBlank() && first >= 0 && max > 0) {
+            if (texto != null && !texto.isBlank() && first >= 0 && max >= 0) {
                 TypedQuery<Pregunta> q = em.createNamedQuery("Pregunta.findByCoincidenciaTexto", Pregunta.class);
                 q.setParameter("texto", "%" + texto.trim().toUpperCase() + "%");
                 q.setFirstResult(first);

@@ -35,7 +35,7 @@ public class AreaConocimientoDAO extends IngresoDefaultDataAcces<AreaConocimient
     public List<AreaConocimiento> findByNameLike(final String name, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         try {
-            if (name != null && !name.isBlank() && first >= 0 && max > 0) {
+            if (name != null && !name.isBlank() && first >= 0 && max >= 0) {
                 TypedQuery<AreaConocimiento> q = em.createNamedQuery("AreaConocimiento.findByNameLike", AreaConocimiento.class);
                 q.setParameter("name", "%" + name.trim().toUpperCase() + "%");
                 q.setFirstResult(first);
@@ -58,6 +58,7 @@ public class AreaConocimientoDAO extends IngresoDefaultDataAcces<AreaConocimient
         }
     }
 
+    //verificar que esta funcion no
     public List<AreaConocimiento> findHijosByPadre(Integer idPadre)
             throws IllegalArgumentException, IllegalStateException {
         try {

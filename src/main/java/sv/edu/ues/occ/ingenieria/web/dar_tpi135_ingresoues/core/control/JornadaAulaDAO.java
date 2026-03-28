@@ -5,9 +5,11 @@ import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
+import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAula;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
 
 @Stateless
 @LocalBean
@@ -30,7 +32,7 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
         return JornadaAula.class;
     }
 
-    public List<JornadaAula> buscarPorJornada(Integer idJornada, int first, int max) {
+    public List<JornadaAula> buscarPorJornada(UUID idJornada, int first, int max) {
         try {
             if (idJornada != null && first >= 0 && max > 0) {
 
@@ -52,7 +54,7 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
         return List.of();
     }
 
-    public List<JornadaAula> buscarPorAula(Integer idAula, int first, int max) {
+    public List<JornadaAula> buscarPorAula(UUID idAula, int first, int max) {
         try {
             if (idAula != null && first >= 0 && max > 0) {
 

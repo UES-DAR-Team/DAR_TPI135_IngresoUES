@@ -5,9 +5,11 @@ import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
+import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PreguntaAreaConocimiento;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,10 +33,10 @@ public class PreguntaAreaConocimientoDAO extends IngresoDefaultDataAcces<Pregunt
         return PreguntaAreaConocimiento.class;
     }
 
-    public List<PreguntaAreaConocimiento> findPreguntaByIdAreaConocimiento(final Integer idAreaConocimiento, int first, int max)
+    public List<PreguntaAreaConocimiento> findPreguntaByIdAreaConocimiento(final UUID idAreaConocimiento, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         try {
-            if (idAreaConocimiento != null && idAreaConocimiento > 0 && first >= 0 && max >= 0) {
+            if (idAreaConocimiento != null && first >= 0 && max >= 0) {
                 TypedQuery<PreguntaAreaConocimiento> q = em.createNamedQuery("PreguntaAreaConocimiento.findByIdAreaConocimiento", PreguntaAreaConocimiento.class)
                         .setParameter("idAreaConocimiento", idAreaConocimiento)
                         .setFirstResult(first)
@@ -47,10 +49,10 @@ public class PreguntaAreaConocimientoDAO extends IngresoDefaultDataAcces<Pregunt
         return List.of();
     }
 
-    public List<PreguntaAreaConocimiento> findByIdPregunta(final Integer idPregunta, int first, int max)
+    public List<PreguntaAreaConocimiento> findByIdPregunta(final UUID idPregunta, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         try {
-            if (idPregunta != null && idPregunta > 0 && first >= 0 && max >= 0) {
+            if (idPregunta != null && first >= 0 && max >= 0) {
                 TypedQuery<PreguntaAreaConocimiento> q = em.createNamedQuery("PreguntaAreaConocimiento.findByIdPregunta", PreguntaAreaConocimiento.class)
                         .setParameter("idPregunta", idPregunta)
                         .setFirstResult(first)

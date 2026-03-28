@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.AspiranteOpcione;
 
 import java.util.List;
 import java.util.UUID;
@@ -74,8 +75,14 @@ class AspiranteOpcioneDAOTest {
     }
 
     @Test
-    void retornaVacio_siMaxInvalido() {
+    void retornaVacio_siMaxCero() {
         List<AspiranteOpcione> resultado = dao.buscarPorAspirante(id, 0, 0);
+        assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    void retornaVacio_siMaxNegativo() {
+        List<AspiranteOpcione> resultado = dao.buscarPorAspirante(id, 0, -1);
         assertTrue(resultado.isEmpty());
     }
 
@@ -89,7 +96,6 @@ class AspiranteOpcioneDAOTest {
                 () -> dao.buscarPorAspirante(id, 0, 10));
     }
 
-
     @Test
     void lanzaIllegalState_siFallaGetResultList() {
 
@@ -101,5 +107,21 @@ class AspiranteOpcioneDAOTest {
 
         assertThrows(IllegalStateException.class,
                 () -> dao.buscarPorAspirante(id, 0, 10));
+    }
+
+    @Test
+    void testdebeUsarElIdCorrectamente() {
+        List<AspiranteOpcione> listaEsperada = List.of(new AspiranteOpcione());
+
+        when(em.createNamedQuery("AspiranteOpcione.buscarPorAspirante", AspiranteOpcione.class))
+                .thenReturn(query);
+        when(query.setParameter("idAspirante", id)).thenReturn(query); // UUID específico
+        when(query.setFirstResult(0)).thenReturn(query);
+        when(query.setMaxResults(10)).thenReturn(query);
+        when(query.getResultList()).thenReturn(listaEsperada);
+
+        dao.buscarPorAspirante(id, 0, 10);
+
+        verify(query).setParameter("idAspirante", id);
     }
 }

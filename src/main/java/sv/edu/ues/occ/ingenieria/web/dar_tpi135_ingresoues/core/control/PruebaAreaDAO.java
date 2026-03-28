@@ -5,9 +5,11 @@ import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
+import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaArea;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
 
 @Stateless
 @LocalBean
@@ -30,7 +32,7 @@ public class PruebaAreaDAO extends IngresoDefaultDataAcces<PruebaArea,Object> im
         return PruebaArea.class;
     }
 
-    public List<PruebaArea> findByPrueba(Integer idPrueba, int first, int max)
+    public List<PruebaArea> findByPrueba(UUID idPrueba, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         if (idPrueba == null) {
             throw new IllegalArgumentException("idPrueba inválido");
@@ -49,7 +51,7 @@ public class PruebaAreaDAO extends IngresoDefaultDataAcces<PruebaArea,Object> im
         }
     }
 
-    public List<PruebaArea> findByAreaConocimiento(Integer idAreaConocimiento, int first, int max)
+    public List<PruebaArea> findByAreaConocimiento(UUID idAreaConocimiento, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         if (idAreaConocimiento == null) {
             throw new IllegalArgumentException("idAreaConocimiento inválido");

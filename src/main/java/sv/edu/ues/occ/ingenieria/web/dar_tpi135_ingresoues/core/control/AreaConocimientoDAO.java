@@ -5,9 +5,11 @@ import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
+import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.AreaConocimiento;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,11 +59,10 @@ public class AreaConocimientoDAO extends IngresoDefaultDataAcces<AreaConocimient
         }
     }
 
-    //verificar que esta funcion no
-    public List<AreaConocimiento> findHijosByPadre(Integer idPadre)
+    public List<AreaConocimiento> findHijosByPadre(final UUID idPadre)
             throws IllegalArgumentException, IllegalStateException {
         try {
-            if (idPadre != null && idPadre > 0) {
+            if (idPadre != null) {
                 return em.createNamedQuery("AreaConocimiento.findHijosByPadre", AreaConocimiento.class)
                         .setParameter("idPadre", idPadre)
                         .getResultList();

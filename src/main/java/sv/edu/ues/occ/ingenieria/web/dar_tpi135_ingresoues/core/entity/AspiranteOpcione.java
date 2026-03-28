@@ -12,6 +12,22 @@ import java.time.OffsetDateTime;
         @NamedQuery(
                 name = "AspiranteOpcione.buscarPorAspirante",
                 query = "SELECT ao FROM AspiranteOpcione ao WHERE ao.idAspirante.id = :idAspirante"
+        ),
+        @NamedQuery(
+                name = "AspiranteOpcione.findByCodigoPrograma",
+                query = "SELECT ao FROM AspiranteOpcione ao WHERE ao.codigoPrograma = :codigoPrograma"
+        ),
+        @NamedQuery(
+                name = "AspiranteOpcione.findByNombrePrograma",
+                query = "SELECT ao FROM AspiranteOpcione ao WHERE UPPER(ao.nombrePrograma) LIKE :nombrePrograma"
+        ),
+        @NamedQuery(
+                name = "AspiranteOpcione.findByOrdenPreferencia",
+                query = "SELECT ao FROM AspiranteOpcione ao WHERE ao.ordenPreferencia = :ordenPreferencia"
+        ),
+        @NamedQuery(
+                name = "AspiranteOpcione.countByAspirante",
+                query = "SELECT COUNT(ao) FROM AspiranteOpcione ao WHERE ao.idAspirante.id = :idAspirante"
         )
 })
 public class AspiranteOpcione {

@@ -13,11 +13,19 @@ import java.time.OffsetDateTime;
 @NamedQueries({
         @NamedQuery(
                 name = "Jornada.buscarPorNombre",
-                query = "SELECT j FROM Jornada j WHERE upper(j.nombreJornada) LIKE :nombre"
+                query = "SELECT j FROM Jornada j WHERE UPPER(j.nombreJornada) LIKE :nombre"
         ),
         @NamedQuery(
                 name = "Jornada.buscarPorActivo",
                 query = "SELECT j FROM Jornada j WHERE j.activo = :activo"
+        ),
+        @NamedQuery(
+                name = "Jornada.countByNombre",
+                query = "SELECT COUNT(j) FROM Jornada j WHERE UPPER(j.nombreJornada) LIKE :nombre"
+        ),
+        @NamedQuery(
+                name = "Jornada.countByActivo",
+                query = "SELECT COUNT(j) FROM Jornada j WHERE j.activo = :activo"
         )
 })
 public class Jornada {

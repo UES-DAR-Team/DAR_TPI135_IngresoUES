@@ -13,10 +13,27 @@ import java.util.UUID;
 @NamedQueries({
         @NamedQuery(
                 name = "Aspirante.buscarAspirantePorNombre",
-                query = "SELECT a FROM Aspirante a WHERE upper(a.nombreAspirante) LIKE :nombre"
+                query = "SELECT a FROM Aspirante a WHERE UPPER(a.nombreAspirante) LIKE :nombre"
+        ),
+        @NamedQuery(
+                name = "Aspirante.findActivos",
+                query = "SELECT a FROM Aspirante a WHERE a.activo = true"
+        ),
+        @NamedQuery(
+                name = "Aspirante.findByDocumento",
+                query = "SELECT a FROM Aspirante a WHERE a.identificacion = :documento"
+        ),
+        @NamedQuery(
+                name = "Aspirante.findByEstado",
+                query = "SELECT a FROM Aspirante a WHERE a.activo = :estado"
+        ),
+        @NamedQuery(
+                name = "Aspirante.countByNombre",
+                query = "SELECT COUNT(a) FROM Aspirante a WHERE UPPER(a.nombreAspirante) LIKE :nombre"
         )
 })
 public class Aspirante {
+
     @Id
     @Column(name = "id_aspirante", nullable = false)
     private UUID id;
@@ -112,5 +129,4 @@ public class Aspirante {
     public void setActivo(Boolean activo) {
         this.activo = activo;
     }
-
 }

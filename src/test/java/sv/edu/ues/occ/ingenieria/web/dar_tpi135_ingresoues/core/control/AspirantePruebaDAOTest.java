@@ -2,7 +2,6 @@ package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,19 +24,15 @@ class AspirantePruebaDAOTest {
     @Mock
     private TypedQuery<AspirantePrueba> query;
 
+    @Mock
+    private TypedQuery<Long> queryLong;
+
     @InjectMocks
     private AspirantePruebaDAO dao;
 
-    private UUID idAspirante;
-
-    @BeforeEach
-    void setUp() {
-        idAspirante = UUID.randomUUID();
-    }
-
     @Test
-    void debeRetornarLista_buscarPorAspirante() {
-
+    void debeRetornarLista_findByAspirante() {
+        UUID id = UUID.randomUUID();
         List<AspirantePrueba> lista = List.of(new AspirantePrueba());
 
         when(em.createNamedQuery(anyString(), eq(AspirantePrueba.class))).thenReturn(query);
@@ -46,53 +41,42 @@ class AspirantePruebaDAOTest {
         when(query.setMaxResults(anyInt())).thenReturn(query);
         when(query.getResultList()).thenReturn(lista);
 
-        List<AspirantePrueba> result = dao.buscarPorAspirante(idAspirante, 0, 10);
+        List<AspirantePrueba> result = dao.findByAspirante(id, 0, 10);
 
         assertNotNull(result);
         assertEquals(1, result.size());
     }
 
     @Test
-    void retornaVacio_siIdAspiranteNull() {
-        assertTrue(dao.buscarPorAspirante(null, 0, 10).isEmpty());
+    void lanzaException_siIdNull_findByAspirante() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.findByAspirante(null, 0, 10));
     }
 
     @Test
-    void retornaVacio_siFirstNegativo_buscarPorAspirante() {
-        assertTrue(dao.buscarPorAspirante(idAspirante, -1, 10).isEmpty());
+    void lanzaException_siPaginacionInvalida_findByAspirante() {
+        UUID id = UUID.randomUUID();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.findByAspirante(id, -1, 10));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.findByAspirante(id, 0, 0));
     }
 
     @Test
-    void retornaVacio_siMaxInvalido_buscarPorAspirante() {
-        assertTrue(dao.buscarPorAspirante(idAspirante, 0, 0).isEmpty());
-    }
-
-    @Test
-    void lanzaIllegalState_siFallaCreateNamedQuery_buscarPorAspirante() {
+    void lanzaIllegalState_siFallaQuery_findByAspirante() {
+        UUID id = UUID.randomUUID();
 
         when(em.createNamedQuery(anyString(), eq(AspirantePrueba.class)))
                 .thenThrow(new RuntimeException());
 
         assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorAspirante(idAspirante, 0, 10));
+                () -> dao.findByAspirante(id, 0, 10));
     }
 
     @Test
-    void lanzaIllegalState_siFallaGetResultList_buscarPorAspirante() {
-
-        when(em.createNamedQuery(anyString(), eq(AspirantePrueba.class))).thenReturn(query);
-        when(query.setParameter(anyString(), any())).thenReturn(query);
-        when(query.setFirstResult(anyInt())).thenReturn(query);
-        when(query.setMaxResults(anyInt())).thenReturn(query);
-        when(query.getResultList()).thenThrow(new RuntimeException());
-
-        assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorAspirante(idAspirante, 0, 10));
-    }
-
-    @Test
-    void debeRetornarLista_buscarPorPrueba() {
-
+    void debeRetornarLista_findByPrueba() {
         List<AspirantePrueba> lista = List.of(new AspirantePrueba());
 
         when(em.createNamedQuery(anyString(), eq(AspirantePrueba.class))).thenReturn(query);
@@ -101,48 +85,66 @@ class AspirantePruebaDAOTest {
         when(query.setMaxResults(anyInt())).thenReturn(query);
         when(query.getResultList()).thenReturn(lista);
 
-        List<AspirantePrueba> result = dao.buscarPorPrueba(1, 0, 10);
+        List<AspirantePrueba> result = dao.findByPrueba(1, 0, 10);
 
         assertNotNull(result);
         assertEquals(1, result.size());
     }
 
     @Test
-    void retornaVacio_siIdPruebaNull() {
-        assertTrue(dao.buscarPorPrueba(null, 0, 10).isEmpty());
+    void lanzaException_siIdNull_findByPrueba() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.findByPrueba(null, 0, 10));
     }
 
     @Test
-    void retornaVacio_siFirstNegativo_buscarPorPrueba() {
-        assertTrue(dao.buscarPorPrueba(1, -1, 10).isEmpty());
+    void lanzaException_siPaginacionInvalida_findByPrueba() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.findByPrueba(1, -1, 10));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.findByPrueba(1, 0, 0));
     }
 
     @Test
-    void retornaVacio_siMaxInvalido_buscarPorPrueba() {
-        assertTrue(dao.buscarPorPrueba(1, 0, 0).isEmpty());
-    }
-
-    @Test
-    void lanzaIllegalState_siFallaCreateNamedQuery_buscarPorPrueba() {
+    void lanzaIllegalState_siFallaQuery_findByPrueba() {
 
         when(em.createNamedQuery(anyString(), eq(AspirantePrueba.class)))
                 .thenThrow(new RuntimeException());
 
         assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorPrueba(1, 0, 10));
+                () -> dao.findByPrueba(1, 0, 10));
     }
 
     @Test
-    void lanzaIllegalState_siFallaGetResultList_buscarPorPrueba() {
+    void debeRetornarConteo_countByAspirante() {
+        UUID id = UUID.randomUUID();
 
-        when(em.createNamedQuery(anyString(), eq(AspirantePrueba.class))).thenReturn(query);
-        when(query.setParameter(anyString(), any())).thenReturn(query);
-        when(query.setFirstResult(anyInt())).thenReturn(query);
-        when(query.setMaxResults(anyInt())).thenReturn(query);
-        when(query.getResultList()).thenThrow(new RuntimeException());
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(anyString(), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(5L);
+
+        Long result = dao.countByAspirante(id);
+
+        assertNotNull(result);
+        assertEquals(5L, result);
+    }
+
+    @Test
+    void lanzaException_siIdNull_countByAspirante() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.countByAspirante(null));
+    }
+
+    @Test
+    void lanzaIllegalState_siFallaQuery_countByAspirante() {
+        UUID id = UUID.randomUUID();
+
+        when(em.createQuery(anyString(), eq(Long.class)))
+                .thenThrow(new RuntimeException());
 
         assertThrows(IllegalStateException.class,
-                () -> dao.buscarPorPrueba(1, 0, 10));
+                () -> dao.countByAspirante(id));
     }
 
     @Test

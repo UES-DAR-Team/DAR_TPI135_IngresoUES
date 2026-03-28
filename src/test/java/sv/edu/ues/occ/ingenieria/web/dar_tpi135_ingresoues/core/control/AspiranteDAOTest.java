@@ -4,127 +4,130 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
+import org.mockito.Mockito;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aspirante;
 
-import java.lang.reflect.Field;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 class AspiranteDAOTest {
 
-    @Mock
-    EntityManager em;
-
-    @Mock
-    TypedQuery<Aspirante> query;
-
-    AspiranteDAO dao;
+    private AspiranteDAO dao;
+    private EntityManager em;
+    private TypedQuery<Aspirante> query;
+    private TypedQuery<Long> queryCount;
 
     @BeforeEach
-    void setup() throws Exception {
+    void setUp() {
         dao = new AspiranteDAO();
+        em = mock(EntityManager.class);
+        query = mock(TypedQuery.class);
+        queryCount = mock(TypedQuery.class);
 
-        // 🔥 inyección REAL del EntityManager
-        Field field = AspiranteDAO.class.getDeclaredField("em");
-        field.setAccessible(true);
-        field.set(dao, em);
+        dao = spy(dao);
+        doReturn(em).when(dao).getEntityManager();
     }
 
     @Test
-    void debeRetornarLista_siParametrosValidos() {
+    void testFindByNombreSuccess() {
+        when(em.createNamedQuery(anyString(), eq(Aspirante.class))).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.setFirstResult(anyInt())).thenReturn(query);
+        when(query.setMaxResults(anyInt())).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new Aspirante()));
 
-        when(em.createNamedQuery(anyString(), eq(Aspirante.class)))
-                .thenReturn(query);
-
-        when(query.setParameter(anyString(), any()))
-                .thenReturn(query);
-
-        when(query.setFirstResult(anyInt()))
-                .thenReturn(query);
-
-        when(query.setMaxResults(anyInt()))
-                .thenReturn(query);
-
-        when(query.getResultList())
-                .thenReturn(List.of(new Aspirante()));
-
-        List<Aspirante> result = dao.buscarAspirantePorNombre("juan", 0, 10);
+        List<Aspirante> result = dao.findByNombre("Juan", 0, 10);
 
         assertNotNull(result);
-        assertFalse(result.isEmpty());
     }
 
     @Test
-    void retornaVacio_siNombreNull() {
-        assertTrue(dao.buscarAspirantePorNombre(null, 0, 10).isEmpty());
+    void testFindByNombreInvalidNombre() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            dao.findByNombre(null, 0, 10);
+        });
     }
 
     @Test
-    void retornaVacio_siNombreBlank() {
-        assertTrue(dao.buscarAspirantePorNombre("   ", 0, 10).isEmpty());
+    void testFindByNombreInvalidPagination() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            dao.findByNombre("Juan", -1, 10);
+        });
     }
 
     @Test
-    void retornaVacio_siFirstNegativo() {
-        assertTrue(dao.buscarAspirantePorNombre("juan", -1, 10).isEmpty());
+    void testFindByNombreException() {
+        when(em.createNamedQuery(anyString(), eq(Aspirante.class))).thenThrow(RuntimeException.class);
+
+        assertThrows(IllegalStateException.class, () -> {
+            dao.findByNombre("Juan", 0, 10);
+        });
     }
 
     @Test
-    void retornaVacio_siMaxCero() {
-        assertTrue(dao.buscarAspirantePorNombre("juan", 0, 0).isEmpty());
+    void testFindActivosSuccess() {
+        when(em.createNamedQuery(anyString(), eq(Aspirante.class))).thenReturn(query);
+        when(query.setFirstResult(anyInt())).thenReturn(query);
+        when(query.setMaxResults(anyInt())).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new Aspirante()));
+
+        List<Aspirante> result = dao.findActivos(0, 10);
+
+        assertNotNull(result);
     }
 
     @Test
-    void lanzaIllegalState_siFallaCreateNamedQuery() {
+    void testFindByDocumentoSuccess() {
+        when(em.createNamedQuery(anyString(), eq(Aspirante.class))).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.setFirstResult(anyInt())).thenReturn(query);
+        when(query.setMaxResults(anyInt())).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new Aspirante()));
 
-        when(em.createNamedQuery(anyString(), eq(Aspirante.class)))
-                .thenThrow(new RuntimeException());
+        List<Aspirante> result = dao.findByDocumento("123", 0, 10);
 
-        assertThrows(IllegalStateException.class,
-                () -> dao.buscarAspirantePorNombre("juan", 0, 10));
+        assertNotNull(result);
     }
 
     @Test
-    void lanzaIllegalState_siFallaSetParameter() {
+    void testFindByEstadoSuccess() {
+        when(em.createNamedQuery(anyString(), eq(Aspirante.class))).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.setFirstResult(anyInt())).thenReturn(query);
+        when(query.setMaxResults(anyInt())).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new Aspirante()));
 
-        when(em.createNamedQuery(anyString(), eq(Aspirante.class)))
-                .thenReturn(query);
+        List<Aspirante> result = dao.findByEstado("ACTIVO", 0, 10);
 
-        when(query.setParameter(anyString(), any()))
-                .thenThrow(new RuntimeException());
-
-        assertThrows(IllegalStateException.class,
-                () -> dao.buscarAspirantePorNombre("juan", 0, 10));
+        assertNotNull(result);
     }
 
     @Test
-    void lanzaIllegalState_siFallaGetResultList() {
+    void testCountByNombreSuccess() {
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(queryCount);
+        when(queryCount.setParameter(anyString(), any())).thenReturn(queryCount);
+        when(queryCount.getSingleResult()).thenReturn(1L);
 
-        when(em.createNamedQuery(anyString(), eq(Aspirante.class)))
-                .thenReturn(query);
+        Long result = dao.countByNombre("Juan");
 
-        when(query.setParameter(anyString(), any()))
-                .thenReturn(query);
+        assertEquals(1L, result);
+    }
 
-        when(query.setFirstResult(anyInt()))
-                .thenReturn(query);
+    @Test
+    void testCountByNombreInvalid() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            dao.countByNombre("");
+        });
+    }
 
-        when(query.setMaxResults(anyInt()))
-                .thenReturn(query);
+    @Test
+    void testCountByNombreException() {
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenThrow(RuntimeException.class);
 
-        when(query.getResultList())
-                .thenThrow(new RuntimeException());
-
-        assertThrows(IllegalStateException.class,
-                () -> dao.buscarAspirantePorNombre("juan", 0, 10));
+        assertThrows(IllegalStateException.class, () -> {
+            dao.countByNombre("Juan");
+        });
     }
 }

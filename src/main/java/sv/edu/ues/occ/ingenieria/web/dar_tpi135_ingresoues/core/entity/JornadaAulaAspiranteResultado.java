@@ -20,6 +20,10 @@ import java.time.OffsetDateTime;
         @NamedQuery(
                 name = "JornadaAulaAspiranteResultado.buscarPorRangoPuntaje",
                 query = "SELECT r FROM JornadaAulaAspiranteResultado r WHERE r.puntajeObtenido BETWEEN :min AND :max"
+        ),
+        @NamedQuery(
+                name = "JornadaAulaAspiranteResultado.countByAprobado",
+                query = "SELECT COUNT(r) FROM JornadaAulaAspiranteResultado r WHERE r.aprobado = :aprobado"
         )
 })
 public class JornadaAulaAspiranteResultado {

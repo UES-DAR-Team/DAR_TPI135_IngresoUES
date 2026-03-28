@@ -118,6 +118,8 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
         }
 
         try {
+            // la query debe ir en la capa de entidades por eso se le asigna al em para constultar la query en las entidades,
+            // entidades con createNamedQuery
             TypedQuery<Long> q = getEntityManager().createQuery(
                     "SELECT COUNT(ja) FROM JornadaAula ja WHERE ja.idAula.id = :idAula",
                     Long.class

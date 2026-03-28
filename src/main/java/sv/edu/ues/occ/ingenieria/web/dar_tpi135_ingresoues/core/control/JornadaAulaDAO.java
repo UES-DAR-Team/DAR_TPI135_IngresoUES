@@ -9,6 +9,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAu
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
 
 @Stateless
 @LocalBean
@@ -31,7 +32,7 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
         return JornadaAula.class;
     }
 
-    public List<JornadaAula> findByJornada(Integer idJornada, int first, int max)
+    public List<JornadaAula> findByJornada(UUID idJornada, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
 
         if (idJornada == null) {
@@ -59,7 +60,7 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
         }
     }
 
-    public List<JornadaAula> findByAula(Integer idAula, int first, int max)
+    public List<JornadaAula> findByAula(UUID idAula, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
 
         if (idAula == null) {
@@ -87,7 +88,7 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
         }
     }
 
-    public Long countByJornada(Integer idJornada)
+    public Long countByJornada(UUID idJornada)
             throws IllegalArgumentException, IllegalStateException {
 
         if (idJornada == null) {
@@ -109,7 +110,7 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
         }
     }
 
-    public Long countByAula(Integer idAula)
+    public Long countByAula(UUID idAula)
             throws IllegalArgumentException, IllegalStateException {
 
         if (idAula == null) {

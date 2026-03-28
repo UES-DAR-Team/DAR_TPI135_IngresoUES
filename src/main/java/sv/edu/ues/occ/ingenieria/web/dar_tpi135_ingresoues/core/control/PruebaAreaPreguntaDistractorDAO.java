@@ -10,6 +10,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAre
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
 
 @Stateless
 @LocalBean
@@ -77,7 +78,7 @@ public class PruebaAreaPreguntaDistractorDAO extends IngresoDefaultDataAcces<Pru
         }
     }
 
-    public List<PruebaAreaPreguntaDistractor> findByDistractor(Integer idDistractor, int first, int max)
+    public List<PruebaAreaPreguntaDistractor> findByDistractor(UUID idDistractor, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         if (idDistractor == null) {
             throw new IllegalArgumentException("idDistractor inválido");

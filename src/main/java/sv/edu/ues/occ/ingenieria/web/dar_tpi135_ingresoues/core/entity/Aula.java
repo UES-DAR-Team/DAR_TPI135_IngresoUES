@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "aula", schema = "public")
@@ -16,7 +17,7 @@ import java.time.OffsetDateTime;
 public class Aula {
     @Id
     @Column(name = "id_aula", nullable = false)
-    private Integer id;
+    private UUID id;
 
     @Size(max = 150)
     @NotNull
@@ -34,11 +35,11 @@ public class Aula {
     @Column(name = "activo", nullable = false)
     private Boolean activo = false;
 
-    public Integer getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

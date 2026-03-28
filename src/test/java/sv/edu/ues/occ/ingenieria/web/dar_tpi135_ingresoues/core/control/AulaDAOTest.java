@@ -12,6 +12,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aula;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -48,7 +49,7 @@ class AulaDAOTest {
 
     private Aula aulaValida() {
         Aula a = new Aula();
-        a.setId(1);
+        a.setId(UUID.randomUUID());
         a.setNombreAula("Aula 1");
         a.setCapacidad(30);
         a.setFechaCreacion(OffsetDateTime.now());

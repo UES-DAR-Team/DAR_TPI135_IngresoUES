@@ -9,6 +9,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAre
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
 
 @Stateless
 @LocalBean
@@ -51,7 +52,7 @@ public class PruebaAreaPreguntaDAO extends IngresoDefaultDataAcces<PruebaAreaPre
     }
 }
 
-    public List<PruebaAreaPregunta> findByPregunta(Integer idPregunta, int first, int max)
+    public List<PruebaAreaPregunta> findByPregunta(UUID idPregunta, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         if (idPregunta == null) {
             throw new IllegalArgumentException("idPregunta inválido");

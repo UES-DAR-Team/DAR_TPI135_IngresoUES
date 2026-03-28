@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Pregunta;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
@@ -32,7 +33,7 @@ class PreguntaDAOTest {
     @BeforeEach
     void setUp() {
         pregunta = new Pregunta();
-        pregunta.setId(1);
+        pregunta.setId(UUID.randomUUID());
     }
 
     @Test

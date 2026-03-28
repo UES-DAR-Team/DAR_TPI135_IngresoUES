@@ -14,6 +14,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAre
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -50,10 +51,10 @@ class PruebaAreaDAOTest {
 
     private PruebaArea pruebaAreaValida() {
         Prueba prueba = new Prueba();
-        prueba.setId(1);
+        prueba.setId(UUID.randomUUID());
 
         AreaConocimiento area = new AreaConocimiento();
-        area.setId(1);
+        area.setId(UUID.randomUUID());
 
         PruebaArea pa = new PruebaArea();
         pa.setId(1);

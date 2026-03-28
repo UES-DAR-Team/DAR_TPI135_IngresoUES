@@ -9,6 +9,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaJor
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
 
 @Stateless
 @LocalBean
@@ -31,7 +32,7 @@ public class PruebaJornadaDAO extends IngresoDefaultDataAcces<PruebaJornada,Obje
         return PruebaJornada.class;
     }
 
-    public List<PruebaJornada> findByJornada(Integer idJornada, int first, int max)
+    public List<PruebaJornada> findByJornada(UUID idJornada, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         if (idJornada == null) {
             throw new IllegalArgumentException("idJornada inválido");
@@ -51,7 +52,7 @@ public class PruebaJornadaDAO extends IngresoDefaultDataAcces<PruebaJornada,Obje
         }
     }
 
-    public List<PruebaJornada> findByPrueba(Integer idPrueba, int first, int max)
+    public List<PruebaJornada> findByPrueba(UUID idPrueba, int first, int max)
             throws IllegalArgumentException, IllegalStateException{
         if (idPrueba == null) {
             throw new IllegalArgumentException("idPrueba inválido");

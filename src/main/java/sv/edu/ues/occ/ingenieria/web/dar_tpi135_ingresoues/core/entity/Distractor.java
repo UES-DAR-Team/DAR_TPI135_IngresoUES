@@ -2,25 +2,25 @@ package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "distractor", schema = "public")
 @NamedQueries({
         @NamedQuery(name = "Distractor.findByCoincidenciaTexto",
-                query ="SELECT d FROM Distractor d WHERE UPPER(d.distractor) LIKE :text")
+                query ="SELECT d FROM Distractor d WHERE UPPER(d.contenidoDistractor) LIKE :text")
 })
 public class Distractor {
     @Id
     @Column(name = "id_distractor", nullable = false)
-    private Integer id;
+    private UUID id;
 
-    @Size(max = 250)
     @NotNull
-    @Column(name = "nombre_distractor", nullable = false, length = 250)
-    private String distractor;
+    @Lob
+    @Column(name = "contenido_distractor", nullable = false)
+    private String contenidoDistractor;
 
     @NotNull
     @Column(name = "es_correcto", nullable = false)
@@ -34,20 +34,20 @@ public class Distractor {
     @Column(name = "activo", nullable = false)
     private Boolean activo = false;
 
-    public Integer getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
-    public String getDistractor() {
-        return distractor;
+    public String getContenidoDistractor() {
+        return contenidoDistractor;
     }
 
-    public void setDistractor(String nombreDistractor) {
-        this.distractor = distractor;
+    public void setContenidoDistractor(String contenidoDistractor) {
+        this.contenidoDistractor = contenidoDistractor;
     }
 
     public Boolean getEsCorrecto() {

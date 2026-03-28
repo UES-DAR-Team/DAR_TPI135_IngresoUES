@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "prueba", schema = "public")
@@ -12,19 +13,15 @@ import java.time.OffsetDateTime;
         @NamedQuery(name = "Prueba.findActivas", query = "SELECT p FROM Prueba p WHERE p.activo = true"),
         @NamedQuery(name = "Prueba.findByNombre", query = "SELECT p FROM Prueba p WHERE LOWER(p.nombrePrueba) LIKE LOWER(CONCAT('%', :nombre, '%'))"),
 })
-
 public class Prueba {
     @Id
     @Column(name = "id_prueba", nullable = false)
-    private Integer id;
+    private UUID id;
 
     @Size(max = 250)
     @NotNull
     @Column(name = "nombre_prueba", nullable = false, length = 250)
     private String nombrePrueba;
-
-    @Column(name = "duracion_min")
-    private Integer duracionMin;
 
     @NotNull
     @Column(name = "fecha_creacion", nullable = false)
@@ -34,11 +31,11 @@ public class Prueba {
     @Column(name = "activo", nullable = false)
     private Boolean activo = false;
 
-    public Integer getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -48,14 +45,6 @@ public class Prueba {
 
     public void setNombrePrueba(String nombrePrueba) {
         this.nombrePrueba = nombrePrueba;
-    }
-
-    public Integer getDuracionMin() {
-        return duracionMin;
-    }
-
-    public void setDuracionMin(Integer duracionMin) {
-        this.duracionMin = duracionMin;
     }
 
     public OffsetDateTime getFechaCreacion() {

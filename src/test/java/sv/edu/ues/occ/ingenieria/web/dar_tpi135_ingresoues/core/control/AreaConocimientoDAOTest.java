@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.AreaConocimiento;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
@@ -33,12 +34,18 @@ class AreaConocimientoDAOTest {
     @BeforeEach
     void setUp() {
         area = new AreaConocimiento();
-        area.setId(1);
+        area.setId(UUID.randomUUID());
     }
 
     @Test
     void testFindByNameLikeNombreVacio() {
         List<AreaConocimiento> resultado = dao.findByNameLike("", 0, 10);
+        assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    void testFindByNameLikeNombreBlanco() {
+        List<AreaConocimiento> resultado = dao.findByNameLike("   ", 0, 10);
         assertTrue(resultado.isEmpty());
     }
 
@@ -111,15 +118,23 @@ class AreaConocimientoDAOTest {
     }
 
     @Test
-    void testFindHijosByPadreParametrosValidos(){
+    void testFindHijosByPadreParametrosValidos() {
+        UUID idPadre = area.getId();
+
         when(em.createNamedQuery("AreaConocimiento.findHijosByPadre", AreaConocimiento.class))
                 .thenReturn(query);
-        when(query.setParameter("idPadre", 1)).thenReturn(query);
+        when(query.setParameter("idPadre", idPadre)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(area));
-        List<AreaConocimiento> resultado = dao.findHijosByPadre(1);
+
+        List<AreaConocimiento> resultado = dao.findHijosByPadre(idPadre);
+
         assertNotNull(resultado);
         assertEquals(1, resultado.size());
         assertSame(area, resultado.getFirst());
+
+        verify(em).createNamedQuery("AreaConocimiento.findHijosByPadre", AreaConocimiento.class);
+        verify(query).setParameter("idPadre", idPadre);
+        verify(query).getResultList();
     }
 
     @Test
@@ -128,17 +143,14 @@ class AreaConocimientoDAOTest {
         assertTrue(resultado.isEmpty());
     }
 
-    @Test
-    void testFindHijosByPadreParametroNegativo(){
-        List<AreaConocimiento> resultado = dao.findHijosByPadre(-1);
-        assertTrue(resultado.isEmpty());
-    }
 
     @Test
     void testFindHijosByPadreException(){
+        UUID idPadre = area.getId();
+
         when(em.createNamedQuery("AreaConocimiento.findHijosByPadre", AreaConocimiento.class))
                 .thenThrow(new RuntimeException("DB error"));
-        List<AreaConocimiento> resultado = dao.findHijosByPadre(1);
+        List<AreaConocimiento> resultado = dao.findHijosByPadre(idPadre);
         assertNotNull(resultado);
         assertTrue(resultado.isEmpty());
         verify(em).createNamedQuery("AreaConocimiento.findHijosByPadre", AreaConocimiento.class);

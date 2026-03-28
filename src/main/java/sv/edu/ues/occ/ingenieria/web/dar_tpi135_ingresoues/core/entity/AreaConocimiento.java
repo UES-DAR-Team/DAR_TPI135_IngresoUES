@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "area_conocimiento", schema = "public")
@@ -16,7 +17,7 @@ import java.time.OffsetDateTime;
 public class AreaConocimiento {
     @Id
     @Column(name = "id_area_conocimiento", nullable = false)
-    private Integer id;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_auto_referencia_area")
@@ -35,11 +36,11 @@ public class AreaConocimiento {
     @Column(name = "activo", nullable = false)
     private Boolean activo = false;
 
-    public Integer getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

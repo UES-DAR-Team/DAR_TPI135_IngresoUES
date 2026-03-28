@@ -12,6 +12,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Prueba;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -48,9 +49,8 @@ class PruebaDAOTest {
 
     private Prueba pruebaValida() {
         Prueba p = new Prueba();
-        p.setId(1);
+        p.setId(UUID.randomUUID());
         p.setNombrePrueba("Prueba de Matematica");
-        p.setDuracionMin(90);
         p.setFechaCreacion(OffsetDateTime.now());
         p.setActivo(true);
         return p;

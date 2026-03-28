@@ -15,6 +15,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAre
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -54,7 +55,7 @@ class PruebaAreaPreguntaDistractorDAOTest {
         pap.setId(1);
 
         Distractor distractor = new Distractor();
-        distractor.setId(1);
+        distractor.setId(UUID.randomUUID());
 
         PruebaAreaPreguntaDistractor d = new PruebaAreaPreguntaDistractor();
         d.setId(1);

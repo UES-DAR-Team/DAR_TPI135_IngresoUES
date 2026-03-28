@@ -14,6 +14,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaJor
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -50,10 +51,10 @@ class PruebaJornadaDAOTest {
 
     private PruebaJornada pruebaJornadaValida() {
         Prueba prueba = new Prueba();
-        prueba.setId(1);
+        prueba.setId(UUID.randomUUID());
 
         Jornada jornada = new Jornada();
-        jornada.setId(1);
+        jornada.setId(UUID.randomUUID());
 
         PruebaJornada pj = new PruebaJornada();
         pj.setId(1);

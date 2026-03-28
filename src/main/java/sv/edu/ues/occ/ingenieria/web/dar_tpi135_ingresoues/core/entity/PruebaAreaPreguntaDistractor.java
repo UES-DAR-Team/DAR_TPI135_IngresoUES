@@ -6,12 +6,12 @@ import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 
 @Entity
+@Table(name = "prueba_area_pregunta_distractor", schema = "public")
 @NamedQueries({
         @NamedQuery(name = "PruebaAreaPreguntaDistractor.findByPruebaAreaPregunta", query = "SELECT d FROM PruebaAreaPreguntaDistractor d WHERE d.idPruebaAreaPregunta.id = :idPruebaAreaPregunta ORDER BY d.id ASC"),
         @NamedQuery(name = "PruebaAreaPreguntaDistractor.findRespuestaCorrecta", query = "SELECT d FROM PruebaAreaPreguntaDistractor d WHERE d.idPruebaAreaPregunta.id = :idPruebaAreaPregunta AND d.esRespuestaCorrecta = true"),
         @NamedQuery(name = "PruebaAreaPreguntaDistractor.findByDistractor", query = "SELECT d FROM PruebaAreaPreguntaDistractor d WHERE d.idDistractor.id = :idDistractor")
 })
-@Table(name = "prueba_area_pregunta_distractor", schema = "public")
 public class PruebaAreaPreguntaDistractor {
     @Id
     @Column(name = "id_prueba_area_pregunta_distractor", nullable = false)

@@ -15,6 +15,10 @@ import java.time.OffsetDateTime;
         @NamedQuery(
                 name = "AspirantePrueba.buscarPorPrueba",
                 query = "SELECT ap FROM AspirantePrueba ap WHERE ap.idPrueba.id = :idPrueba"
+        ),
+        @NamedQuery(
+                name = "AspirantePrueba.countByAspirante",
+                query = "SELECT COUNT(ap) FROM AspirantePrueba ap WHERE ap.idAspirante.id = :idAspirante"
         )
 })
 public class AspirantePrueba {

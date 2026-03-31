@@ -9,6 +9,8 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aspirante
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -31,7 +33,6 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
         return Aspirante.class;
     }
 
-    // 🔹 Buscar por nombre
     public List<Aspirante> findByNombre(String nombre, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
 
@@ -56,8 +57,10 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar aspirantes por nombre", ex);
+            Logger.getLogger(AspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public List<Aspirante> findActivos(int first, int max)
@@ -79,8 +82,10 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar aspirantes activos", ex);
+            Logger.getLogger(AspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public List<Aspirante> findByDocumento(String documento, int first, int max)
@@ -107,8 +112,10 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar aspirantes por documento", ex);
+            Logger.getLogger(AspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public List<Aspirante> findByEstado(String estado, int first, int max)
@@ -135,8 +142,10 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar aspirantes por estado", ex);
+            Logger.getLogger(AspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public Long countByNombre(String nombre)
@@ -157,7 +166,9 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al contar aspirantes por nombre", ex);
+            Logger.getLogger(AspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return 0L;
     }
 }

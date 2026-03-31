@@ -9,6 +9,9 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAu
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -31,7 +34,7 @@ public class JornadaAulaAspiranteDAO extends IngresoDefaultDataAcces<JornadaAula
         return JornadaAulaAspirante.class;
     }
 
-    public List<JornadaAulaAspirante> findByJornadaAula(Integer idJornadaAula, int first, int max)
+    public List<JornadaAulaAspirante> findByJornadaAula(UUID idJornadaAula, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
 
         if (idJornadaAula == null) {
@@ -55,8 +58,10 @@ public class JornadaAulaAspiranteDAO extends IngresoDefaultDataAcces<JornadaAula
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar por jornada aula", ex);
+            Logger.getLogger(JornadaAulaAspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public List<JornadaAulaAspirante> findByAspirantePrueba(Integer idAspirantePrueba, int first, int max)
@@ -83,8 +88,10 @@ public class JornadaAulaAspiranteDAO extends IngresoDefaultDataAcces<JornadaAula
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar por aspirante prueba", ex);
+            Logger.getLogger(JornadaAulaAspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public List<JornadaAulaAspirante> findByAsistencia(Boolean asistio, int first, int max)
@@ -111,8 +118,10 @@ public class JornadaAulaAspiranteDAO extends IngresoDefaultDataAcces<JornadaAula
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar por asistencia", ex);
+            Logger.getLogger(JornadaAulaAspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public Long countByJornadaAula(Integer idJornadaAula)
@@ -123,8 +132,8 @@ public class JornadaAulaAspiranteDAO extends IngresoDefaultDataAcces<JornadaAula
         }
 
         try {
-            TypedQuery<Long> q = getEntityManager().createQuery(
-                    "SELECT COUNT(jaa) FROM JornadaAulaAspirante jaa WHERE jaa.idJornadaAula.id = :idJornadaAula",
+            TypedQuery<Long> q = getEntityManager().createNamedQuery(
+                    "JornadaAulaAspirante.countByJornadaAula",
                     Long.class
             );
 
@@ -133,8 +142,10 @@ public class JornadaAulaAspiranteDAO extends IngresoDefaultDataAcces<JornadaAula
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al contar por jornada aula", ex);
+            Logger.getLogger(JornadaAulaAspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return 0L;
     }
 
     public Long countByAsistencia(Boolean asistio)
@@ -145,8 +156,8 @@ public class JornadaAulaAspiranteDAO extends IngresoDefaultDataAcces<JornadaAula
         }
 
         try {
-            TypedQuery<Long> q = getEntityManager().createQuery(
-                    "SELECT COUNT(jaa) FROM JornadaAulaAspirante jaa WHERE jaa.asistio = :asistio",
+            TypedQuery<Long> q = getEntityManager().createNamedQuery(
+                    "JornadaAulaAspirante.countByAsistencia",
                     Long.class
             );
 
@@ -155,7 +166,9 @@ public class JornadaAulaAspiranteDAO extends IngresoDefaultDataAcces<JornadaAula
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al contar por asistencia", ex);
+            Logger.getLogger(JornadaAulaAspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return 0L;
     }
 }

@@ -9,6 +9,8 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Jornada;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -55,8 +57,10 @@ public class JornadaDAO extends IngresoDefaultDataAcces<Jornada, Object> impleme
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar jornadas por nombre", ex);
+            Logger.getLogger(JornadaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public List<Jornada> findByActivo(Boolean activo, int first, int max)
@@ -83,8 +87,10 @@ public class JornadaDAO extends IngresoDefaultDataAcces<Jornada, Object> impleme
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar jornadas por estado", ex);
+            Logger.getLogger(JornadaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public Long countByNombre(String nombre)
@@ -105,8 +111,10 @@ public class JornadaDAO extends IngresoDefaultDataAcces<Jornada, Object> impleme
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al contar jornadas por nombre", ex);
+            Logger.getLogger(JornadaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return 0L;
     }
 
     public Long countByActivo(Boolean activo)
@@ -127,7 +135,9 @@ public class JornadaDAO extends IngresoDefaultDataAcces<Jornada, Object> impleme
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al contar jornadas por estado", ex);
+            Logger.getLogger(JornadaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return 0L;
     }
 }

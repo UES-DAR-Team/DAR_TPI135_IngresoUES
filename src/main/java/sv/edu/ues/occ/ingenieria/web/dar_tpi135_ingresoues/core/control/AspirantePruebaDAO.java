@@ -10,6 +10,8 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aspirante
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -56,8 +58,10 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar pruebas por aspirante", ex);
+            Logger.getLogger(AspirantePruebaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public List<AspirantePrueba> findByPrueba(Integer idPrueba, int first, int max)
@@ -84,8 +88,10 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar aspirantes por prueba", ex);
+            Logger.getLogger(AspirantePruebaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public Long countByAspirante(UUID idAspirante)
@@ -96,8 +102,8 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
         }
 
         try {
-            TypedQuery<Long> q = getEntityManager().createQuery(
-                    "SELECT COUNT(ap) FROM AspirantePrueba ap WHERE ap.idAspirante.id = :idAspirante",
+            TypedQuery<Long> q = getEntityManager().createNamedQuery(
+                    "AspirantePrueba.countByAspirante",
                     Long.class
             );
 
@@ -106,7 +112,9 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al contar pruebas por aspirante", ex);
+            Logger.getLogger(AspirantePruebaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return 0L;
     }
 }

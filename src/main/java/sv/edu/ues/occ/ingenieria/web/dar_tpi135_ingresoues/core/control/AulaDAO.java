@@ -9,6 +9,8 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aula;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -31,7 +33,7 @@ public class AulaDAO extends IngresoDefaultDataAcces<Aula, Object> implements Se
         return Aula.class;
     }
 
-    public List<Aula> findByCapacidadMin(Integer capacidad, int first, int max)
+    public List<Aula> findByCapacidadMin(final Integer capacidad, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         if (capacidad == null) {
             throw new IllegalArgumentException("Capacidad inválida");
@@ -45,12 +47,14 @@ public class AulaDAO extends IngresoDefaultDataAcces<Aula, Object> implements Se
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
-        } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar aulas por capacidad mínima", ex);
         }
+        catch (Exception ex) {
+            Logger.getLogger(AulaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        return List.of();
     }
 
-    public List<Aula> findByNombre(String nombre, int first, int max)
+    public List<Aula> findByNombre(final String nombre, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         if (nombre == null || nombre.isBlank()) {
             throw new IllegalArgumentException("Nombre inválido");
@@ -64,9 +68,11 @@ public class AulaDAO extends IngresoDefaultDataAcces<Aula, Object> implements Se
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
-        } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar aulas por nombre", ex);
         }
+        catch (Exception ex) {
+            Logger.getLogger(AulaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        return List.of();
     }
 
     public List<Aula> findActivos(int first, int max)
@@ -79,8 +85,10 @@ public class AulaDAO extends IngresoDefaultDataAcces<Aula, Object> implements Se
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
-        } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar aulas activas", ex);
         }
+        catch (Exception ex) {
+            Logger.getLogger(AulaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        return List.of();
     }
 }

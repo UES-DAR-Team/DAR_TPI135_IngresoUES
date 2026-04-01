@@ -11,6 +11,8 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAre
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -33,7 +35,7 @@ public class PruebaAreaPreguntaDistractorDAO extends IngresoDefaultDataAcces<Pru
         return PruebaAreaPreguntaDistractor.class;
     }
 
-    public List<PruebaAreaPreguntaDistractor> findByPruebaAreaPregunta(Integer idPruebaAreaPregunta, int first, int max)
+    public List<PruebaAreaPreguntaDistractor> findByPruebaAreaPregunta(final Integer idPruebaAreaPregunta, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         if (idPruebaAreaPregunta == null) {
             throw new IllegalArgumentException("idPruebaAreaPregunta inválido");
@@ -48,20 +50,20 @@ public class PruebaAreaPreguntaDistractorDAO extends IngresoDefaultDataAcces<Pru
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
-        } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar distractores por pregunta", ex);
         }
+        catch (Exception ex) {
+            Logger.getLogger(PruebaAreaPreguntaDistractorDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        return List.of();
     }
 
     /**
      * Obtiene la respuesta correcta de una pregunta específica. Si la pregunta no tiene respuesta correcta asignada, retorna null.
-     *
-     * @param idPruebaAreaPregunta ID de la pregunta a consultar. No debe ser null.
-     * @return La respuesta correcta de la pregunta, o null si no tiene ninguna asignada.
-     * @throws IllegalArgumentException si idPruebaAreaPregunta es null.
-     * @throws IllegalStateException si ocurre un error al consultar la base de datos.
-     */
-    public PruebaAreaPreguntaDistractor findRespuestaCorrecta(Integer idPruebaAreaPregunta)
+     *  * @param idPruebaAreaPregunta ID de la pregunta a consultar. No debe ser null.
+     *  * @return La respuesta correcta de la pregunta, o null si no existe o si ocurre un error.
+     *  * @throws IllegalArgumentException si idPruebaAreaPregunta es null.
+     *  */
+    public PruebaAreaPreguntaDistractor findRespuestaCorrecta(final Integer idPruebaAreaPregunta)
             throws IllegalArgumentException, IllegalStateException {
         if (idPruebaAreaPregunta == null) {
             throw new IllegalArgumentException("idPruebaAreaPregunta inválido");
@@ -71,14 +73,14 @@ public class PruebaAreaPreguntaDistractorDAO extends IngresoDefaultDataAcces<Pru
                     "PruebaAreaPreguntaDistractor.findRespuestaCorrecta", PruebaAreaPreguntaDistractor.class);
             q.setParameter("idPruebaAreaPregunta", idPruebaAreaPregunta);
             return q.getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar respuesta correcta", ex);
         }
+        catch (Exception ex) {
+            Logger.getLogger(PruebaAreaPreguntaDistractorDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        return null;
     }
 
-    public List<PruebaAreaPreguntaDistractor> findByDistractor(UUID idDistractor, int first, int max)
+    public List<PruebaAreaPreguntaDistractor> findByDistractor(final UUID idDistractor, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         if (idDistractor == null) {
             throw new IllegalArgumentException("idDistractor inválido");
@@ -93,8 +95,10 @@ public class PruebaAreaPreguntaDistractorDAO extends IngresoDefaultDataAcces<Pru
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
-        } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar preguntas por distractor", ex);
         }
+        catch (Exception ex) {
+            Logger.getLogger(PruebaAreaPreguntaDistractorDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        return List.of();
     }
 }

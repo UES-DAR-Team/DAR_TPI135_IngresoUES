@@ -10,6 +10,8 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAre
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -32,27 +34,29 @@ public class PruebaAreaPreguntaDAO extends IngresoDefaultDataAcces<PruebaAreaPre
         return PruebaAreaPregunta.class;
     }
 
-    public List<PruebaAreaPregunta> findByPruebaArea(Integer idPruebaArea, int first, int max)
+    public List<PruebaAreaPregunta> findByPruebaArea(final Integer idPruebaArea, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
-    if (idPruebaArea == null) {
-        throw new IllegalArgumentException("idPruebaArea inválido");
+        if (idPruebaArea == null) {
+            throw new IllegalArgumentException("idPruebaArea inválido");
+        }
+        if (first < 0 || max <= 0) {
+            throw new IllegalArgumentException("Parámetros de paginación inválidos");
+        }
+        try {
+            TypedQuery<PruebaAreaPregunta> q = getEntityManager().createNamedQuery(
+                    "PruebaAreaPregunta.findByPruebaArea", PruebaAreaPregunta.class);
+            q.setParameter("idPruebaArea", idPruebaArea);
+            q.setFirstResult(first);
+            q.setMaxResults(max);
+            return q.getResultList();
+        }
+        catch (Exception ex) {
+            Logger.getLogger(PruebaAreaPreguntaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        return List.of();
     }
-    if (first < 0 || max <= 0) {
-        throw new IllegalArgumentException("Parámetros de paginación inválidos");
-    }
-    try {
-        TypedQuery<PruebaAreaPregunta> q = getEntityManager().createNamedQuery(
-                "PruebaAreaPregunta.findByPruebaArea", PruebaAreaPregunta.class);
-        q.setParameter("idPruebaArea", idPruebaArea);
-        q.setFirstResult(first);
-        q.setMaxResults(max);
-        return q.getResultList();
-    } catch (Exception ex) {
-        throw new IllegalStateException("Error al buscar preguntas por área de prueba", ex);
-    }
-}
 
-    public List<PruebaAreaPregunta> findByPregunta(UUID idPregunta, int first, int max)
+    public List<PruebaAreaPregunta> findByPregunta(final UUID idPregunta, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         if (idPregunta == null) {
             throw new IllegalArgumentException("idPregunta inválido");
@@ -67,8 +71,10 @@ public class PruebaAreaPreguntaDAO extends IngresoDefaultDataAcces<PruebaAreaPre
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
-        } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar áreas de prueba por pregunta", ex);
         }
+        catch (Exception ex) {
+            Logger.getLogger(PruebaAreaPreguntaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        return List.of();
     }
 }

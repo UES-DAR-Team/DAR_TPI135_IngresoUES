@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence  version="3.0" xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             >
+    <persistence-unit name="IngresoPUIT" transaction-type="RESOURCE_LOCAL">
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
+
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.AreaConocimiento</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aspirante</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.AspiranteOpcione</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.AspirantePrueba</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aula</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.DistractorAreaConocimiento</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Distractor</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Jornada</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAula</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAulaAspirante</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAulaAspiranteResultado</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Pregunta</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PreguntaAreaConocimiento</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PreguntaDistractor</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Prueba</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaArea</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAreaPregunta</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAreaPreguntaDistractor</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaJornada</class>
+
+        <properties>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/ingreso_ues_bd" />
+            <property name="jakarta.persistence.jdbc.host" value="localhost"/>
+            <property name="jakarta.persistence.jdbc.user" value="postgres"/>
+            <property name="jakarta.persistence.jdbc.password" value="postgresmy"/>
+            <property name="jakarta.persistence.jdbc.port" value="5432"/>
+            <property name="jakarta.persistence.jdbc.database" value="ingreso_ues_bd"/>
+            <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver" />
+        </properties>
+    </persistence-unit>
+</persistence>

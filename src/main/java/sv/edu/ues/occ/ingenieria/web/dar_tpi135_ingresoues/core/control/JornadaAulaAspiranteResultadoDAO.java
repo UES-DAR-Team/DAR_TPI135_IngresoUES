@@ -10,6 +10,8 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAu
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -56,8 +58,10 @@ public class JornadaAulaAspiranteResultadoDAO extends IngresoDefaultDataAcces<Jo
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar resultados por jornada aula aspirante", ex);
+            Logger.getLogger(JornadaAulaAspiranteResultadoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public List<JornadaAulaAspiranteResultado> findByAprobado(Boolean aprobado, int first, int max)
@@ -84,8 +88,10 @@ public class JornadaAulaAspiranteResultadoDAO extends IngresoDefaultDataAcces<Jo
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar resultados por estado de aprobación", ex);
+            Logger.getLogger(JornadaAulaAspiranteResultadoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public List<JornadaAulaAspiranteResultado> findByRangoPuntaje(BigDecimal min, BigDecimal max, int first, int maxResults)
@@ -117,8 +123,10 @@ public class JornadaAulaAspiranteResultadoDAO extends IngresoDefaultDataAcces<Jo
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar resultados por rango de puntaje", ex);
+            Logger.getLogger(JornadaAulaAspiranteResultadoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public Long countByAprobado(Boolean aprobado)
@@ -129,8 +137,8 @@ public class JornadaAulaAspiranteResultadoDAO extends IngresoDefaultDataAcces<Jo
         }
 
         try {
-            TypedQuery<Long> q = getEntityManager().createQuery(
-                    "SELECT COUNT(r) FROM JornadaAulaAspiranteResultado r WHERE r.aprobado = :aprobado",
+            TypedQuery<Long> q = getEntityManager().createNamedQuery(
+                    "JornadaAulaAspiranteResultado.countByAprobado",
                     Long.class
             );
 
@@ -139,7 +147,9 @@ public class JornadaAulaAspiranteResultadoDAO extends IngresoDefaultDataAcces<Jo
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al contar resultados por estado", ex);
+            Logger.getLogger(JornadaAulaAspiranteResultadoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return 0L;
     }
 }

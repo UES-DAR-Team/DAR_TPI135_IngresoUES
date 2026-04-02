@@ -10,6 +10,8 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aspirante
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -56,8 +58,10 @@ public class AspiranteOpcioneDAO extends IngresoDefaultDataAcces<AspiranteOpcion
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar opciones del aspirante", ex);
+            Logger.getLogger(AspiranteOpcioneDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public List<AspiranteOpcione> findByCodigoPrograma(String codigoPrograma, int first, int max)
@@ -84,8 +88,10 @@ public class AspiranteOpcioneDAO extends IngresoDefaultDataAcces<AspiranteOpcion
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar por código de programa", ex);
+            Logger.getLogger(AspiranteOpcioneDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public List<AspiranteOpcione> findByNombrePrograma(String nombrePrograma, int first, int max)
@@ -112,8 +118,10 @@ public class AspiranteOpcioneDAO extends IngresoDefaultDataAcces<AspiranteOpcion
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar por nombre de programa", ex);
+            Logger.getLogger(AspiranteOpcioneDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public List<AspiranteOpcione> findByOrdenPreferencia(Short ordenPreferencia, int first, int max)
@@ -140,8 +148,10 @@ public class AspiranteOpcioneDAO extends IngresoDefaultDataAcces<AspiranteOpcion
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar por orden de preferencia", ex);
+            Logger.getLogger(AspiranteOpcioneDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public Long countByAspirante(UUID idAspirante)
@@ -162,7 +172,9 @@ public class AspiranteOpcioneDAO extends IngresoDefaultDataAcces<AspiranteOpcion
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al contar opciones del aspirante", ex);
+            Logger.getLogger(AspiranteOpcioneDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return 0L;
     }
 }

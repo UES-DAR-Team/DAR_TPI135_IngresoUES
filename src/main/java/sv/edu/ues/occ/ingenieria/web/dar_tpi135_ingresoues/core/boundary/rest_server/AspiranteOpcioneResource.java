@@ -24,36 +24,6 @@ public class AspiranteOpcioneResource implements Serializable {
     AspiranteDAO aspiranteDAO;
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response findRange(
-            @Min(0) @DefaultValue("0") @QueryParam("first") int first,
-            @Max(100) @DefaultValue("100") @QueryParam("max") int max,
-            @PathParam("idAspirante") UUID idAspirante
-    ) {
-
-        if (idAspirante != null && first >= 0 && max <= 100) {
-            try {
-                long total = aspiranteOpcioneDAO.countByAspirante(idAspirante);
-
-                return Response.ok(
-                                aspiranteOpcioneDAO.findByAspirante(idAspirante, first, max)
-                        )
-                        .header("Total-records", total)
-                        .build();
-
-            } catch (Exception e) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db")
-                        .build();
-            }
-        }
-
-        return Response.status(422)
-                .header("Missing-parameter", "idAspirante,first,max")
-                .build();
-    }
-
-    @GET
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(@PathParam("idAspirante") UUID idAspirante,
@@ -65,36 +35,6 @@ public class AspiranteOpcioneResource implements Serializable {
 
                 if (resp != null && resp.getIdAspirante().getId().equals(idAspirante)) {
                     return Response.ok(resp).build();
-                }
-
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Registro no encontrado")
-                        .build();
-
-            } catch (Exception e) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db")
-                        .build();
-            }
-        }
-
-        return Response.status(422)
-                .header("Missing-parameter", "idAspirante,id")
-                .build();
-    }
-
-    @DELETE
-    @Path("{id}")
-    public Response delete(@PathParam("idAspirante") UUID idAspirante,
-                           @PathParam("id") UUID id) {
-
-        if (idAspirante != null && id != null) {
-            try {
-                AspiranteOpcione resp = aspiranteOpcioneDAO.findById(id);
-
-                if (resp != null && resp.getIdAspirante().getId().equals(idAspirante)) {
-                    aspiranteOpcioneDAO.delete(resp);
-                    return Response.noContent().build();
                 }
 
                 return Response.status(Response.Status.NOT_FOUND)

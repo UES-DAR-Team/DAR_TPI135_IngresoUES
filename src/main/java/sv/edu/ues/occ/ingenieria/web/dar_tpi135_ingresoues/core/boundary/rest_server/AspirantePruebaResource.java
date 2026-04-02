@@ -29,36 +29,6 @@ public class AspirantePruebaResource implements Serializable {
     PruebaDAO pruebaDAO;
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response findRange(
-            @Min(0) @DefaultValue("0") @QueryParam("first") int first,
-            @Max(100) @DefaultValue("100") @QueryParam("max") int max,
-            @PathParam("idAspirante") UUID idAspirante
-    ) {
-
-        if (idAspirante != null && first >= 0 && max <= 100) {
-            try {
-                long total = aspirantePruebaDAO.countByAspirante(idAspirante);
-
-                return Response.ok(
-                                aspirantePruebaDAO.findByAspirante(idAspirante, first, max)
-                        )
-                        .header("Total-records", total)
-                        .build();
-
-            } catch (Exception e) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db")
-                        .build();
-            }
-        }
-
-        return Response.status(422)
-                .header("Missing-parameter", "idAspirante,first,max")
-                .build();
-    }
-
-    @GET
     @Path("{idPrueba}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(@PathParam("idAspirante") UUID idAspirante,
@@ -176,29 +146,4 @@ public class AspirantePruebaResource implements Serializable {
         }
     }
 
-    @DELETE
-    @Path("{idPrueba}")
-    public Response delete(@PathParam("idAspirante") UUID idAspirante,
-                           @PathParam("idPrueba") Integer idPrueba) {
-
-        if (idAspirante != null && idPrueba != null) {
-            try {
-                AspirantePrueba resp = aspirantePruebaDAO.findById(idPrueba);
-
-                if (resp != null &&
-                        resp.getIdAspirante().getId().equals(idAspirante)) {
-
-                    aspirantePruebaDAO.delete(resp);
-                    return Response.noContent().build();
-                }
-
-                return Response.status(404).build();
-
-            } catch (Exception e) {
-                return Response.status(500).build();
-            }
-        }
-
-        return Response.status(422).build();
-    }
 }

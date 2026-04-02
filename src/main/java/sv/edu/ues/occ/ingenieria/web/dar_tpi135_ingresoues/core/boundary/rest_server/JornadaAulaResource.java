@@ -28,37 +28,6 @@ public class JornadaAulaResource implements Serializable {
     @Inject
     AulaDAO aulaDAO;
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response findRange(
-            @Min(0) @DefaultValue("0") @QueryParam("first") int first,
-            @Max(100) @DefaultValue("100") @QueryParam("max") int max,
-            @PathParam("idJornada") UUID idJornada,
-            @PathParam("idAula") UUID idAula
-    ) {
-
-        if (idJornada != null && idAula != null && first >= 0 && max <= 100) {
-            try {
-                long total = jornadaAulaDAO.countByJornada(idJornada);
-
-                return Response.ok(
-                                jornadaAulaDAO.findByJornada(idJornada, first, max)
-                        )
-                        .header("Total-records", total)
-                        .build();
-
-            } catch (Exception e) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db")
-                        .build();
-            }
-        }
-
-        return Response.status(422)
-                .header("Missing-parameter", "idJornada,idAula,first,max")
-                .build();
-    }
-
 
     @GET
     @Path("{id}")
@@ -89,34 +58,6 @@ public class JornadaAulaResource implements Serializable {
                 .build();
     }
 
-    @DELETE
-    @Path("{id}")
-    public Response delete(@PathParam("id") UUID id) {
-
-        if (id != null) {
-            try {
-                JornadaAula resp = jornadaAulaDAO.findById(id);
-
-                if (resp != null) {
-                    jornadaAulaDAO.delete(resp);
-                    return Response.noContent().build();
-                }
-
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Registro no encontrado")
-                        .build();
-
-            } catch (Exception e) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db")
-                        .build();
-            }
-        }
-
-        return Response.status(422)
-                .header("Missing-parameter", "id")
-                .build();
-    }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)

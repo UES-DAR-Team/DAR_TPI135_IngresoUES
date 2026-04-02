@@ -25,35 +25,6 @@ public class JornadaAulaAspiranteResource implements Serializable {
     AspirantePruebaDAO aspirantePruebaDAO;
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response findRange(
-            @Min(0) @DefaultValue("0") @QueryParam("first") int first,
-            @Max(100) @DefaultValue("100") @QueryParam("max") int max,
-            @PathParam("idJornadaAula") UUID idJornadaAula,
-            @PathParam("idAspirantePrueba") Integer idAspirantePrueba
-    ) {
-
-        if (idJornadaAula != null && idAspirantePrueba != null && first >= 0 && max <= 100) {
-            try {
-                return Response.ok(
-                                jaaDAO.findByJornadaAula(idJornadaAula, first, max)
-                        )
-                        .header("Total-records", "N/A")
-                        .build();
-
-            } catch (Exception e) {
-                return Response.status(500)
-                        .header("Server-exception", "Cannot access db")
-                        .build();
-            }
-        }
-
-        return Response.status(422)
-                .header("Missing-parameter", "idJornadaAula,idAspirantePrueba,first,max")
-                .build();
-    }
-
-    @GET
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(@PathParam("id") Integer id) {
@@ -76,28 +47,6 @@ public class JornadaAulaAspiranteResource implements Serializable {
         return Response.status(422).build();
     }
 
-    @DELETE
-    @Path("{id}")
-    public Response delete(@PathParam("id") Integer id) {
-
-        if (id != null) {
-            try {
-                JornadaAulaAspirante resp = jaaDAO.findById(id);
-
-                if (resp != null) {
-                    jaaDAO.delete(resp);
-                    return Response.noContent().build();
-                }
-
-                return Response.status(404).build();
-
-            } catch (Exception e) {
-                return Response.status(500).build();
-            }
-        }
-
-        return Response.status(422).build();
-    }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)

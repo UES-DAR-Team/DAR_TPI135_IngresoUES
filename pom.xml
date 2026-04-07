@@ -3,7 +3,6 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>sv.edu.ues.occ.ingenieria.tpi135.ingresoues.web.core</groupId>
     <artifactId>DAR_TPI135_IngresoUES</artifactId>
     <version>1.0-SNAPSHOT</version>
@@ -12,11 +11,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.target>21</maven.compiler.target>
-        <maven.compiler.source>21</maven.compiler.source>
         <jakartaee>10.0.0</jakartaee>
         <mockito.version>5.19.0</mockito.version>
-        <junit.version>5.10.2</junit.version>
     </properties>
 
     <dependencyManagement>
@@ -32,6 +28,20 @@
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-bom</artifactId>
                 <version>5.21.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>1.21.4</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey</groupId>
+                <artifactId>jersey-bom</artifactId>
+                <version>4.0.2</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -65,13 +75,87 @@
             <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-common</artifactId>
-            <version>3.1.5</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>eclipselink</artifactId>
+            <version>4.0.9</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.7</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>integracion</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>3.5.4</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <build>
         <plugins>
@@ -90,18 +174,6 @@
                 <version>3.3.2</version>
             </plugin>
 
-            <!--            <plugin>-->
-            <!--                <groupId>org.apache.maven.plugins</groupId>-->
-            <!--                <artifactId>maven-dependency-plugin</artifactId>-->
-            <!--                <executions>-->
-            <!--                    <execution>-->
-            <!--                        <goals>-->
-            <!--                            <goal>properties</goal>-->
-            <!--                        </goals>-->
-            <!--                    </execution>-->
-            <!--                </executions>-->
-            <!--            </plugin>-->
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -111,17 +183,35 @@
                     <parallel>all</parallel>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>io.openliberty.tools</groupId>
+                <artifactId>liberty-maven-plugin</artifactId>
+                <version>3.12.0</version>
+                <configuration>
+                    <installDirectory>/usr/local/openliberty/wlp/</installDirectory>
+                    <serverName>tpi135_2026</serverName>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.14</version>
                 <executions>
+                    <!-- Pruebas unitarias -->
                     <execution>
                         <id>Preparar-Agente</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
+                        <configuration>
+                            <destFile>
+                                ${project.build.directory}/jacoco-output/jacoco-unit-test.exec
+                            </destFile>
+                            <propertyName>
+                                surefire.jacoco.args
+                            </propertyName>
+                        </configuration>
                     </execution>
 
                     <execution>
@@ -130,6 +220,15 @@
                             <goal>report</goal>
                         </goals>
                         <phase>prepare-package</phase>
+                        <configuration>
+                            <dataFile>
+                                ${project.build.directory}/jacoco-output/jacoco-unit-test.exec
+                            </dataFile>
+                            <outputDirectory>
+                                ${project.reporting.outputDirectory}/jacoco-unit-test-coverage-report
+                            </outputDirectory>
+
+                        </configuration>
                     </execution>
 
                     <execution>
@@ -138,7 +237,122 @@
                             <goal>report</goal>
                         </goals>
                         <phase>test</phase>
+                        <configuration>
+                            <dataFile>
+                                ${project.build.directory}/jacoco-output/jacoco-unit-test.exec
+                            </dataFile>
+                            <outputDirectory>
+                                ${project.reporting.outputDirectory}/jacoco-unit-test-coverage-report
+                            </outputDirectory>
+
+                        </configuration>
                     </execution>
+
+                    <!-- Pruebas de integración -->
+                    <execution>
+                        <id>Preparar-Agente Antes de integracion</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <destFile>
+                                ${project.build.directory}/jacoco-output/jacoco-integration-test.exec
+                            </destFile>
+                            <propertyName>
+                                failsafe.jacoco.args
+                            </propertyName>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>despues de integracion</id>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <phase>post-integration-test</phase>
+                        <configuration>
+                            <dataFile>
+                                ${project.build.directory}/jacoco-output/jacoco-integration-test.exec
+                            </dataFile>
+                            <outputDirectory>
+                                ${project.reporting.outputDirectory}/jacoco-integration-test-coverage-report
+                            </outputDirectory>
+
+                        </configuration>
+                    </execution>
+
+
+                    <!-- mezcla de las dos pruebas -->
+                    <execution>
+                        <id>mezclar unidad e integracion</id>
+                        <goals>
+                            <goal>merge</goal>
+                        </goals>
+                        <phase>post-integration-test</phase>
+                        <configuration>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${project.build.directory}/jacoco-output</directory>
+                                    <includes>
+                                        <include>*.exec</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                            <destFile>
+                                ${project.build.directory}/jacoco-output/jacoco-unitintegration-test.exec
+                            </destFile>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>crear reporte mezclado</id>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <phase>post-integration-test</phase>
+                        <configuration>
+                            <dataFile>
+                                ${project.build.directory}/jacoco-output/jacoco-unitintegration-test.exec
+                            </dataFile>
+                            <outputDirectory>
+                                ${project.reporting.outputDirectory}/jacoco-unitintegration-test-coverage-report
+                            </outputDirectory>
+
+                        </configuration>
+                    </execution>
+
+                    <!--Validaion-->
+                    <execution>
+                        <id>validacion</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <haltOnFailure>true</haltOnFailure>
+                            <rules>
+                                <rule>
+                                    <element>CLASS</element>
+                                    <excludes>
+                                        <exclude>*Test</exclude>
+                                        <exclude>*IT</exclude>
+                                    </excludes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>10%</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                            <dataFile>
+                                ${project.build.directory}/jacoco-output/jacoco-unitintegration-test.exec
+                            </dataFile>
+                        </configuration>
+                    </execution>
+
                 </executions>
             </plugin>
         </plugins>

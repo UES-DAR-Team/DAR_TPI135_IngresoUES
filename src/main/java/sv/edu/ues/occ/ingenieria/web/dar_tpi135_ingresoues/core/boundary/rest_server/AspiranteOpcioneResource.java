@@ -27,7 +27,7 @@ public class AspiranteOpcioneResource implements Serializable {
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(@PathParam("idAspirante") UUID idAspirante,
-                             @PathParam("id") UUID id) {
+                             @PathParam("id") Integer id) {
 
         if (idAspirante != null && id != null) {
             try {

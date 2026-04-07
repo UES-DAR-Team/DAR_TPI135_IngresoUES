@@ -10,6 +10,8 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAre
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -32,7 +34,7 @@ public class PruebaAreaDAO extends IngresoDefaultDataAcces<PruebaArea,Object> im
         return PruebaArea.class;
     }
 
-    public List<PruebaArea> findByPrueba(UUID idPrueba, int first, int max)
+    public List<PruebaArea> findByPrueba(final UUID idPrueba, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         if (idPrueba == null) {
             throw new IllegalArgumentException("idPrueba inválido");
@@ -46,12 +48,14 @@ public class PruebaAreaDAO extends IngresoDefaultDataAcces<PruebaArea,Object> im
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
-        } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar áreas por prueba", ex);
         }
+        catch (Exception ex) {
+            Logger.getLogger(PruebaAreaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        return List.of();
     }
 
-    public List<PruebaArea> findByAreaConocimiento(UUID idAreaConocimiento, int first, int max)
+    public List<PruebaArea> findByAreaConocimiento(final UUID idAreaConocimiento, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         if (idAreaConocimiento == null) {
             throw new IllegalArgumentException("idAreaConocimiento inválido");
@@ -65,12 +69,14 @@ public class PruebaAreaDAO extends IngresoDefaultDataAcces<PruebaArea,Object> im
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
-        } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar pruebas por área de conocimiento", ex);
         }
+        catch (Exception ex) {
+            Logger.getLogger(PruebaAreaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        return List.of();
     }
 
-    public List<PruebaArea> findByNumPreguntasMin(Short numPreguntas, int first, int max)
+    public List<PruebaArea> findByNumPreguntasMin(final Short numPreguntas, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         if (numPreguntas == null) {
             throw new IllegalArgumentException("numPreguntas inválido");
@@ -84,8 +90,10 @@ public class PruebaAreaDAO extends IngresoDefaultDataAcces<PruebaArea,Object> im
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
-        } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar por número mínimo de preguntas", ex);
         }
+        catch (Exception ex) {
+            Logger.getLogger(PruebaAreaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        return List.of();
     }
 }

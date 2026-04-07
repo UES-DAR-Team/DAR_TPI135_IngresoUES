@@ -9,6 +9,8 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Prueba;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -31,7 +33,7 @@ public class PruebaDAO extends IngresoDefaultDataAcces<Prueba,Object> implements
         return Prueba.class;
     }
 
-    public List<Prueba> findActivas(int first, int max)
+    public List<Prueba> findActivas(final int first, final int max)
             throws IllegalArgumentException, IllegalStateException {
         if (first < 0 || max <= 0) {
             throw new IllegalArgumentException("Parámetros de paginación inválidos");
@@ -42,12 +44,15 @@ public class PruebaDAO extends IngresoDefaultDataAcces<Prueba,Object> implements
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
-        } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar pruebas activas", ex);
         }
+        catch (Exception ex) {
+            Logger.getLogger(PruebaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        return List.of();
+
     }
 
-    public List<Prueba> findByNombre(String nombre, int first, int max)
+    public List<Prueba> findByNombre(final String nombre, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         if (nombre == null || nombre.isBlank()) {
             throw new IllegalArgumentException("Nombre inválido");
@@ -63,9 +68,11 @@ public class PruebaDAO extends IngresoDefaultDataAcces<Prueba,Object> implements
             q.setMaxResults(max);
 
             return q.getResultList();
-
-        } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar pruebas por nombre", ex);
         }
+        catch (Exception ex) {
+            Logger.getLogger(PruebaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        return List.of();
+
     }
 }

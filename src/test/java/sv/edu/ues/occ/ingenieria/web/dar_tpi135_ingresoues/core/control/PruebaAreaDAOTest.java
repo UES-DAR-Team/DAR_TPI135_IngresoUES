@@ -73,44 +73,47 @@ class PruebaAreaDAOTest {
 
     @Test
     void testFindByPruebaFirstNegativo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByPrueba(1, -1, 10));
+                () -> dao.findByPrueba(id, -1, 10));
     }
 
     @Test
     void testFindByPruebaMaxCeroNegativo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByPrueba(1, 0, 0));
+                () -> dao.findByPrueba(id, 0, 0));
     }
 
     @Test
     void testFindByPruebaParametrosValidosRetornaLista() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaArea.findByPrueba", PruebaArea.class)).thenReturn(query);
-        when(query.setParameter("idPrueba", 1)).thenReturn(query);
+        when(query.setParameter("idPrueba", id)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(pruebaAreaValida()));
 
-        List<PruebaArea> resultado = dao.findByPrueba(1, 0, 10);
+        List<PruebaArea> resultado = dao.findByPrueba(id, 0, 10);
 
         assertNotNull(resultado);
         assertFalse(resultado.isEmpty());
         verify(em).createNamedQuery("PruebaArea.findByPrueba", PruebaArea.class);
-        verify(query).setParameter("idPrueba", 1);
+        verify(query).setParameter("idPrueba", id);
         verify(query).setFirstResult(0);
         verify(query).setMaxResults(10);
         verify(query).getResultList();
     }
-
     @Test
     void testFindByPruebaRetornaListaVacia() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaArea.findByPrueba", PruebaArea.class)).thenReturn(query);
-        when(query.setParameter("idPrueba", 1)).thenReturn(query);
+        when(query.setParameter("idPrueba", id)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
         when(query.getResultList()).thenReturn(Collections.emptyList());
 
-        List<PruebaArea> resultado = dao.findByPrueba(1, 0, 10);
+        List<PruebaArea> resultado = dao.findByPrueba(id, 0, 10);
 
         assertNotNull(resultado);
         assertTrue(resultado.isEmpty());
@@ -118,17 +121,19 @@ class PruebaAreaDAOTest {
 
     @Test
     void testFindByPruebaErrorInterno() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaArea.findByPrueba", PruebaArea.class))
                 .thenThrow(new RuntimeException("fallo en la Base de Datos"));
 
         assertThrows(IllegalStateException.class,
-                () -> dao.findByPrueba(1, 0, 10));
+                () -> dao.findByPrueba(id, 0, 10));
     }
 
     @Test
     void testFindByPruebaEntityManagerNulo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalStateException.class,
-                () -> daoConEntityManagerNulo().findByPrueba(1, 0, 10));
+                () -> daoConEntityManagerNulo().findByPrueba(id, 0, 10));
     }
 
     @Test
@@ -139,30 +144,33 @@ class PruebaAreaDAOTest {
 
     @Test
     void testFindByAreaConocimientoFirstNegativo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByAreaConocimiento(1, -1, 10));
+                () -> dao.findByAreaConocimiento(id, -1, 10));
     }
 
     @Test
     void testFindByAreaConocimientoMaxCeroNegativo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByAreaConocimiento(1, 0, 0));
+                () -> dao.findByAreaConocimiento(id, 0, 0));
     }
 
     @Test
     void testFindByAreaConocimientoParametrosValidosRetornaLista() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaArea.findByAreaConocimiento", PruebaArea.class)).thenReturn(query);
-        when(query.setParameter("idAreaConocimiento", 1)).thenReturn(query);
+        when(query.setParameter("idAreaConocimiento", id)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(pruebaAreaValida()));
 
-        List<PruebaArea> resultado = dao.findByAreaConocimiento(1, 0, 10);
+        List<PruebaArea> resultado = dao.findByAreaConocimiento(id, 0, 10);
 
         assertNotNull(resultado);
         assertFalse(resultado.isEmpty());
         verify(em).createNamedQuery("PruebaArea.findByAreaConocimiento", PruebaArea.class);
-        verify(query).setParameter("idAreaConocimiento", 1);
+        verify(query).setParameter("idAreaConocimiento", id);
         verify(query).setFirstResult(0);
         verify(query).setMaxResults(10);
         verify(query).getResultList();
@@ -170,13 +178,14 @@ class PruebaAreaDAOTest {
 
     @Test
     void testFindByAreaConocimientoRetornaListaVacia() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaArea.findByAreaConocimiento", PruebaArea.class)).thenReturn(query);
-        when(query.setParameter("idAreaConocimiento", 1)).thenReturn(query);
+        when(query.setParameter("idAreaConocimiento", id)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
         when(query.getResultList()).thenReturn(Collections.emptyList());
 
-        List<PruebaArea> resultado = dao.findByAreaConocimiento(1, 0, 10);
+        List<PruebaArea> resultado = dao.findByAreaConocimiento(id, 0, 10);
 
         assertNotNull(resultado);
         assertTrue(resultado.isEmpty());
@@ -184,17 +193,19 @@ class PruebaAreaDAOTest {
 
     @Test
     void testFindByAreaConocimientoErrorInterno() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaArea.findByAreaConocimiento", PruebaArea.class))
                 .thenThrow(new RuntimeException("fallo en la Base de datos"));
 
         assertThrows(IllegalStateException.class,
-                () -> dao.findByAreaConocimiento(1, 0, 10));
+                () -> dao.findByAreaConocimiento(id, 0, 10));
     }
 
     @Test
     void testFindByAreaConocimientoEntityManagerNulo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalStateException.class,
-                () -> daoConEntityManagerNulo().findByAreaConocimiento(1, 0, 10));
+                () -> daoConEntityManagerNulo().findByAreaConocimiento(id, 0, 10));
     }
 
     @Test

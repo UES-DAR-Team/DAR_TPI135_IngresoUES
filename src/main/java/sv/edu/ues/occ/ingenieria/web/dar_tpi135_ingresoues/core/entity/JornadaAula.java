@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "jornada_aula", schema = "public")
@@ -15,12 +16,20 @@ import java.time.OffsetDateTime;
         @NamedQuery(
                 name = "JornadaAula.buscarPorAula",
                 query = "SELECT ja FROM JornadaAula ja WHERE ja.idAula.id = :idAula"
+        ),
+        @NamedQuery(
+                name = "JornadaAula.countByJornada",
+                query = "SELECT COUNT(ja) FROM JornadaAula ja WHERE ja.idJornada.id = :idJornada"
+        ),
+        @NamedQuery(
+                name = "JornadaAula.countByAula",
+                query = "SELECT COUNT(ja) FROM JornadaAula ja WHERE ja.idAula.id = :idAula"
         )
 })
 public class JornadaAula {
     @Id
-    @Column(name = "id_jornada_aula", nullable = false)
-    private Integer id;
+    @Column(name = "id_jornada_aula", nullable = false, updatable = false)
+    private UUID id;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -36,11 +45,18 @@ public class JornadaAula {
     @Column(name = "fecha_asignacion", nullable = false)
     private OffsetDateTime fechaAsignacion;
 
-    public Integer getId() {
+    @PrePersist
+    public void prePersist() {
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
+    }
+
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -67,5 +83,4 @@ public class JornadaAula {
     public void setFechaAsignacion(OffsetDateTime fechaAsignacion) {
         this.fechaAsignacion = fechaAsignacion;
     }
-
 }

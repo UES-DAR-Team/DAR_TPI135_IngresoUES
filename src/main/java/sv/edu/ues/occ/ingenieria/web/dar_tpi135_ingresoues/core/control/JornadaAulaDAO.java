@@ -10,10 +10,12 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAu
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
-public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object> implements Serializable {
+public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, UUID> implements Serializable {
 
     @PersistenceContext(unitName = "IngresoPU")
     private EntityManager em;
@@ -44,7 +46,7 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
         }
 
         try {
-            TypedQuery<JornadaAula> q = getEntityManager().createNamedQuery(
+            TypedQuery<JornadaAula> q = em.createNamedQuery(
                     "JornadaAula.buscarPorJornada",
                     JornadaAula.class
             );
@@ -56,8 +58,10 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar aulas por jornada", ex);
+            Logger.getLogger(JornadaAulaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public List<JornadaAula> findByAula(UUID idAula, int first, int max)
@@ -72,7 +76,7 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
         }
 
         try {
-            TypedQuery<JornadaAula> q = getEntityManager().createNamedQuery(
+            TypedQuery<JornadaAula> q = em.createNamedQuery(
                     "JornadaAula.buscarPorAula",
                     JornadaAula.class
             );
@@ -84,8 +88,10 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
             return q.getResultList();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al buscar jornadas por aula", ex);
+            Logger.getLogger(JornadaAulaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return List.of();
     }
 
     public Long countByJornada(UUID idJornada)
@@ -96,8 +102,8 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
         }
 
         try {
-            TypedQuery<Long> q = getEntityManager().createQuery(
-                    "SELECT COUNT(ja) FROM JornadaAula ja WHERE ja.idJornada.id = :idJornada",
+            TypedQuery<Long> q = em.createNamedQuery(
+                    "JornadaAula.countByJornada",
                     Long.class
             );
 
@@ -106,8 +112,10 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al contar aulas por jornada", ex);
+            Logger.getLogger(JornadaAulaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return 0L;
     }
 
     public Long countByAula(UUID idAula)
@@ -118,10 +126,8 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
         }
 
         try {
-            // la query debe ir en la capa de entidades por eso se le asigna al em para constultar la query en las entidades,
-            // entidades con createNamedQuery
-            TypedQuery<Long> q = getEntityManager().createQuery(
-                    "SELECT COUNT(ja) FROM JornadaAula ja WHERE ja.idAula.id = :idAula",
+            TypedQuery<Long> q = em.createNamedQuery(
+                    "JornadaAula.countByAula",
                     Long.class
             );
 
@@ -130,7 +136,9 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Object>
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            throw new IllegalStateException("Error al contar jornadas por aula", ex);
+            Logger.getLogger(JornadaAulaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
+
+        return 0L;
     }
 }

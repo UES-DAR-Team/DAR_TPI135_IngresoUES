@@ -10,8 +10,6 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaJor
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -49,11 +47,9 @@ public class PruebaJornadaDAO extends IngresoDefaultDataAcces<PruebaJornada,Obje
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
-        }
-        catch (Exception ex) {
-            Logger.getLogger(PruebaJornadaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
-        }
-        return List.of();
+        } catch (Exception ex) {
+        throw new IllegalStateException("Error al buscar pruebas por jornada", ex);
+    }
     }
 
     public List<PruebaJornada> findByPrueba(final UUID idPrueba, int first, int max)
@@ -72,9 +68,8 @@ public class PruebaJornadaDAO extends IngresoDefaultDataAcces<PruebaJornada,Obje
             q.setMaxResults(max);
             return q.getResultList();
         } catch (Exception ex) {
-            Logger.getLogger(PruebaJornadaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar jornadas por prueba", ex);
         }
-        return List.of();
     }
 
     /**
@@ -89,6 +84,7 @@ public class PruebaJornadaDAO extends IngresoDefaultDataAcces<PruebaJornada,Obje
      * @return lista de registros que coinciden con la prueba y la jornada indicadas.
      *         Si la lista no está vacía, la asignación ya existe.
      * @throws IllegalArgumentException si idPrueba o idJornada son null, o si los valores de first o max son invalidos.
+     * @throws IllegalStateException si ocurre un error al consultar la base de datos.
      */
 
     public List<PruebaJornada> findByPruebaAndJornada(final Integer idPrueba, Integer idJornada, int first, int max)
@@ -111,8 +107,7 @@ public class PruebaJornadaDAO extends IngresoDefaultDataAcces<PruebaJornada,Obje
             q.setMaxResults(max);
             return q.getResultList();
         } catch (Exception ex) {
-            Logger.getLogger(PruebaJornadaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar asignación por prueba y jornada", ex);
         }
-        return List.of();
     }
 }

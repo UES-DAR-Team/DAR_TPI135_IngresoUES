@@ -11,8 +11,6 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAre
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -50,19 +48,19 @@ public class PruebaAreaPreguntaDistractorDAO extends IngresoDefaultDataAcces<Pru
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
-        }
-        catch (Exception ex) {
-            Logger.getLogger(PruebaAreaPreguntaDistractorDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
-        }
-        return List.of();
+        } catch (Exception ex) {
+        throw new IllegalStateException("Error al buscar distractores por pregunta", ex);
+    }
     }
 
     /**
      * Obtiene la respuesta correcta de una pregunta específica. Si la pregunta no tiene respuesta correcta asignada, retorna null.
-     *  * @param idPruebaAreaPregunta ID de la pregunta a consultar. No debe ser null.
-     *  * @return La respuesta correcta de la pregunta, o null si no existe o si ocurre un error.
-     *  * @throws IllegalArgumentException si idPruebaAreaPregunta es null.
-     *  */
+     *
+     * @param idPruebaAreaPregunta ID de la pregunta a consultar. No debe ser null.
+     * @return La respuesta correcta de la pregunta, o null si no tiene ninguna asignada.
+     * @throws IllegalArgumentException si idPruebaAreaPregunta es null.
+     * @throws IllegalStateException si ocurre un error al consultar la base de datos.
+     */
     public PruebaAreaPreguntaDistractor findRespuestaCorrecta(final Integer idPruebaAreaPregunta)
             throws IllegalArgumentException, IllegalStateException {
         if (idPruebaAreaPregunta == null) {
@@ -73,11 +71,11 @@ public class PruebaAreaPreguntaDistractorDAO extends IngresoDefaultDataAcces<Pru
                     "PruebaAreaPreguntaDistractor.findRespuestaCorrecta", PruebaAreaPreguntaDistractor.class);
             q.setParameter("idPruebaAreaPregunta", idPruebaAreaPregunta);
             return q.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        } catch (Exception ex) {
+            throw new IllegalStateException("Error al buscar respuesta correcta", ex);
         }
-        catch (Exception ex) {
-            Logger.getLogger(PruebaAreaPreguntaDistractorDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
-        }
-        return null;
     }
 
     public List<PruebaAreaPreguntaDistractor> findByDistractor(final UUID idDistractor, int first, int max)
@@ -95,10 +93,8 @@ public class PruebaAreaPreguntaDistractorDAO extends IngresoDefaultDataAcces<Pru
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
-        }
-        catch (Exception ex) {
-            Logger.getLogger(PruebaAreaPreguntaDistractorDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
-        }
-        return List.of();
+        } catch (Exception ex) {
+        throw new IllegalStateException("Error al buscar preguntas por distractor", ex);
+    }
     }
 }

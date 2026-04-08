@@ -10,8 +10,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Pregunta;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 @Stateless
 @LocalBean
@@ -33,20 +32,23 @@ public class PreguntaDAO extends IngresoDefaultDataAcces<Pregunta, Object> imple
         return Pregunta.class;
     }
 
-    public List<Pregunta> findByCoincidenciaTexto(final String texto, int first, int max)
+    public List<Pregunta> findByCoincidenciaTexto(final String text, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
+        if(text == null || text.isBlank()){
+            throw new IllegalArgumentException("Parametro invalido: texto");
+        }
+        if(first < 0 || max <= 0){
+            throw new IllegalArgumentException("Parametros invalidos: first, max");
+        }
         try {
-            if (texto != null && !texto.isBlank() && first >= 0 && max >= 0) {
                 TypedQuery<Pregunta> q = em.createNamedQuery("Pregunta.findByCoincidenciaTexto", Pregunta.class);
-                q.setParameter("texto", "%" + texto.trim().toUpperCase() + "%");
+                q.setParameter("text", "%" + text.trim().toUpperCase() + "%");
                 q.setFirstResult(first);
                 q.setMaxResults(max);
                 return q.getResultList();
-            }
-        }catch (Exception e){
-            Logger.getLogger(PreguntaDAO.class.getName()).log(Level.SEVERE, e.getMessage(), e);
+        }catch (RuntimeException e){
+            throw new IllegalStateException("Error de sistema en la ejecucion de query", e);
         }
-        return List.of();
     }
 
 

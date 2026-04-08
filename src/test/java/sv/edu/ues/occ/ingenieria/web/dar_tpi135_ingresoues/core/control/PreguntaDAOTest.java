@@ -13,9 +13,8 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Pregunta;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PreguntaDAOTest {
@@ -37,54 +36,53 @@ class PreguntaDAOTest {
     }
 
     @Test
-    void testFindByCoincidenciaTextoValido() {
+    void retornaResultados_cuandoParametrosSonValidos() {
         when(em.createNamedQuery("Pregunta.findByCoincidenciaTexto", Pregunta.class))
                 .thenReturn(query);
-        when(query.setParameter("texto", "%TEXTO%")).thenReturn(query);
+        when(query.setParameter("text", "%TEXT%")).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(pregunta));
 
-        List<Pregunta> resultado = dao.findByCoincidenciaTexto("texto", 0, 10);
+        List<Pregunta> resultado = dao.findByCoincidenciaTexto("text", 0, 10);
 
-        assertTrue(resultado.contains(pregunta));
+        assertSame(pregunta, resultado.getFirst());
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
         verify(em).createNamedQuery("Pregunta.findByCoincidenciaTexto", Pregunta.class);
-        verify(query).setParameter("texto", "%TEXTO%");
+        verify(query).setParameter("text", "%TEXT%");
         verify(query).setFirstResult(0);
         verify(query).setMaxResults(10);
         verify(query).getResultList();
     }
 
     @Test
-    void testFindByCoincidenciaTextoNulo(){
-        List<Pregunta> resultado = dao.findByCoincidenciaTexto(null, 0, 10);
-        assertTrue(resultado.isEmpty());
+    void lanzaIllegalArgumentException_cuandoTextoEsNulo() {
+        assertThrows(IllegalArgumentException.class,()-> dao.findByCoincidenciaTexto(null, 0, 10));
     }
 
     @Test
-    void testFindByCoincidenciaTextoVacio(){
-        List<Pregunta> resultado = dao.findByCoincidenciaTexto("", 0, 10);
-        assertTrue(resultado.isEmpty());
+    void lanzaIllegalArgumentException_cuandoTextoEsBlancoOVacio() {
+        assertThrows(IllegalArgumentException.class,()-> dao.findByCoincidenciaTexto("   ", 0, 10));
+        assertThrows(IllegalArgumentException.class,()-> dao.findByCoincidenciaTexto("", 10, 10));
     }
 
     @Test
-    void testFindByCoincidenciaTextoFirstNegativo(){
-        List<Pregunta> resultado = dao.findByCoincidenciaTexto("texto", -1, 10);
-        assertTrue(resultado.isEmpty());
+    void lanzaIllegalArgumentException_cuandoFirstEsNegativo() {
+        assertThrows(IllegalArgumentException.class,()-> dao.findByCoincidenciaTexto("text", -1, 10));
     }
 
     @Test
-    void testFindByCoincidenciaTextoMaxNegativo(){
-        List<Pregunta> resultado = dao.findByCoincidenciaTexto("texto", 0, -1);
-        assertTrue(resultado.isEmpty());
+    void lanzaIllegalArgumentException_cuandoMaxEsCeroONegativo() {
+        assertThrows(IllegalArgumentException.class,()-> dao.findByCoincidenciaTexto("text", 0, 0));
+        assertThrows(IllegalArgumentException.class,()-> dao.findByCoincidenciaTexto("text", 0, -1));
     }
 
     @Test
-    void testFindByCoincidenciaTextoException() {
+    void lanzaIllegalStateException_cuandoJpaFalla(){
         when(em.createNamedQuery("Pregunta.findByCoincidenciaTexto", Pregunta.class))
-                .thenThrow(new RuntimeException("DB error"));
-        List<Pregunta> resultado = dao.findByCoincidenciaTexto("texto",0 , 10);
-        assertTrue(resultado.isEmpty());
+                .thenThrow(new RuntimeException("fallo de base de datos"));
+        assertThrows(IllegalStateException.class,()-> dao.findByCoincidenciaTexto("text", 0, 10));
         verify(em).createNamedQuery("Pregunta.findByCoincidenciaTexto", Pregunta.class);
     }
 

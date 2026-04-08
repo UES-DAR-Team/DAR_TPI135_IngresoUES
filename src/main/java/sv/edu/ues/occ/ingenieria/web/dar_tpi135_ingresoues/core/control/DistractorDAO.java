@@ -9,8 +9,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Distracto
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 @Stateless
 @LocalBean
@@ -34,18 +33,22 @@ public class DistractorDAO extends IngresoDefaultDataAcces<Distractor, Object> i
 
     public List<Distractor> findByCoincidenciaTexto(final String text, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
+        if(text==null || text.isBlank()){
+            throw new IllegalArgumentException("Parametro invalido: text");
+        }
+        if(first < 0 || max <= 0){
+            throw new IllegalArgumentException("Parametros invalidos: first, max");
+        }
         try {
-            if (text != null && !text.isBlank() && first >= 0 && max >= 0) {
                 TypedQuery<Distractor> q = em.createNamedQuery("Distractor.findByCoincidenciaTexto", Distractor.class);
                 q.setParameter("text", "%" + text.trim().toUpperCase() + "%");
                 q.setFirstResult(first);
                 q.setMaxResults(max);
                 return q.getResultList();
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(DistractorDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        } catch (RuntimeException e) {
+           throw new IllegalStateException("Error de sistema en la ejecucion de query",e);
         }
-        return List.of();
+
     }
 
 }

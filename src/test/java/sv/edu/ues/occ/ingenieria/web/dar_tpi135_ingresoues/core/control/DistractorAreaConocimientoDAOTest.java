@@ -3,6 +3,7 @@ package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,7 +20,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DistractorAreaConocimientoDAOTest {
-
     @Mock
     private EntityManager em;
 
@@ -29,122 +29,115 @@ class DistractorAreaConocimientoDAOTest {
     @InjectMocks
     private DistractorAreaConocimientoDAO dao;
 
+    private UUID idDistractor;
+    private UUID idAreaConocimiento;
     private DistractorAreaConocimiento dac;
 
     @BeforeEach
     void setUp() {
+        idDistractor = UUID.randomUUID();
+        idAreaConocimiento = UUID.randomUUID();
         dac = new DistractorAreaConocimiento();
-        dac.setId(1);
     }
 
-    //===============pruebas para buscar por idDistractor===========================
-    @Test
-    void testFindByIdDistractorParametrosValido() {
-        UUID idDistractor = UUID.fromString("218062e5-d905-47cb-96e9-d427c98dc284");
+    @Nested
+    class FindByIdDistractor {
 
-        when(em.createNamedQuery("DistractorAreaConocimiento.findByIdDistractor", DistractorAreaConocimiento.class))
-                .thenReturn(query);
-        when(query.setParameter("idDistractor", 1)).thenReturn(query);
-        when(query.setFirstResult(0)).thenReturn(query);
-        when(query.setMaxResults(10)).thenReturn(query);
-        when(query.getResultList()).thenReturn(java.util.List.of(dac));
+        @Test
+        void retornaResultados_cuandoParametrosSonValidos() {
+            when(em.createNamedQuery("DistractorAreaConocimiento.findByIdDistractor", DistractorAreaConocimiento.class))
+                    .thenReturn(query);
+            when(query.setParameter("idDistractor", idDistractor)).thenReturn(query);
+            when(query.setFirstResult(0)).thenReturn(query);
+            when(query.setMaxResults(10)).thenReturn(query);
+            when(query.getResultList()).thenReturn(List.of(dac));
 
-        var resultado = dao.findByIdDistractor(idDistractor, 0, 10);
+            List<DistractorAreaConocimiento> resultado = dao.findByIdDistractor(idDistractor, 0, 10);
 
-        assertFalse(resultado.isEmpty());
-        assertTrue(resultado.contains(dac));
-        verify(em).createNamedQuery("DistractorAreaConocimiento.findByIdDistractor", DistractorAreaConocimiento.class);
-        verify(query).setParameter("idDistractor", idDistractor);
-        verify(query).setFirstResult(0);
-        verify(query).setMaxResults(10);
-        verify(query).getResultList();
+            assertNotNull(resultado);
+            assertEquals(1, resultado.size());
+            assertSame(dac, resultado.getFirst());
+
+            verify(em).createNamedQuery("DistractorAreaConocimiento.findByIdDistractor", DistractorAreaConocimiento.class);
+            verify(query).setParameter("idDistractor", idDistractor);
+            verify(query).setFirstResult(0);
+            verify(query).setMaxResults(10);
+            verify(query).getResultList();
+        }
+
+        @Test
+        void lanzaIllegalArgumentException_cuandoIdDistractorEsNulo(){
+            assertThrows(IllegalArgumentException.class, ()->dao.findByIdDistractor(null,0,10));
+        }
+
+        @Test
+        void lanzaIllegalArgumentException_cuandoFistNegativo(){
+            assertThrows(IllegalArgumentException.class, ()->dao.findByIdDistractor(idDistractor,-1,10));
+        }
+
+        @Test
+        void lanzaIllegalArgumentException_cuandoMaxNegativoOCero(){
+            assertThrows(IllegalArgumentException.class, ()->dao.findByIdDistractor(idDistractor,0,0));
+            assertThrows(IllegalArgumentException.class, ()->dao.findByIdDistractor(idDistractor,0,-1));
+        }
+
+        @Test
+        void lanzaIllegalStateException_cuandoJpaFalla(){
+            when(em.createNamedQuery("DistractorAreaConocimiento.findByIdDistractor", DistractorAreaConocimiento.class))
+                    .thenThrow(new RuntimeException("Fallo de base de datos"));
+            assertThrows(IllegalStateException.class, ()->dao.findByIdDistractor(idDistractor,0,10));
+            verify(em).createNamedQuery("DistractorAreaConocimiento.findByIdDistractor", DistractorAreaConocimiento.class);
+        }
     }
 
-    @Test
-    void testFindBiIdDistractorIdNulo() {
-        var resultado = dao.findByIdDistractor(null, 0, 10);
-        assertTrue(resultado.isEmpty());
-    }
+    @Nested
+    class FindByIdAreaConocimiento {
 
-    @Test
-    void testFindByIdFirstNegativo(){
-        UUID idDistractor = UUID.randomUUID();
-        List<DistractorAreaConocimiento> resultado = dao.findByIdDistractor(idDistractor, -1, 10);
-        assertTrue(resultado.isEmpty());
-    }
+        @Test
+        void retornaResultados_cuandoParametrosSonValidos() {
+            when(em.createNamedQuery("DistractorAreaConocimiento.findByIdAreaConocimiento", DistractorAreaConocimiento.class))
+                    .thenReturn(query);
+            when(query.setParameter("idAreaConocimiento", idAreaConocimiento)).thenReturn(query);
+            when(query.setFirstResult(0)).thenReturn(query);
+            when(query.setMaxResults(10)).thenReturn(query);
+            when(query.getResultList()).thenReturn(List.of(dac));
 
-    @Test
-    void testFindByIdMaxNegativo(){
-        UUID idDistractor = UUID.randomUUID();
-        List<DistractorAreaConocimiento> resultado = dao.findByIdDistractor(idDistractor, 0, -1);
-        assertTrue(resultado.isEmpty());
-    }
+            List<DistractorAreaConocimiento> resultado = dao.findByIdAreaConocimiento(idAreaConocimiento, 0, 10);
 
-    @Test
-    void testFindByIdDistractorException() {
-        UUID idDistractor = UUID.randomUUID();
+            assertNotNull(resultado);
+            assertEquals(1, resultado.size());
+            assertSame(dac, resultado.getFirst());
 
-        when(em.createNamedQuery("DistractorAreaConocimiento.findByIdDistractor", DistractorAreaConocimiento.class))
-                .thenThrow(new RuntimeException("DB Error"));
-        List<DistractorAreaConocimiento> resultado = dao.findByIdDistractor(idDistractor, 0, 10);
-        assertNotNull(resultado);
-        assertTrue(resultado.isEmpty());
-        verify(em).createNamedQuery("DistractorAreaConocimiento.findByIdDistractor", DistractorAreaConocimiento.class);
-    }
+            verify(em).createNamedQuery("DistractorAreaConocimiento.findByIdAreaConocimiento", DistractorAreaConocimiento.class);
+            verify(query).setParameter("idAreaConocimiento", idAreaConocimiento);
+            verify(query).setFirstResult(0);
+            verify(query).setMaxResults(10);
+            verify(query).getResultList();
+        }
+        @Test
+        void lanzaIllegalArgumentException_cuandoIdDistractorEsNulo(){
+            assertThrows(IllegalArgumentException.class, ()->dao.findByIdAreaConocimiento(null,0,10));
+        }
 
-    //===============pruebas para buscar por idAreaConocimiento=====================
-    @Test
-    void testFindByIdAreaConocimientoParametrosValido() {
-        UUID idArea = UUID.randomUUID();
+        @Test
+        void lanzaIllegalArgumentException_cuandoFistNegativo(){
+            assertThrows(IllegalArgumentException.class, ()->dao.findByIdAreaConocimiento(idAreaConocimiento,-1,10));
+        }
 
-        when(em.createNamedQuery("DistractorAreaConocimiento.findByIdAreaConocimiento", DistractorAreaConocimiento.class))
-                .thenReturn(query);
-        when(query.setParameter("idAreaConocimiento", 1)).thenReturn(query);
-        when(query.setFirstResult(0)).thenReturn(query);
-        when(query.setMaxResults(10)).thenReturn(query);
-        when(query.getResultList()).thenReturn(java.util.List.of(dac));
+        @Test
+        void lanzaIllegalArgumentException_cuandoMaxNegativoOCero(){
+            assertThrows(IllegalArgumentException.class, ()->dao.findByIdAreaConocimiento(idAreaConocimiento,0,0));
+            assertThrows(IllegalArgumentException.class, ()->dao.findByIdAreaConocimiento(idAreaConocimiento,0,-1));
+        }
 
-        var resultado = dao.findByIdAreaConocimiento(idArea, 0, 10);
+        @Test
+        void lanzaIllegalStateException_cuandoJpaFalla(){
+            when(em.createNamedQuery("DistractorAreaConocimiento.findByIdAreaConocimiento", DistractorAreaConocimiento.class))
+                    .thenThrow(new RuntimeException("Fallo de base de datos"));
+            assertThrows(IllegalStateException.class, ()->dao.findByIdAreaConocimiento(idAreaConocimiento,0,10));
+            verify(em).createNamedQuery("DistractorAreaConocimiento.findByIdAreaConocimiento", DistractorAreaConocimiento.class);
+        }
 
-        assertFalse(resultado.isEmpty());
-        assertTrue(resultado.contains(dac));
-        verify(em).createNamedQuery("DistractorAreaConocimiento.findByIdAreaConocimiento", DistractorAreaConocimiento.class);
-        verify(query).setParameter("idAreaConocimiento", idArea);
-        verify(query).setFirstResult(0);
-        verify(query).setMaxResults(10);
-        verify(query).getResultList();
-    }
-
-    @Test
-    void testFindByIdAreaConocimientoIdNulo() {
-        var resultado = dao.findByIdAreaConocimiento(null, 0, 10);
-        assertTrue(resultado.isEmpty());
-    }
-
-    @Test
-    void testFindByIdAreaConocimientoFirstNegativo() {
-        UUID idArea = UUID.randomUUID();
-
-        List<DistractorAreaConocimiento> resultado = dao.findByIdAreaConocimiento(idArea, -1, 10);
-        assertTrue(resultado.isEmpty());
-    }
-
-    @Test
-    void testFindByIdAreaConocimientoMaxNegativo() {
-        UUID idArea = UUID.randomUUID();
-        List<DistractorAreaConocimiento> resultado = dao.findByIdAreaConocimiento(idArea, 0, -1);
-        assertTrue(resultado.isEmpty());
-    }
-
-    @Test
-    void testFindByIdAreaConocimientoException() {
-        UUID idArea = UUID.randomUUID();
-        when(em.createNamedQuery("DistractorAreaConocimiento.findByIdAreaConocimiento", DistractorAreaConocimiento.class))
-                .thenThrow(new RuntimeException("DB Error"));
-        List<DistractorAreaConocimiento> resultado = dao.findByIdAreaConocimiento(idArea, 0, 10);
-        assertNotNull(resultado);
-        assertTrue(resultado.isEmpty());
-        verify(em).createNamedQuery("DistractorAreaConocimiento.findByIdAreaConocimiento", DistractorAreaConocimiento.class);
     }
 
 }

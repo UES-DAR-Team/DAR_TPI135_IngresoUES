@@ -9,8 +9,6 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Prueba;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -44,12 +42,9 @@ public class PruebaDAO extends IngresoDefaultDataAcces<Prueba,Object> implements
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
-        }
-        catch (Exception ex) {
-            Logger.getLogger(PruebaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
-        }
-        return List.of();
-
+        } catch (Exception ex) {
+        throw new IllegalStateException("Error al buscar pruebas activas", ex);
+    }
     }
 
     public List<Prueba> findByNombre(final String nombre, int first, int max)
@@ -68,11 +63,8 @@ public class PruebaDAO extends IngresoDefaultDataAcces<Prueba,Object> implements
             q.setMaxResults(max);
 
             return q.getResultList();
-        }
-        catch (Exception ex) {
-            Logger.getLogger(PruebaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
-        }
-        return List.of();
-
+        } catch (Exception ex) {
+        throw new IllegalStateException("Error al buscar pruebas por nombre", ex);
+    }
     }
 }

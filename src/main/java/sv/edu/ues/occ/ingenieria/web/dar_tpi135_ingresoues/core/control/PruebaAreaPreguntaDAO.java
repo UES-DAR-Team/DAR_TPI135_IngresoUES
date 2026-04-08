@@ -10,8 +10,6 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAre
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -49,11 +47,9 @@ public class PruebaAreaPreguntaDAO extends IngresoDefaultDataAcces<PruebaAreaPre
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
+        } catch (Exception ex) {
+            throw new IllegalStateException("Error al buscar preguntas por área de prueba", ex);
         }
-        catch (Exception ex) {
-            Logger.getLogger(PruebaAreaPreguntaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
-        }
-        return List.of();
     }
 
     public List<PruebaAreaPregunta> findByPregunta(final UUID idPregunta, int first, int max)
@@ -71,10 +67,8 @@ public class PruebaAreaPreguntaDAO extends IngresoDefaultDataAcces<PruebaAreaPre
             q.setFirstResult(first);
             q.setMaxResults(max);
             return q.getResultList();
-        }
-        catch (Exception ex) {
-            Logger.getLogger(PruebaAreaPreguntaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
-        }
-        return List.of();
+        } catch (Exception ex) {
+        throw new IllegalStateException("Error al buscar áreas de prueba por pregunta", ex);
+    }
     }
 }

@@ -3,6 +3,7 @@ package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,12 +15,11 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+
 
 @ExtendWith(MockitoExtension.class)
 class AreaConocimientoDAOTest {
-
     @Mock
     EntityManager em;
 
@@ -29,131 +29,145 @@ class AreaConocimientoDAOTest {
     @InjectMocks
     AreaConocimientoDAO dao;
 
-    private AreaConocimiento area;
+    private AreaConocimiento areaConocimiento;
 
     @BeforeEach
     void setUp() {
-        area = new AreaConocimiento();
-        area.setId(UUID.randomUUID());
-    }
-
-    @Test
-    void testFindByNameLikeNombreVacio() {
-        List<AreaConocimiento> resultado = dao.findByNameLike("", 0, 10);
-        assertTrue(resultado.isEmpty());
-    }
-
-    @Test
-    void testFindByNameLikeNombreBlanco() {
-        List<AreaConocimiento> resultado = dao.findByNameLike("   ", 0, 10);
-        assertTrue(resultado.isEmpty());
-    }
-
-    @Test
-    void testFindByNameLikeNombreNulo() {
-        List<AreaConocimiento> resultado = dao.findByNameLike(null, 0, 10);
-        assertTrue(resultado.isEmpty());
-    }
-
-    @Test
-    void testFindByNameLikeFirstNegativo() {
-        List<AreaConocimiento> resultado = dao.findByNameLike("test", -1, 10);
-        assertTrue(resultado.isEmpty());
-    }
-
-    @Test
-    void testFindByNameLikeMaxNegativo() {
-        List<AreaConocimiento> resultado = dao.findByNameLike("test", 0, -1);
-        assertTrue(resultado.isEmpty());
-    }
-
-    @Test
-    void testFindByNameLikeParametrosValidos() {
-        when(em.createNamedQuery("AreaConocimiento.findByNameLike", AreaConocimiento.class))
-                .thenReturn(query);
-        when(query.setParameter("name", "%TEST%")).thenReturn(query);
-        when(query.setFirstResult(0)).thenReturn(query);
-        when(query.setMaxResults(10)).thenReturn(query);
-        when(query.getResultList()).thenReturn(List.of(area));
-        List<AreaConocimiento> resultado = dao.findByNameLike("test", 0, 10);
-        assertTrue(resultado.contains(area));
-        verify(em).createNamedQuery("AreaConocimiento.findByNameLike", AreaConocimiento.class);
-        verify(query).setParameter("name", "%TEST%");
-        verify(query).setFirstResult(0);
-        verify(query).setMaxResults(10);
-        verify(query).getResultList();
-    }
-
-    @Test
-    void testFindByNameLikeException(){
-        when(em.createNamedQuery("AreaConocimiento.findByNameLike", AreaConocimiento.class))
-                .thenThrow(new RuntimeException("DB error"));
-        List<AreaConocimiento> resultado = dao.findByNameLike("test", 0,10);
-        assertTrue(resultado.isEmpty());
-        verify(em).createNamedQuery("AreaConocimiento.findByNameLike", AreaConocimiento.class);
-    }
-
-    @Test
-    void testFindByAreaPadreOk() {
-        when(em.createNamedQuery("AreaConocimiento.findByAreaPadre", AreaConocimiento.class))
-                .thenReturn(query);
-        when(query.getResultList()).thenReturn(List.of(area));
-        List<AreaConocimiento> resultado = dao.findByAreaPadre();
-        assertNotNull(resultado);
-        assertEquals(1, resultado.size());
-        assertSame(area, resultado.getFirst());
-
-        verify(em).createNamedQuery("AreaConocimiento.findByAreaPadre", AreaConocimiento.class);
-        verify(query).getResultList();
-    }
-
-    @Test
-    void testFindByAreaPadreException(){
-        when(em.createNamedQuery("AreaConocimiento.findByAreaPadre", AreaConocimiento.class))
-                .thenThrow(new RuntimeException("DB error"));
-        List<AreaConocimiento> resultado = dao.findByAreaPadre();
-        assertNotNull(resultado);
-        assertTrue(resultado.isEmpty());
-        verify(em).createNamedQuery("AreaConocimiento.findByAreaPadre", AreaConocimiento.class);
-    }
-
-    @Test
-    void testFindHijosByPadreParametrosValidos() {
-        UUID idPadre = area.getId();
-
-        when(em.createNamedQuery("AreaConocimiento.findHijosByPadre", AreaConocimiento.class))
-                .thenReturn(query);
-        when(query.setParameter("idPadre", idPadre)).thenReturn(query);
-        when(query.getResultList()).thenReturn(List.of(area));
-
-        List<AreaConocimiento> resultado = dao.findHijosByPadre(idPadre);
-
-        assertNotNull(resultado);
-        assertEquals(1, resultado.size());
-        assertSame(area, resultado.getFirst());
-
-        verify(em).createNamedQuery("AreaConocimiento.findHijosByPadre", AreaConocimiento.class);
-        verify(query).setParameter("idPadre", idPadre);
-        verify(query).getResultList();
-    }
-
-    @Test
-    void testFindHijosByPadreParametrosNulos(){
-        List<AreaConocimiento> resultado = dao.findHijosByPadre(null);
-        assertTrue(resultado.isEmpty());
+        areaConocimiento = new AreaConocimiento();
+        areaConocimiento.setId(UUID.randomUUID());
     }
 
 
-    @Test
-    void testFindHijosByPadreException(){
-        UUID idPadre = area.getId();
+    @Nested
+    class FindByNameLike {
 
-        when(em.createNamedQuery("AreaConocimiento.findHijosByPadre", AreaConocimiento.class))
-                .thenThrow(new RuntimeException("DB error"));
-        List<AreaConocimiento> resultado = dao.findHijosByPadre(idPadre);
-        assertNotNull(resultado);
-        assertTrue(resultado.isEmpty());
-        verify(em).createNamedQuery("AreaConocimiento.findHijosByPadre", AreaConocimiento.class);
+        @Test
+        void retornaResultados_cuandoParametrosSonValidos() {
+            when(em.createNamedQuery("AreaConocimiento.findByNameLike", AreaConocimiento.class))
+                    .thenReturn(query);
+            when(query.setParameter("name", "%MATEMATICA%")).thenReturn(query);
+            when(query.setFirstResult(0)).thenReturn(query);
+            when(query.setMaxResults(10)).thenReturn(query);
+            when(query.getResultList()).thenReturn(List.of(areaConocimiento));
+
+            List<AreaConocimiento> resultado = dao.findByNameLike("matematica", 0, 10);
+
+            assertNotNull(resultado);
+            assertEquals(1, resultado.size());
+            assertSame(areaConocimiento, resultado.getFirst());
+            verify(em).createNamedQuery("AreaConocimiento.findByNameLike", AreaConocimiento.class);
+            verify(query).setParameter("name", "%MATEMATICA%");
+            verify(query).setFirstResult(0);
+            verify(query).setMaxResults(10);
+            verify(query).getResultList();
+        }
+
+        @Test
+        void lanzaIllegalArgumentException_cuandoNameEsNulo() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findByNameLike(null, 0, 10));
+        }
+
+        @Test
+        void lanzaIllegalArgumentException_cuandoNameEsBlancoOVacio() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findByNameLike("   ", 0, 10));
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findByNameLike("", 0, 10));
+        }
+
+        @Test
+        void lanzaIllegalArgumentException_cuandoFirstEsNegativo() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findByNameLike("matematica", -1, 10));
+        }
+
+        @Test
+        void lanzaIllegalArgumentException_cuandoMaxEsCeroONegativo() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findByNameLike("matematica", 0, 0));
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findByNameLike("matematica", 0, -1));
+        }
+
+        @Test
+        void lanzaIllegalStateException_cuandoJpaFalla() {
+            when(em.createNamedQuery("AreaConocimiento.findByNameLike", AreaConocimiento.class))
+                    .thenThrow(new RuntimeException("fallo de base de datos"));
+
+            assertThrows(IllegalStateException.class,
+                    () -> dao.findByNameLike("matematica", 0, 10));
+
+            verify(em).createNamedQuery("AreaConocimiento.findByNameLike", AreaConocimiento.class);
+        }
+    }
+
+    @Nested
+    class FindByAreaPadre {
+
+        @Test
+        void retornaListaDeAreasPadre_cuandoConsultaEsExitosa() {
+            when(em.createNamedQuery("AreaConocimiento.findByAreaPadre", AreaConocimiento.class))
+                    .thenReturn(query);
+            when(query.getResultList()).thenReturn(List.of(areaConocimiento));
+
+            List<AreaConocimiento> resultado = dao.findByAreaPadre();
+
+            assertNotNull(resultado);
+            assertEquals(1, resultado.size());
+            assertSame(areaConocimiento, resultado.getFirst());
+            verify(em).createNamedQuery("AreaConocimiento.findByAreaPadre", AreaConocimiento.class);
+            verify(query).getResultList();
+        }
+
+        @Test
+        void lanzaIllegalStateException_cuandoJpaFalla() {
+            when(em.createNamedQuery("AreaConocimiento.findByAreaPadre", AreaConocimiento.class))
+                    .thenThrow(new RuntimeException("fallo de base de datos"));
+
+            assertThrows(IllegalStateException.class, () -> dao.findByAreaPadre());
+
+            verify(em).createNamedQuery("AreaConocimiento.findByAreaPadre", AreaConocimiento.class);
+        }
+    }
+
+    @Nested
+    class FindHijosByPadre {
+
+        @Test
+        void retornaHijos_cuandoIdPadreEsValido() {
+            UUID idPadre = areaConocimiento.getId();
+            when(em.createNamedQuery("AreaConocimiento.findHijosByPadre", AreaConocimiento.class))
+                    .thenReturn(query);
+            when(query.setParameter("idPadre", idPadre)).thenReturn(query);
+            when(query.getResultList()).thenReturn(List.of(areaConocimiento));
+
+            List<AreaConocimiento> resultado = dao.findHijosByPadre(idPadre);
+
+            assertNotNull(resultado);
+            assertEquals(1, resultado.size());
+            assertSame(areaConocimiento, resultado.getFirst());
+            verify(em).createNamedQuery("AreaConocimiento.findHijosByPadre", AreaConocimiento.class);
+            verify(query).setParameter("idPadre", idPadre);
+            verify(query).getResultList();
+        }
+
+        @Test
+        void lanzaIllegalArgumentException_cuandoIdPadreEsNulo() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findHijosByPadre(null));
+        }
+
+        @Test
+        void lanzaIllegalStateException_cuandoJpaFalla() {
+            UUID idPadre = areaConocimiento.getId();
+            when(em.createNamedQuery("AreaConocimiento.findHijosByPadre", AreaConocimiento.class))
+                    .thenThrow(new RuntimeException("Fallo de base de datos"));
+
+            assertThrows(IllegalStateException.class,
+                    () -> dao.findHijosByPadre(idPadre));
+            verify(em).createNamedQuery("AreaConocimiento.findHijosByPadre", AreaConocimiento.class);
+        }
     }
 
 }

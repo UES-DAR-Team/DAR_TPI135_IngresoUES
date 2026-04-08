@@ -34,34 +34,40 @@ public class DistractorAreaConocimientoDAO extends IngresoDefaultDataAcces<Distr
 
     public List<DistractorAreaConocimiento> findByIdDistractor(final UUID idDistractor, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
-        if (idDistractor != null  && first >= 0 && max >= 0) {
+        if(idDistractor == null){
+            throw new IllegalArgumentException("Parametro invalido: idDistractor");
+        }
+        if (first < 0 || max<=0){
+            throw new IllegalArgumentException("Parametros invalidos: first, max");
+        }
             try {
                 return em.createNamedQuery("DistractorAreaConocimiento.findByIdDistractor", DistractorAreaConocimiento.class)
                         .setParameter("idDistractor", idDistractor)
                         .setFirstResult(first)
                         .setMaxResults(max)
                         .getResultList();
-            } catch (Exception ex) {
-                Logger.getLogger(DistractorAreaConocimientoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            } catch (RuntimeException ex) {
+                throw new IllegalStateException("Error de sistema en la ejecucion de query",ex);
             }
-        }
-        return List.of();
     }
 
    public List<DistractorAreaConocimiento> findByIdAreaConocimiento(final UUID idAreaConocimiento, int first, int max)
            throws IllegalArgumentException, IllegalStateException {
-        if (idAreaConocimiento != null  && first >= 0 && max >= 0) {
+       if(idAreaConocimiento == null){
+           throw new IllegalArgumentException("Parametro invalido: idAreaConocimiento");
+       }
+       if (first < 0 || max<=0){
+           throw new IllegalArgumentException("Parametros invalidos: first, max");
+       }
             try {
                 return em.createNamedQuery("DistractorAreaConocimiento.findByIdAreaConocimiento", DistractorAreaConocimiento.class)
                         .setParameter("idAreaConocimiento", idAreaConocimiento)
                         .setFirstResult(first)
                         .setMaxResults(max)
                         .getResultList();
-            } catch (Exception ex) {
-                Logger.getLogger(DistractorAreaConocimientoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            } catch (RuntimeException ex) {
+                throw new IllegalStateException("Error de sistema en la ejecucion de query",ex);
             }
-        }
-        return List.of();
     }
 
 }

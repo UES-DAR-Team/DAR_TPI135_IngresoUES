@@ -199,33 +199,36 @@ class PruebaAreaPreguntaDistractorDAOTest {
 
     @Test
     void testFindByDistractorFirstNegativo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByDistractor(1, -1, 10));
+                () -> dao.findByDistractor(id, -1, 10));
     }
 
     @Test
     void testFindByDistractorMaxCeroNegativo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByDistractor(1, 0, 0));
+                () -> dao.findByDistractor(id, 0, 0));
     }
 
     @Test
     void testFindByDistractorParametrosValidosRetornaLista() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaAreaPreguntaDistractor.findByDistractor",
                 PruebaAreaPreguntaDistractor.class)).thenReturn(query);
-        when(query.setParameter("idDistractor", 1)).thenReturn(query);
+        when(query.setParameter("idDistractor", id)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(distractorValido()));
 
         List<PruebaAreaPreguntaDistractor> resultado =
-                dao.findByDistractor(1, 0, 10);
+                dao.findByDistractor(id, 0, 10);
 
         assertNotNull(resultado);
         assertFalse(resultado.isEmpty());
         verify(em).createNamedQuery("PruebaAreaPreguntaDistractor.findByDistractor",
                 PruebaAreaPreguntaDistractor.class);
-        verify(query).setParameter("idDistractor", 1);
+        verify(query).setParameter("idDistractor", id);
         verify(query).setFirstResult(0);
         verify(query).setMaxResults(10);
         verify(query).getResultList();
@@ -233,15 +236,16 @@ class PruebaAreaPreguntaDistractorDAOTest {
 
     @Test
     void testFindByDistractorRetornarListaVacia() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaAreaPreguntaDistractor.findByDistractor",
                 PruebaAreaPreguntaDistractor.class)).thenReturn(query);
-        when(query.setParameter("idDistractor", 1)).thenReturn(query);
+        when(query.setParameter("idDistractor", id)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
         when(query.getResultList()).thenReturn(Collections.emptyList());
 
         List<PruebaAreaPreguntaDistractor> resultado =
-                dao.findByDistractor(1, 0, 10);
+                dao.findByDistractor(id, 0, 10);
 
         assertNotNull(resultado);
         assertTrue(resultado.isEmpty());
@@ -249,17 +253,19 @@ class PruebaAreaPreguntaDistractorDAOTest {
 
     @Test
     void testFindByDistractorErrorInterno() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaAreaPreguntaDistractor.findByDistractor",
                 PruebaAreaPreguntaDistractor.class))
                 .thenThrow(new RuntimeException("fallo en la Base de Datos"));
 
         assertThrows(IllegalStateException.class,
-                () -> dao.findByDistractor(1, 0, 10));
+                () -> dao.findByDistractor(id, 0, 10));
     }
 
     @Test
     void testFindByDistractorEntityManagerNulo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalStateException.class,
-                () -> daoConEntityNulo().findByDistractor(1, 0, 10));
+                () -> daoConEntityNulo().findByDistractor(id, 0, 10));
     }
 }

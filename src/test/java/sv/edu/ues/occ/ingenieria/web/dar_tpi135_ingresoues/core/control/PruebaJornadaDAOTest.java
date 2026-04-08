@@ -72,30 +72,33 @@ class PruebaJornadaDAOTest {
 
     @Test
     void testFindByJornadaFirstNegativo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByJornada(1, -1, 10));
+                () -> dao.findByJornada(id, -1, 10));
     }
 
     @Test
     void testFindByJornadaMaxCeroNegativo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByJornada(1, 0, 0));
+                () -> dao.findByJornada(id, 0, 0));
     }
 
     @Test
     void testFindByJornadaParametrosValidosRetornaLista() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaJornada.findByJornada", PruebaJornada.class)).thenReturn(query);
-        when(query.setParameter("idJornada", 1)).thenReturn(query);
+        when(query.setParameter("idJornada", id)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(pruebaJornadaValida()));
 
-        List<PruebaJornada> resultado = dao.findByJornada(1, 0, 10);
+        List<PruebaJornada> resultado = dao.findByJornada(id, 0, 10);
 
         assertNotNull(resultado);
         assertFalse(resultado.isEmpty());
         verify(em).createNamedQuery("PruebaJornada.findByJornada", PruebaJornada.class);
-        verify(query).setParameter("idJornada", 1);
+        verify(query).setParameter("idJornada", id);
         verify(query).setFirstResult(0);
         verify(query).setMaxResults(10);
         verify(query).getResultList();
@@ -103,13 +106,14 @@ class PruebaJornadaDAOTest {
 
     @Test
     void testFindByJornadaRetornaListaVacia() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaJornada.findByJornada", PruebaJornada.class)).thenReturn(query);
-        when(query.setParameter("idJornada", 1)).thenReturn(query);
+        when(query.setParameter("idJornada", id)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
         when(query.getResultList()).thenReturn(Collections.emptyList());
 
-        List<PruebaJornada> resultado = dao.findByJornada(1, 0, 10);
+        List<PruebaJornada> resultado = dao.findByJornada(id, 0, 10);
 
         assertNotNull(resultado);
         assertTrue(resultado.isEmpty());
@@ -117,17 +121,19 @@ class PruebaJornadaDAOTest {
 
     @Test
     void testFindByJornadaErrorInterno() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaJornada.findByJornada", PruebaJornada.class))
                 .thenThrow(new RuntimeException("Fallo en la Base de Datos"));
 
         assertThrows(IllegalStateException.class,
-                () -> dao.findByJornada(1, 0, 10));
+                () -> dao.findByJornada(id, 0, 10));
     }
 
     @Test
     void testFindByJornadaEntityManagerNulo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalStateException.class,
-                () -> daoConEntityNulo().findByJornada(1, 0, 10));
+                () -> daoConEntityNulo().findByJornada(id, 0, 10));
     }
 
     @Test
@@ -138,30 +144,33 @@ class PruebaJornadaDAOTest {
 
     @Test
     void testFindByPruebaFirstNegativo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByPrueba(1, -1, 10));
+                () -> dao.findByPrueba(id, -1, 10));
     }
 
     @Test
     void testFindByPruebaMaxCeroNegativo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByPrueba(1, 0, 0));
+                () -> dao.findByPrueba(id, 0, 0));
     }
 
     @Test
     void testFindByPruebaParametrosValidosRetornaLista() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaJornada.findByPrueba", PruebaJornada.class)).thenReturn(query);
-        when(query.setParameter("idPrueba", 1)).thenReturn(query);
+        when(query.setParameter("idPrueba", id)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(pruebaJornadaValida()));
 
-        List<PruebaJornada> resultado = dao.findByPrueba(1, 0, 10);
+        List<PruebaJornada> resultado = dao.findByPrueba(id, 0, 10);
 
         assertNotNull(resultado);
         assertFalse(resultado.isEmpty());
         verify(em).createNamedQuery("PruebaJornada.findByPrueba", PruebaJornada.class);
-        verify(query).setParameter("idPrueba", 1);
+        verify(query).setParameter("idPrueba", id);
         verify(query).setFirstResult(0);
         verify(query).setMaxResults(10);
         verify(query).getResultList();
@@ -169,13 +178,14 @@ class PruebaJornadaDAOTest {
 
     @Test
     void testFindByPruebaRetornaListaVacia() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaJornada.findByPrueba", PruebaJornada.class)).thenReturn(query);
-        when(query.setParameter("idPrueba", 1)).thenReturn(query);
+        when(query.setParameter("idPrueba", id)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
         when(query.getResultList()).thenReturn(Collections.emptyList());
 
-        List<PruebaJornada> resultado = dao.findByPrueba(1, 0, 10);
+        List<PruebaJornada> resultado = dao.findByPrueba(id, 0, 10);
 
         assertNotNull(resultado);
         assertTrue(resultado.isEmpty());
@@ -183,17 +193,19 @@ class PruebaJornadaDAOTest {
 
     @Test
     void testFindByPruebaErrorInterno() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaJornada.findByPrueba", PruebaJornada.class))
                 .thenThrow(new RuntimeException("Fallo en la Base de Datos"));
 
         assertThrows(IllegalStateException.class,
-                () -> dao.findByPrueba(1, 0, 10));
+                () -> dao.findByPrueba(id, 0, 10));
     }
 
     @Test
     void testFindByPruebaEntityManagerNulo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalStateException.class,
-                () -> daoConEntityNulo().findByPrueba(1, 0, 10));
+                () -> daoConEntityNulo().findByPrueba(id, 0, 10));
     }
 
     /**

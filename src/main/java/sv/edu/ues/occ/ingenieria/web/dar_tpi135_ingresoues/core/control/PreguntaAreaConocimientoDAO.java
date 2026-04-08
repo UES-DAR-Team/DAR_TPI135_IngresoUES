@@ -10,8 +10,6 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PreguntaA
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -35,34 +33,42 @@ public class PreguntaAreaConocimientoDAO extends IngresoDefaultDataAcces<Pregunt
 
     public List<PreguntaAreaConocimiento> findPreguntaByIdAreaConocimiento(final UUID idAreaConocimiento, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
+        if(idAreaConocimiento == null){
+            throw new IllegalArgumentException("Parametro invalido: idAreaConocimiento");
+        }
+        if (first < 0 || max<=0){
+            throw new IllegalArgumentException("Parametros invalidos: first, max");
+        }
         try {
-            if (idAreaConocimiento != null && first >= 0 && max >= 0) {
                 TypedQuery<PreguntaAreaConocimiento> q = em.createNamedQuery("PreguntaAreaConocimiento.findByIdAreaConocimiento", PreguntaAreaConocimiento.class)
                         .setParameter("idAreaConocimiento", idAreaConocimiento)
                         .setFirstResult(first)
                         .setMaxResults(max);
                 return q.getResultList();
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(PreguntaAreaConocimientoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+
+        } catch (RuntimeException ex) {
+            throw new IllegalStateException("Error de sistema en la ejecucion de query", ex);
         }
-        return List.of();
     }
 
     public List<PreguntaAreaConocimiento> findByIdPregunta(final UUID idPregunta, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
+        if(idPregunta == null){
+            throw new IllegalArgumentException("Parametro invalido: idPregunta");
+        }
+        if (first < 0 || max<=0){
+            throw new IllegalArgumentException("Parametros invalidos: first, max");
+        }
         try {
-            if (idPregunta != null && first >= 0 && max >= 0) {
                 TypedQuery<PreguntaAreaConocimiento> q = em.createNamedQuery("PreguntaAreaConocimiento.findByIdPregunta", PreguntaAreaConocimiento.class)
                         .setParameter("idPregunta", idPregunta)
                         .setFirstResult(first)
                         .setMaxResults(max);
                 return q.getResultList();
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(PreguntaAreaConocimientoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+
+        } catch (RuntimeException ex) {
+            throw new IllegalStateException("Error de sistema en la ejecucion de query", ex);
         }
-        return List.of();
     }
 
 

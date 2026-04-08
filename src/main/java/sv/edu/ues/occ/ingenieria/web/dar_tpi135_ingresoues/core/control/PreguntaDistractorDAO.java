@@ -10,8 +10,6 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PreguntaD
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -35,33 +33,40 @@ public class PreguntaDistractorDAO extends IngresoDefaultDataAcces<PreguntaDistr
 
     public List<PreguntaDistractor> findByIdPregunta(final UUID idPregunta, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
+        if(idPregunta == null){
+            throw new IllegalArgumentException("Parametro invalido: idPregunta");
+        }
+        if(first < 0 || max<=0){
+            throw new IllegalArgumentException("Parametros invalidos: first, max");
+        }
         try {
-            if (idPregunta != null && first >= 0 && max >= 0) {
                 TypedQuery<PreguntaDistractor> q = em.createNamedQuery("PreguntaDistractor.findByIdPregunta", PreguntaDistractor.class)
                         .setParameter("idPregunta", idPregunta)
                         .setFirstResult(first)
                         .setMaxResults(max);
                 return q.getResultList();
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(PreguntaDistractorDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        } catch (RuntimeException ex) {
+            throw new IllegalStateException("Error de sistema en la ejecucion de query",ex);
         }
-        return List.of();
     }
 
     public List<PreguntaDistractor> findByIdDistractor(final UUID idDistractor, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
+        if(idDistractor == null){
+            throw new IllegalArgumentException("Parametro invalido: idDistractor");
+        }
+        if (first < 0 || max<=0){
+            throw new IllegalArgumentException("Parametros invalidos: first, max");
+        }
         try {
-            if (idDistractor != null && first >= 0 && max >= 0) {
                 TypedQuery<PreguntaDistractor> q = em.createNamedQuery("PreguntaDistractor.findByIdDistractor", PreguntaDistractor.class)
                         .setParameter("idDistractor", idDistractor)
                         .setFirstResult(first)
                         .setMaxResults(max);
                 return q.getResultList();
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(PreguntaDistractorDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        } catch (RuntimeException ex) {
+            throw new IllegalStateException("Error de sistema en la ejecucion de query",ex);
         }
-        return List.of();
     }
+
 }

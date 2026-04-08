@@ -19,7 +19,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DistractorDAOTest {
-
     @Mock
     private EntityManager em;
 
@@ -39,7 +38,7 @@ class DistractorDAOTest {
 
 
     @Test
-    void testFindByCoincidenciaTexto(){
+    void retornaResulatados_cuandoParametrosSonValidos(){
         when(em.createNamedQuery("Distractor.findByCoincidenciaTexto", Distractor.class))
                 .thenReturn(query);
         when(query.setParameter("text", "%TEXT%")).thenReturn(query);
@@ -49,6 +48,9 @@ class DistractorDAOTest {
 
         List<Distractor> resultado = dao.findByCoincidenciaTexto("text", 0, 10);
 
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        assertSame(distractor, resultado.getFirst());
         assertTrue(resultado.contains(distractor));
         verify(em).createNamedQuery("Distractor.findByCoincidenciaTexto", Distractor.class);
         verify(query).setParameter("text", "%TEXT%");
@@ -58,35 +60,33 @@ class DistractorDAOTest {
     }
 
     @Test
-    void testFindByCoincidenciaTextoNulo(){
-        List<Distractor> resultado = dao.findByCoincidenciaTexto(null, 0, 10);
-        assertTrue(resultado.isEmpty());
+    void lanzaIllegalArgumentException_cuandoTextoEsNulo() {
+        assertThrows(IllegalArgumentException.class,()-> dao.findByCoincidenciaTexto(null, 0, 10));
     }
 
     @Test
-    void testFindByCoincidenciaTextVacio(){
-        List<Distractor> resutlado = dao.findByCoincidenciaTexto(" ", 0, 10);
-        assertTrue(resutlado.isEmpty());
+    void lanzaIllegalArgumentException_cuandoTextoEsBlancoOVacio(){
+        assertThrows(IllegalArgumentException.class,()-> dao.findByCoincidenciaTexto(" ", 0, 10));
+        assertThrows(IllegalArgumentException.class, ()-> dao.findByCoincidenciaTexto("", 0, 10));
     }
 
     @Test
-    void testFindByCoincidenciaTextoFirstNegativo(){
-        List<Distractor> resultado = dao.findByCoincidenciaTexto("text", -1, 10);
-        assertTrue(resultado.isEmpty());
+    void lanzaIllegalArgumentException_cuandoFirstEsNegativo(){
+        assertThrows(IllegalArgumentException.class, ()-> dao.findByCoincidenciaTexto("text", -1, 10));
     }
 
     @Test
-    void testFindByCoincidenciaTextoMaxNegativo(){
-        List<Distractor> resultado =dao.findByCoincidenciaTexto("text", 10, -1);
-        assertTrue(resultado.isEmpty());
+    void lanzaIllegalArgumentException_cuandoMaxEsCeroONegativo(){
+        assertThrows(IllegalArgumentException.class, ()-> dao.findByCoincidenciaTexto("text", 0, 0));
+        assertThrows(IllegalArgumentException.class, ()-> dao.findByCoincidenciaTexto("text", 0, -1));
     }
 
     @Test
-    void testFindByCoincidenciaTextoExcepcion(){
+    void lanzaIllegalStateException_cuandoJpaFalla(){
         when(em.createNamedQuery("Distractor.findByCoincidenciaTexto", Distractor.class))
-                .thenThrow(new RuntimeException("DB Error"));
-        List<Distractor> resultado = dao.findByCoincidenciaTexto("text", 0, 10);
-        assertTrue(resultado.isEmpty());
+                .thenThrow(new RuntimeException("fallo de base de datos"));
+        assertThrows(IllegalStateException.class,()-> dao.findByCoincidenciaTexto("text", 0, 10));
         verify(em).createNamedQuery("Distractor.findByCoincidenciaTexto", Distractor.class);
     }
+
 }

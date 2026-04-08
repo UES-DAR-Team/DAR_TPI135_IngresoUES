@@ -10,8 +10,6 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.AreaConoc
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -35,42 +33,45 @@ public class AreaConocimientoDAO extends IngresoDefaultDataAcces<AreaConocimient
 
     public List<AreaConocimiento> findByNameLike(final String name, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
-        try {
-            if (name != null && !name.isBlank() && first >= 0 && max >= 0) {
-                TypedQuery<AreaConocimiento> q = em.createNamedQuery("AreaConocimiento.findByNameLike", AreaConocimiento.class);
-                q.setParameter("name", "%" + name.trim().toUpperCase() + "%");
-                q.setFirstResult(first);
-                q.setMaxResults(max);
-                return q.getResultList();
-            }
-        } catch (Exception e) {
-            Logger.getLogger(AreaConocimientoDAO.class.getName()).log(Level.SEVERE, e.getMessage(), e);
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("parametro invalido: name");
         }
-        return List.of();
+        if (first < 0 || max <= 0) {
+            throw new IllegalArgumentException("Parametros invalidos: first, max");
+        }
+        try {
+            TypedQuery<AreaConocimiento> q = em.createNamedQuery("AreaConocimiento.findByNameLike", AreaConocimiento.class);
+            q.setParameter("name", "%" + name.trim().toUpperCase() + "%");
+            q.setFirstResult(first);
+            q.setMaxResults(max);
+            return q.getResultList();
+
+        } catch (RuntimeException e) {
+            throw new IllegalStateException("Error de sistema en la ejecucion de query", e);
+        }
     }
 
     public List<AreaConocimiento> findByAreaPadre()
-            throws IllegalArgumentException, IllegalStateException {
+            throws IllegalStateException {
         try {
             return em.createNamedQuery("AreaConocimiento.findByAreaPadre", AreaConocimiento.class).getResultList();
-        } catch (Exception e) {
-            Logger.getLogger(AreaConocimientoDAO.class.getName()).log(Level.SEVERE, e.getMessage(), e);
-            return List.of();
+        } catch (RuntimeException e) {
+            throw new IllegalStateException("Error de sistema en la ejecucion de query", e);
         }
     }
 
     public List<AreaConocimiento> findHijosByPadre(final UUID idPadre)
             throws IllegalArgumentException, IllegalStateException {
+        if(idPadre == null ){
+            throw new IllegalArgumentException("Parametro invalido: idPadre");
+        }
         try {
-            if (idPadre != null) {
                 return em.createNamedQuery("AreaConocimiento.findHijosByPadre", AreaConocimiento.class)
                         .setParameter("idPadre", idPadre)
                         .getResultList();
-            }
-        } catch (Exception e) {
-            Logger.getLogger(AreaConocimientoDAO.class.getName()).log(Level.SEVERE, e.getMessage(), e);
+        } catch (RuntimeException e) {
+         throw new IllegalStateException("Error de sistema en la ejecucion de query", e);
         }
-      return List.of();
     }
 
 }

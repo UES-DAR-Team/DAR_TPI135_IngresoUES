@@ -10,7 +10,7 @@ import java.util.UUID;
 @Table(name = "pregunta", schema = "public")
 @NamedQueries({
         @NamedQuery(name = "Pregunta.findByCoincidenciaTexto",
-                query = "SELECT p FROM Pregunta p WHERE UPPER(p.contenidoPregunta) LIKE :texto")
+                query = "SELECT p FROM Pregunta p WHERE UPPER(p.contenidoPregunta) LIKE :text")
 
 })
 public class Pregunta {

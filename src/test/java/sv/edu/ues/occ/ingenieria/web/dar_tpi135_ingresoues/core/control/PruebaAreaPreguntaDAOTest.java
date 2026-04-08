@@ -139,30 +139,33 @@ class PruebaAreaPreguntaDAOTest {
 
     @Test
     void testFindByPreguntaFirstNegativo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByPregunta(1, -1, 10));
+                () -> dao.findByPregunta(id, -1, 10)); // ✅ UUID
     }
 
     @Test
     void testFindByPreguntaMaxCeroNegativo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByPregunta(1, 0, 0));
+                () -> dao.findByPregunta(id, 0, 0));
     }
 
     @Test
     void testFindByPreguntaParametrosValidosRetornaLista() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaAreaPregunta.findByPregunta", PruebaAreaPregunta.class)).thenReturn(query);
-        when(query.setParameter("idPregunta", 1)).thenReturn(query);
+        when(query.setParameter("idPregunta", id)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(pruebaAreaPreguntaValida()));
 
-        List<PruebaAreaPregunta> resultado = dao.findByPregunta(1, 0, 10);
+        List<PruebaAreaPregunta> resultado = dao.findByPregunta(id, 0, 10);
 
         assertNotNull(resultado);
         assertFalse(resultado.isEmpty());
         verify(em).createNamedQuery("PruebaAreaPregunta.findByPregunta", PruebaAreaPregunta.class);
-        verify(query).setParameter("idPregunta", 1);
+        verify(query).setParameter("idPregunta", id);
         verify(query).setFirstResult(0);
         verify(query).setMaxResults(10);
         verify(query).getResultList();
@@ -170,13 +173,14 @@ class PruebaAreaPreguntaDAOTest {
 
     @Test
     void testFindByPreguntaRetornaListaVacia() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaAreaPregunta.findByPregunta", PruebaAreaPregunta.class)).thenReturn(query);
-        when(query.setParameter("idPregunta", 1)).thenReturn(query);
+        when(query.setParameter("idPregunta", id)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
         when(query.getResultList()).thenReturn(Collections.emptyList());
 
-        List<PruebaAreaPregunta> resultado = dao.findByPregunta(1, 0, 10);
+        List<PruebaAreaPregunta> resultado = dao.findByPregunta(id, 0, 10);
 
         assertNotNull(resultado);
         assertTrue(resultado.isEmpty());
@@ -184,16 +188,17 @@ class PruebaAreaPreguntaDAOTest {
 
     @Test
     void testFindByPreguntaErrorInterno() {
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery("PruebaAreaPregunta.findByPregunta", PruebaAreaPregunta.class))
                 .thenThrow(new RuntimeException("fallo en la Base de Datos"));
-
         assertThrows(IllegalStateException.class,
-                () -> dao.findByPregunta(1, 0, 10));
+                () -> dao.findByPregunta(id, 0, 10));
     }
 
     @Test
     void testFindByPreguntaEntityManagerNulo() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalStateException.class,
-                () -> daoConEntityManagerNulo().findByPregunta(1, 0, 10));
+                () -> daoConEntityManagerNulo().findByPregunta(id, 0, 10));
     }
 }

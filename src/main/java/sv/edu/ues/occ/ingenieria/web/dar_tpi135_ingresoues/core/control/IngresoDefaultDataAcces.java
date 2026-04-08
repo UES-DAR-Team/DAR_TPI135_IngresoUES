@@ -1,109 +1,102 @@
 package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Id;
-import java.util.List;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+import java.util.List;
+
 public abstract class IngresoDefaultDataAcces<T, ID> implements IngresoDAOInterface<T, ID> {
+
+    private final Class<T> tipoDato;
+
+    protected IngresoDefaultDataAcces(Class<T> tipoDato) {
+        this.tipoDato = tipoDato;
+    }
 
     public abstract EntityManager getEntityManager();
 
-    protected abstract Class<T> getEntityClass();
-
-    private final Class<T> TipoDato;
-
-    protected IngresoDefaultDataAcces(Class<T> tipoDato) {
-        TipoDato = tipoDato;
+    protected Class<T> getEntityClass() {
+        return tipoDato;
     }
 
-    public void create(final T obj) throws IllegalStateException, IllegalArgumentException  {
-        EntityManager em = null;
-
+    @Override
+    public void create(final T obj) throws IllegalArgumentException, IllegalStateException {
         if (obj == null) {
-            throw new IllegalArgumentException("Parametro no valido:objeto nulo");
+            throw new IllegalArgumentException("Parámetro no válido: objeto nulo");
         }
+
+        EntityManager em = getEntityManager();
+        if (em == null) {
+            throw new IllegalStateException("EntityManager no disponible");
+        }
+
         try {
-           em = getEntityManager();
-            if (em == null) {
-                throw new IllegalArgumentException("Parametro no valido:entity manager nulo");
-            }
             em.persist(obj);
             em.flush();
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
-            if(e instanceof IllegalArgumentException) {
-                throw (IllegalArgumentException) e;
-            }
             throw new IllegalStateException("Error al acceder al repositorio", e);
         }
     }
 
-    public void delete(final T obj) throws  IllegalStateException, IllegalArgumentException {
-        EntityManager em = null;
-
+    @Override
+    public void delete(final T obj) throws IllegalArgumentException, IllegalStateException {
         if (obj == null) {
-            throw new IllegalArgumentException("Parametro no valido:entity nulo");
+            throw new IllegalArgumentException("Parámetro no válido: entidad nula");
         }
+
+        EntityManager em = getEntityManager();
+        if (em == null) {
+            throw new IllegalStateException("EntityManager no disponible");
+        }
+
         try {
-            //asignacion en limpio
-            em = getEntityManager();
-            if (em == null) {
-                throw new IllegalArgumentException("Parametro no valido:entity manager nulo");
-            }
             T managedEntity = em.merge(obj);
             em.remove(managedEntity);
-        } catch (Exception ex) {
-            if (ex instanceof IllegalArgumentException) {
-                throw (IllegalArgumentException) ex;
-            }
-            throw  new IllegalStateException("Error al acceder al repositorio", ex);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalStateException("Error al acceder al repositorio", e);
         }
     }
 
     @Override
-    public T update(final T registro)
-            throws IllegalArgumentException, IllegalStateException {
-
+    public T update(final T registro) throws IllegalArgumentException, IllegalStateException {
         if (registro == null) {
             throw new IllegalArgumentException("Parámetro no válido: registro es null");
         }
 
+        EntityManager em = getEntityManager();
+        if (em == null) {
+            throw new IllegalStateException("No se pudo obtener el EntityManager");
+        }
+
         try {
-            EntityManager em = getEntityManager();
-
-            if (em == null) {
-                throw new IllegalStateException("No se pudo obtener el EntityManager");
-            }
-
             return em.merge(registro);
-
-        } catch (Exception ex) {
-            throw new IllegalStateException("Error al actualizar el registro", ex);
+        } catch (Exception e) {
+            throw new IllegalStateException("Error al actualizar el registro", e);
         }
     }
 
     @Override
-    public List<T> findRange(int first, int max)
-            throws IllegalArgumentException, IllegalStateException {
-
+    public List<T> findRange(int first, int max) throws IllegalArgumentException, IllegalStateException {
         if (first < 0 || max < 1) {
-            throw new IllegalArgumentException("Parámetros no válidos");
+            throw new IllegalArgumentException("Parámetros no válidos: first=" + first + ", max=" + max);
+        }
+
+        EntityManager em = getEntityManager();
+        if (em == null) {
+            throw new IllegalStateException("No se pudo obtener el EntityManager");
         }
 
         try {
-            EntityManager em = getEntityManager();
-
-            if (em == null) {
-                throw new IllegalStateException("No se pudo obtener el EntityManager");
-            }
-
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<T> cq = cb.createQuery(getEntityClass());
             Root<T> root = cq.from(getEntityClass());
-
             cq.select(root);
 
             TypedQuery<T> query = em.createQuery(cq);
@@ -111,48 +104,44 @@ public abstract class IngresoDefaultDataAcces<T, ID> implements IngresoDAOInterf
             query.setMaxResults(max);
 
             return query.getResultList();
-
-        } catch (Exception ex) {
-            throw new IllegalStateException("No se pudo acceder al repositorio", ex);
+        } catch (Exception e) {
+            throw new IllegalStateException("No se pudo acceder al repositorio", e);
         }
     }
 
-
+    @Override
     public int count() throws IllegalStateException {
-        EntityManager em = null;
-        try {
-            em = getEntityManager();
-            if (em == null) {
-                throw new IllegalStateException("Error al acceder al repositorio");
-            }
-
-        } catch (Exception ex) {
-            throw new IllegalStateException("No se pudo acceder al repositorio", ex);
+        EntityManager em = getEntityManager();
+        if (em == null) {
+            throw new IllegalStateException("No se pudo obtener el EntityManager");
         }
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-        Root<T> root = cq.from(getEntityClass());
-        cq.select(cb.count(root));
-        return em.createQuery(cq).getSingleResult().intValue();
+
+        try {
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<T> root = cq.from(getEntityClass());
+            cq.select(cb.count(root));
+            return em.createQuery(cq).getSingleResult().intValue();
+        } catch (Exception e) {
+            throw new IllegalStateException("No se pudo acceder al repositorio", e);
+        }
     }
 
-    public T findById(final Object id) throws IllegalArgumentException, IllegalStateException{
-        EntityManager em = null;
-
-        if(id==null){
-            throw new IllegalArgumentException("Parametro no valido: ID");
+    @Override
+    public T findById(final Object id) throws IllegalArgumentException, IllegalStateException {
+        if (id == null) {
+            throw new IllegalArgumentException("Parámetro no válido: ID nulo");
         }
+
+        EntityManager em = getEntityManager();
+        if (em == null) {
+            throw new IllegalStateException("Error al acceder al repositorio");
+        }
+
         try {
-            em = getEntityManager();
-            if(em == null){
-                throw new IllegalStateException("Error al acceder al repositorio");
-            }
-
-        }catch (Exception ex){
-            throw new  IllegalStateException("Error al acceder al repositorio",ex);
+            return em.find(tipoDato, id);
+        } catch (Exception e) {
+            throw new IllegalStateException("Error al acceder al repositorio", e);
         }
-        return em.find(TipoDato, id);
     }
-
-
 }

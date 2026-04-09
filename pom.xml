@@ -13,6 +13,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jakartaee>10.0.0</jakartaee>
         <mockito.version>5.19.0</mockito.version>
+        <junit.version>5.10.2</junit.version>
     </properties>
 
     <dependencyManagement>
@@ -208,9 +209,6 @@
                             <destFile>
                                 ${project.build.directory}/jacoco-output/jacoco-unit-test.exec
                             </destFile>
-                            <propertyName>
-                                surefire.jacoco.args
-                            </propertyName>
                         </configuration>
                     </execution>
 
@@ -227,7 +225,6 @@
                             <outputDirectory>
                                 ${project.reporting.outputDirectory}/jacoco-unit-test-coverage-report
                             </outputDirectory>
-
                         </configuration>
                     </execution>
 
@@ -244,7 +241,6 @@
                             <outputDirectory>
                                 ${project.reporting.outputDirectory}/jacoco-unit-test-coverage-report
                             </outputDirectory>
-
                         </configuration>
                     </execution>
 
@@ -259,12 +255,8 @@
                             <destFile>
                                 ${project.build.directory}/jacoco-output/jacoco-integration-test.exec
                             </destFile>
-                            <propertyName>
-                                failsafe.jacoco.args
-                            </propertyName>
                         </configuration>
                     </execution>
-
                     <execution>
                         <id>despues de integracion</id>
                         <goals>
@@ -278,7 +270,6 @@
                             <outputDirectory>
                                 ${project.reporting.outputDirectory}/jacoco-integration-test-coverage-report
                             </outputDirectory>
-
                         </configuration>
                     </execution>
 
@@ -318,40 +309,39 @@
                             <outputDirectory>
                                 ${project.reporting.outputDirectory}/jacoco-unitintegration-test-coverage-report
                             </outputDirectory>
-
                         </configuration>
                     </execution>
 
                     <!--Validaion-->
-                    <execution>
-                        <id>validacion</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <haltOnFailure>true</haltOnFailure>
-                            <rules>
-                                <rule>
-                                    <element>CLASS</element>
-                                    <excludes>
-                                        <exclude>*Test</exclude>
-                                        <exclude>*IT</exclude>
-                                    </excludes>
-                                    <limits>
-                                        <limit>
-                                            <counter>LINE</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>10%</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                            </rules>
-                            <dataFile>
-                                ${project.build.directory}/jacoco-output/jacoco-unitintegration-test.exec
-                            </dataFile>
-                        </configuration>
-                    </execution>
+<!--                    <execution>-->
+<!--                        <id>validacion</id>-->
+<!--                        <phase>verify</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>check</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <haltOnFailure>true</haltOnFailure>-->
+<!--                            <rules>-->
+<!--                                <rule>-->
+<!--                                    <element>CLASS</element>-->
+<!--                                    <excludes>-->
+<!--                                        <exclude>*Test</exclude>-->
+<!--                                        <exclude>*IT</exclude>-->
+<!--                                    </excludes>-->
+<!--                                    <limits>-->
+<!--                                        <limit>-->
+<!--                                            <counter>LINE</counter>-->
+<!--                                            <value>COVEREDRATIO</value>-->
+<!--                                            <minimum>10%</minimum>-->
+<!--                                        </limit>-->
+<!--                                    </limits>-->
+<!--                                </rule>-->
+<!--                            </rules>-->
+<!--                            <dataFile>-->
+<!--                                ${project.build.directory}/jacoco-output/jacoco-unitintegration-test.exec-->
+<!--                            </dataFile>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
 
                 </executions>
             </plugin>

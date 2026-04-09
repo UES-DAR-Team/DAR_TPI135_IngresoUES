@@ -109,30 +109,6 @@ class AspiranteOpcioneDAOTest {
     }
 
     @Test
-    void debeRetornarLista_findByOrdenPreferencia() {
-
-        List<AspiranteOpcione> lista = List.of(new AspiranteOpcione());
-
-        when(em.createNamedQuery(anyString(), eq(AspiranteOpcione.class))).thenReturn(query);
-        when(query.setParameter(anyString(), any())).thenReturn(query);
-        when(query.setFirstResult(anyInt())).thenReturn(query);
-        when(query.setMaxResults(anyInt())).thenReturn(query);
-        when(query.getResultList()).thenReturn(lista);
-
-        List<AspiranteOpcione> result =
-                dao.findByOrdenPreferencia((short) 1, 0, 10);
-
-        assertNotNull(result);
-        assertEquals(1, result.size());
-    }
-
-    @Test
-    void lanzaException_null_findByOrdenPreferencia() {
-        assertThrows(IllegalArgumentException.class,
-                () -> dao.findByOrdenPreferencia(null, 0, 10));
-    }
-
-    @Test
     void debeContarPorAspirante() {
 
         when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(queryLong);

@@ -58,10 +58,8 @@ public class JornadaAulaAspiranteResultadoDAO extends IngresoDefaultDataAcces<Jo
             return q.getResultList();
 
         } catch (Exception ex) {
-            Logger.getLogger(JornadaAulaAspiranteResultadoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar resultados por jornada aula aspirante", ex);
         }
-
-        return List.of();
     }
 
     public List<JornadaAulaAspiranteResultado> findByAprobado(Boolean aprobado, int first, int max)
@@ -88,10 +86,8 @@ public class JornadaAulaAspiranteResultadoDAO extends IngresoDefaultDataAcces<Jo
             return q.getResultList();
 
         } catch (Exception ex) {
-            Logger.getLogger(JornadaAulaAspiranteResultadoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar resultados por estado de aprobación", ex);
         }
-
-        return List.of();
     }
 
     public List<JornadaAulaAspiranteResultado> findByRangoPuntaje(BigDecimal min, BigDecimal max, int first, int maxResults)
@@ -123,10 +119,8 @@ public class JornadaAulaAspiranteResultadoDAO extends IngresoDefaultDataAcces<Jo
             return q.getResultList();
 
         } catch (Exception ex) {
-            Logger.getLogger(JornadaAulaAspiranteResultadoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar resultados por rango de puntaje", ex);
         }
-
-        return List.of();
     }
 
     public Long countByAprobado(Boolean aprobado)
@@ -147,9 +141,7 @@ public class JornadaAulaAspiranteResultadoDAO extends IngresoDefaultDataAcces<Jo
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            Logger.getLogger(JornadaAulaAspiranteResultadoDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al contar resultados por estado", ex);
         }
-
-        return 0L;
     }
 }

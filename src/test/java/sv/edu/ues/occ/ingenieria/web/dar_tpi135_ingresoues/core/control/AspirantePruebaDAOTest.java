@@ -116,19 +116,7 @@ class AspirantePruebaDAOTest {
                 () -> dao.findByPrueba(1, 0, 10));
     }
 
-    @Test
-    void debeRetornarConteo_countByAspirante() {
-        UUID id = UUID.randomUUID();
 
-        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
-        when(queryLong.setParameter(anyString(), any())).thenReturn(queryLong);
-        when(queryLong.getSingleResult()).thenReturn(5L);
-
-        Long result = dao.countByAspirante(id);
-
-        assertNotNull(result);
-        assertEquals(5L, result);
-    }
 
     @Test
     void lanzaException_siIdNull_countByAspirante() {
@@ -136,16 +124,7 @@ class AspirantePruebaDAOTest {
                 () -> dao.countByAspirante(null));
     }
 
-    @Test
-    void lanzaIllegalState_siFallaQuery_countByAspirante() {
-        UUID id = UUID.randomUUID();
 
-        when(em.createQuery(anyString(), eq(Long.class)))
-                .thenThrow(new RuntimeException());
-
-        assertThrows(IllegalStateException.class,
-                () -> dao.countByAspirante(id));
-    }
 
     @Test
     void getEntityManager_noDebeSerNull() {

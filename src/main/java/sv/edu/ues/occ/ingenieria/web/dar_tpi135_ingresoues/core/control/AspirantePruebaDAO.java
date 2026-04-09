@@ -58,10 +58,9 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
             return q.getResultList();
 
         } catch (Exception ex) {
-            Logger.getLogger(AspirantePruebaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar pruebas por aspirante", ex);
         }
 
-        return List.of();
     }
 
     public List<AspirantePrueba> findByPrueba(Integer idPrueba, int first, int max)
@@ -88,10 +87,9 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
             return q.getResultList();
 
         } catch (Exception ex) {
-            Logger.getLogger(AspirantePruebaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar aspirantes por prueba", ex);
         }
 
-        return List.of();
     }
 
     public Long countByAspirante(UUID idAspirante)
@@ -112,9 +110,7 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            Logger.getLogger(AspirantePruebaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al contar pruebas por aspirante", ex);
         }
-
-        return 0L;
     }
 }

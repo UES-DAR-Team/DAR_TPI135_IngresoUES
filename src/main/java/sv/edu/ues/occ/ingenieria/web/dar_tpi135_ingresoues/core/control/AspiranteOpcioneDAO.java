@@ -124,35 +124,6 @@ public class AspiranteOpcioneDAO extends IngresoDefaultDataAcces<AspiranteOpcion
         return List.of();
     }
 
-    public List<AspiranteOpcione> findByOrdenPreferencia(Short ordenPreferencia, int first, int max)
-            throws IllegalArgumentException, IllegalStateException {
-
-        if (ordenPreferencia == null) {
-            throw new IllegalArgumentException("Orden de preferencia inválido");
-        }
-
-        if (first < 0 || max <= 0) {
-            throw new IllegalArgumentException("Parámetros de paginación inválidos");
-        }
-
-        try {
-            TypedQuery<AspiranteOpcione> q = getEntityManager().createNamedQuery(
-                    "AspiranteOpcione.findByOrdenPreferencia",
-                    AspiranteOpcione.class
-            );
-
-            q.setParameter("ordenPreferencia", ordenPreferencia);
-            q.setFirstResult(first);
-            q.setMaxResults(max);
-
-            return q.getResultList();
-
-        } catch (Exception ex) {
-            Logger.getLogger(AspiranteOpcioneDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
-        }
-
-        return List.of();
-    }
 
     public Long countByAspirante(UUID idAspirante)
             throws IllegalArgumentException, IllegalStateException {

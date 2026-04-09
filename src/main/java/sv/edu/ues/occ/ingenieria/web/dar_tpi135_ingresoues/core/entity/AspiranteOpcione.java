@@ -21,10 +21,7 @@ import java.time.OffsetDateTime;
                 name = "AspiranteOpcione.findByNombrePrograma",
                 query = "SELECT ao FROM AspiranteOpcione ao WHERE UPPER(ao.nombrePrograma) LIKE :nombrePrograma"
         ),
-        @NamedQuery(
-                name = "AspiranteOpcione.findByOrdenPreferencia",
-                query = "SELECT ao FROM AspiranteOpcione ao WHERE ao.ordenPreferencia = :ordenPreferencia"
-        ),
+
         @NamedQuery(
                 name = "AspiranteOpcione.countByAspirante",
                 query = "SELECT COUNT(ao) FROM AspiranteOpcione ao WHERE ao.idAspirante.id = :idAspirante"

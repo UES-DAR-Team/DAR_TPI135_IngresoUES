@@ -57,10 +57,8 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
             return q.getResultList();
 
         } catch (Exception ex) {
-            Logger.getLogger(AspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar aspirantes por nombre", ex);
         }
-
-        return List.of();
     }
 
     public List<Aspirante> findActivos(int first, int max)
@@ -82,10 +80,8 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
             return q.getResultList();
 
         } catch (Exception ex) {
-            Logger.getLogger(AspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar aspirantes activos", ex);
         }
-
-        return List.of();
     }
 
     public List<Aspirante> findByDocumento(String documento, int first, int max)
@@ -112,10 +108,8 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
             return q.getResultList();
 
         } catch (Exception ex) {
-            Logger.getLogger(AspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar aspirantes por documento", ex);
         }
-
-        return List.of();
     }
 
     public List<Aspirante> findByEstado(String estado, int first, int max)
@@ -142,10 +136,8 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
             return q.getResultList();
 
         } catch (Exception ex) {
-            Logger.getLogger(AspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar aspirantes por estado", ex);
         }
-
-        return List.of();
     }
 
     public Long countByNombre(String nombre)
@@ -166,9 +158,7 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            Logger.getLogger(AspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al contar aspirantes por nombre", ex);
         }
-
-        return 0L;
     }
 }

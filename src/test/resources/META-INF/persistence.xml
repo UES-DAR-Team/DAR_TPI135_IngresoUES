@@ -29,11 +29,8 @@
 
         <properties>
             <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/ingreso_ues_bd" />
-            <property name="jakarta.persistence.jdbc.host" value="localhost"/>
             <property name="jakarta.persistence.jdbc.user" value="postgres"/>
             <property name="jakarta.persistence.jdbc.password" value="postgresmy"/>
-            <property name="jakarta.persistence.jdbc.port" value="5432"/>
-            <property name="jakarta.persistence.jdbc.database" value="ingreso_ues_bd"/>
             <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver" />
         </properties>
     </persistence-unit>

@@ -28,11 +28,9 @@ public abstract class BaseIntegrationAbstract {
 
 
     // variables para E2A
-    /*
-    protected Client cliente;
-    protected WebTarget target;
-    */
-
+//    protected Client cliente;
+//    protected WebTarget target;
+//
     // EntityManagerFactory con el patron SINGLETON
     protected static EntityManagerFactory emf;
 

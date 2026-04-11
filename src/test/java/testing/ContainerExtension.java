@@ -34,7 +34,7 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
     //CONTENEDOR DE POSTGRES
     protected static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17.5-alpine")
             .withDatabaseName("ingreso_ues_db")
-            .withPassword("abc123")
+            .withPassword("postgresmy")
             .withUsername("postgres")
             .withExposedPorts(5432)
            // .withNetwork(red)

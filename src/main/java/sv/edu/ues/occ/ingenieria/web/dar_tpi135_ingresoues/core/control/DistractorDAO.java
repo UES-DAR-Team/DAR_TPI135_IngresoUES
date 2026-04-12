@@ -15,7 +15,7 @@ import java.util.List;
 @LocalBean
 public class DistractorDAO extends IngresoDefaultDataAcces<Distractor, Object> implements Serializable {
     @PersistenceContext(unitName = "IngresoPU")
-    private EntityManager em;
+    EntityManager em;
 
     public DistractorDAO() {
         super(Distractor.class);

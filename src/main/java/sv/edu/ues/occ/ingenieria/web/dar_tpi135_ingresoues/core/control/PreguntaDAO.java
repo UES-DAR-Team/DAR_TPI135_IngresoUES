@@ -16,7 +16,7 @@ import java.util.List;
 @LocalBean
 public class PreguntaDAO extends IngresoDefaultDataAcces<Pregunta, Object> implements Serializable {
     @PersistenceContext(unitName = "IngresoPU")
-    private EntityManager em;
+    EntityManager em;
 
     public PreguntaDAO() {
         super(Pregunta.class);
@@ -50,7 +50,6 @@ public class PreguntaDAO extends IngresoDefaultDataAcces<Pregunta, Object> imple
             throw new IllegalStateException("Error de sistema en la ejecucion de query", e);
         }
     }
-
 
 }
 

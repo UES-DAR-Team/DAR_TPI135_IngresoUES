@@ -15,7 +15,7 @@ import java.util.UUID;
 @LocalBean
 public class PreguntaDistractorDAO extends IngresoDefaultDataAcces<PreguntaDistractor, Object> implements Serializable {
     @PersistenceContext(unitName = "IngresoPU")
-    private EntityManager em;
+    EntityManager em;
 
     public PreguntaDistractorDAO() {
         super(PreguntaDistractor.class);

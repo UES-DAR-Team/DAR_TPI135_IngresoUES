@@ -98,7 +98,7 @@ class AspiranteDAOTest {
         when(query.setMaxResults(anyInt())).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(new Aspirante()));
 
-        List<Aspirante> result = dao.findByEstado("ACTIVO", 0, 10);
+        List<Aspirante> result = dao.findByEstado(true, 0, 10);
 
         assertNotNull(result);
     }

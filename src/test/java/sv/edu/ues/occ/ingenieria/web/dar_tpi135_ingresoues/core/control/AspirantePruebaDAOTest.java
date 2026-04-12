@@ -78,6 +78,7 @@ class AspirantePruebaDAOTest {
     @Test
     void debeRetornarLista_findByPrueba() {
         List<AspirantePrueba> lista = List.of(new AspirantePrueba());
+        UUID id = UUID.randomUUID();
 
         when(em.createNamedQuery(anyString(), eq(AspirantePrueba.class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
@@ -85,7 +86,7 @@ class AspirantePruebaDAOTest {
         when(query.setMaxResults(anyInt())).thenReturn(query);
         when(query.getResultList()).thenReturn(lista);
 
-        List<AspirantePrueba> result = dao.findByPrueba(1, 0, 10);
+        List<AspirantePrueba> result = dao.findByPrueba(id, 0, 10);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -99,21 +100,22 @@ class AspirantePruebaDAOTest {
 
     @Test
     void lanzaException_siPaginacionInvalida_findByPrueba() {
+        UUID id = UUID.randomUUID();
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByPrueba(1, -1, 10));
+                () -> dao.findByPrueba(id, -1, 10));
 
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByPrueba(1, 0, 0));
+                () -> dao.findByPrueba(id, 0, 0));
     }
 
     @Test
     void lanzaIllegalState_siFallaQuery_findByPrueba() {
-
+        UUID id = UUID.randomUUID();
         when(em.createNamedQuery(anyString(), eq(AspirantePrueba.class)))
                 .thenThrow(new RuntimeException());
 
         assertThrows(IllegalStateException.class,
-                () -> dao.findByPrueba(1, 0, 10));
+                () -> dao.findByPrueba(id, 0, 10));
     }
 
 

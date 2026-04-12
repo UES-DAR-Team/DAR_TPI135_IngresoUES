@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba, Object> implements Serializable {
 
     @PersistenceContext(unitName = "IngresoPU")
-    private EntityManager em;
+    EntityManager em;
 
     public AspirantePruebaDAO() {
         super(AspirantePrueba.class);
@@ -63,7 +63,7 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
 
     }
 
-    public List<AspirantePrueba> findByPrueba(Integer idPrueba, int first, int max)
+    public List<AspirantePrueba> findByPrueba(UUID idPrueba, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
 
         if (idPrueba == null) {

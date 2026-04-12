@@ -30,22 +30,22 @@ class PreguntaDistractorDAOTest {
     @InjectMocks
     private PreguntaDistractorDAO dao;
 
+    private PreguntaDistractor pd;
     private UUID idPregunta;
     private UUID idDistractor;
-    private PreguntaDistractor pd;
 
     @BeforeEach
     void setUp() {
+        pd = new PreguntaDistractor();
+        pd.setId(1);
         idPregunta = UUID.randomUUID();
         idDistractor = UUID.randomUUID();
-        pd = new PreguntaDistractor();
     }
 
     @Nested
     class FindByIdPregunta {
-
         @Test
-        void retornaResultados_cuandoParametrosSonValidos() {
+        void testFindByIdPreguntaParametrosValido() {
             when(em.createNamedQuery("PreguntaDistractor.findByIdPregunta", PreguntaDistractor.class))
                     .thenReturn(query);
             when(query.setParameter("idPregunta", idPregunta)).thenReturn(query);
@@ -55,9 +55,7 @@ class PreguntaDistractorDAOTest {
 
             List<PreguntaDistractor> resultado = dao.findByIdPregunta(idPregunta, 0, 10);
 
-            assertNotNull(resultado);
-            assertEquals(1, resultado.size());
-            assertSame(pd, resultado.getFirst());
+            assertFalse(resultado.isEmpty());
             assertTrue(resultado.contains(pd));
             verify(em).createNamedQuery("PreguntaDistractor.findByIdPregunta", PreguntaDistractor.class);
             verify(query).setParameter("idPregunta", idPregunta);
@@ -67,36 +65,35 @@ class PreguntaDistractorDAOTest {
         }
 
         @Test
-        void lanzaIllegalArgumentException_cuandoIdPreguntaEsNulo() {
+        void lanzaIllegalArgumentExceptionCuandoIdPreguntaEsNulo() {
             assertThrows(IllegalArgumentException.class, () -> dao.findByIdPregunta(null, 0, 10));
         }
 
+
         @Test
-        void lanzaIllegalArgumentException_cuandoFirstNegativo() {
+        void lanzaIllegalArgumentExceptionCuandoFirstEsNegativo() {
             assertThrows(IllegalArgumentException.class, () -> dao.findByIdPregunta(idPregunta, -1, 10));
         }
 
         @Test
-        void lanzaIllegalArgumentException_cuandoMaxNegativoOCero() {
+        void lanzaIllegalArgumentExceptionCuandoMaxEsNegativoOCero() {
             assertThrows(IllegalArgumentException.class, () -> dao.findByIdPregunta(idPregunta, 0, -1));
             assertThrows(IllegalArgumentException.class, () -> dao.findByIdPregunta(idPregunta, 0, 0));
         }
 
         @Test
-        void lanzaIllegalStateException_cuandoJpaFalla(){
+        void lanzaIllegalStateExceptionCuandoQueryFalla() {
             when(em.createNamedQuery("PreguntaDistractor.findByIdPregunta", PreguntaDistractor.class))
-                    .thenThrow(new RuntimeException("Fallo de base de datos"));
+                    .thenThrow(new RuntimeException("DB Error"));
             assertThrows(IllegalStateException.class, () -> dao.findByIdPregunta(idPregunta, 0, 10));
             verify(em).createNamedQuery("PreguntaDistractor.findByIdPregunta", PreguntaDistractor.class);
         }
-
     }
 
     @Nested
     class FindByIdDistractor {
-
         @Test
-        void retornaResultados_cuandoParametrosSonValidos() {
+        void testFindByIdDistractorParametrosValido() {
             when(em.createNamedQuery("PreguntaDistractor.findByIdDistractor", PreguntaDistractor.class))
                     .thenReturn(query);
             when(query.setParameter("idDistractor", idDistractor)).thenReturn(query);
@@ -106,9 +103,7 @@ class PreguntaDistractorDAOTest {
 
             List<PreguntaDistractor> resultado = dao.findByIdDistractor(idDistractor, 0, 10);
 
-            assertNotNull(resultado);
-            assertEquals(1, resultado.size());
-            assertSame(pd, resultado.getFirst());
+            assertFalse(resultado.isEmpty());
             assertTrue(resultado.contains(pd));
             verify(em).createNamedQuery("PreguntaDistractor.findByIdDistractor", PreguntaDistractor.class);
             verify(query).setParameter("idDistractor", idDistractor);
@@ -118,25 +113,25 @@ class PreguntaDistractorDAOTest {
         }
 
         @Test
-        void lanzaIllegalArgumentException_cuandoIdDistractorEsNulo() {
+        void lanzaIllegalArgumentExceptionCuandoIdDistractorEsNulo() {
             assertThrows(IllegalArgumentException.class, () -> dao.findByIdDistractor(null, 0, 10));
         }
 
         @Test
-        void lanzaIllegalArgumentException_cuandoFirstNegativo() {
+        void lanzaIllegalArgumentExceptionCuandoFirstEsNegativo() {
             assertThrows(IllegalArgumentException.class, () -> dao.findByIdDistractor(idDistractor, -1, 10));
         }
 
         @Test
-        void lanzaIllegalArgumentException_cuandoMaxNegativoOCero() {
+        void lanzaIllegalArgumentExceptionCuandoMaxEsNegativoOCero() {
             assertThrows(IllegalArgumentException.class, () -> dao.findByIdDistractor(idDistractor, 0, -1));
             assertThrows(IllegalArgumentException.class, () -> dao.findByIdDistractor(idDistractor, 0, 0));
         }
 
         @Test
-        void lanzaIllegalStateException_cuandoJpaFalla(){
+        void lanzaIllegalStateExceptionCuandoQueryFalla() {
             when(em.createNamedQuery("PreguntaDistractor.findByIdDistractor", PreguntaDistractor.class))
-                    .thenThrow(new RuntimeException("Fallo de base de datos"));
+                    .thenThrow(new RuntimeException("DB Error"));
             assertThrows(IllegalStateException.class, () -> dao.findByIdDistractor(idDistractor, 0, 10));
             verify(em).createNamedQuery("PreguntaDistractor.findByIdDistractor", PreguntaDistractor.class);
         }

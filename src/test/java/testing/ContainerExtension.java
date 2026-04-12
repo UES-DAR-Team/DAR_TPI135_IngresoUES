@@ -49,7 +49,7 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
             //expone el puerto del contenedor donde corre el api rest
             .withExposedPorts(9080)
             //war del proyecto
-            .withCopyFileToContainer(getWarFile(), "/config/dropins/IngresoUES-1.0-SNAPSHOT.war")
+            .withCopyFileToContainer(getWarFile(), "/config/dropins/DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war")
            //conecta a la red docker
             .withNetwork(red)
 
@@ -171,7 +171,7 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
 
     //Obtener WAR
     private static MountableFile getWarFile() {
-        return MountableFile.forHostPath(Paths.get("target/IngresoUES-1.0-SNAPSHOT.war").toAbsolutePath());
+        return MountableFile.forHostPath(Paths.get("target/DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war").toAbsolutePath());
     }
 
 

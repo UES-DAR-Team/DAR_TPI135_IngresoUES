@@ -15,7 +15,7 @@ import java.util.UUID;
 @LocalBean
 public class PreguntaAreaConocimientoDAO extends IngresoDefaultDataAcces<PreguntaAreaConocimiento, Object> implements Serializable {
     @PersistenceContext(unitName = "IngresoPU")
-    private EntityManager em;
+    EntityManager em;
 
     public PreguntaAreaConocimientoDAO() {
         super(PreguntaAreaConocimiento.class);

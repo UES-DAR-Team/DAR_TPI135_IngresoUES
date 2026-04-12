@@ -32,15 +32,15 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
     private static boolean libertyStart = false;
 
     // Red de Docker para comunicación entre contenedores
-    protected static final Network red = Network.newNetwork();
+    //  protected static final Network red = Network.newNetwork();
 
     //CONTENEDOR DE POSTGRES
     protected static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17.5-alpine")
             .withDatabaseName("ingreso_ues_db")
-            .withPassword("abc123")
+            .withPassword("postgresmy")
             .withUsername("postgres")
             .withExposedPorts(5432)
-            .withNetwork(red)
+            // .withNetwork(red)
             .withNetworkAliases("db");
 
 

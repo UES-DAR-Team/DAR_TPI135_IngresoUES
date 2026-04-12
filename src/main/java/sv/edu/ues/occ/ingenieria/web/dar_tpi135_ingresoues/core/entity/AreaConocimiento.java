@@ -35,7 +35,7 @@ public class AreaConocimiento {
     @NotNull
     @Column(name = "activo", nullable = false)
     private Boolean activo = false;
-    
+
     public UUID getId() {
         return id;
     }

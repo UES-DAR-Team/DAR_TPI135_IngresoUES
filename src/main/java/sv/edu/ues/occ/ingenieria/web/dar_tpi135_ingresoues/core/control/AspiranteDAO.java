@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> implements Serializable {
 
     @PersistenceContext(unitName = "IngresoPU")
-    private EntityManager em;
+    EntityManager em;
 
     public AspiranteDAO() {
         super(Aspirante.class);
@@ -112,10 +112,10 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
         }
     }
 
-    public List<Aspirante> findByEstado(String estado, int first, int max)
+    public List<Aspirante> findByEstado(Boolean estado, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
 
-        if (estado == null || estado.isBlank()) {
+        if (estado == null) {
             throw new IllegalArgumentException("Estado inválido");
         }
 
@@ -129,7 +129,7 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
                     Aspirante.class
             );
 
-            q.setParameter("estado", estado.trim());
+            q.setParameter("estado", estado);
             q.setFirstResult(first);
             q.setMaxResults(max);
 

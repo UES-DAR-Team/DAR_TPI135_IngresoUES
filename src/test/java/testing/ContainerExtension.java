@@ -28,6 +28,9 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
     //Indica si es prueba de sistema (E2E)
     private static boolean SystemTest = false; // (no se usara en estas pruebas)
 
+    // Indica si el contenedor de OpenLiberty ya fue iniciado
+    private static boolean libertyStart = false;
+
     // Red de Docker para comunicación entre contenedores
     //  protected static final Network red = Network.newNetwork();
 
@@ -42,30 +45,35 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
 
 
     // contenedor de openLiberty
-    /*
     protected static final GenericContainer<?> openliberty = new GenericContainer<>("openliberty:latest")
+            //expone el puerto del contenedor donde corre el api rest
             .withExposedPorts(9080)
-            .withCopyFileToContainer(getWarFile(), "RUTA-1.0-SNAPSHOT.war")
+            //war del proyecto
+            .withCopyFileToContainer(getWarFile(), "/config/dropins/IngresoUES-1.0-SNAPSHOT.war")
+           //conecta a la red docker
             .withNetwork(red)
-            .withEnv("PGPASSWORD", "abc123")
-            .withEnv("PGUSER", "postgres")
-            .withEnv("PGDBNAME", "ingreso_ues_db")
-            .withEnv("PGPORT", "5432")
-            .withEnv("PGHOST", "db")
+
+            //variables de entorno
+           .withEnv("PGHOST", "db")
+           .withEnv("PGPORT", "5432")
+           .withEnv("PGDBNAME", "ingreso_ues_db")
+           .withEnv("PGUSER", "postgres")
+           .withEnv("PGPASSWORD", "abc123")
+
+            //orden de arranque
             .dependsOn(postgres)
+            //espera que este listo
             .waitingFor(Wait.forLogMessage(".*The app server is ready to run a smarter planet.*", 1));
-    */
+
 
 
     //CONFIGURACIONES
-
-    /*
     // Configuración para pruebas E2E
     public static void configurarParaE2E(){
         SystemTest = true;
-        postgres = postgres.withInitScript("ingreso_ues_db_E2E.sql");
+        postgres = postgres.withInitScript("ingreso_ues_db.sql");
     }
-    */
+
 
     // Configuración para pruebas de integración
     public static void configurarParaIT(){
@@ -76,52 +84,59 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         synchronized (lock) {
-            // Configuramos el script ANTES de iniciar el contenedor
-            if (!postgresStart) {
-                configurarParaIT(); // bd real
-            }
-            /*
-            // Para diferenciar E2E vs IT
-            if (context.getTestClass().isPresent()) {
-                Class<?> testClass = context.getTestClass().get();
-                if (testClass.getName().contains("E2E") || testClass.getName().contains("SystemTest")) {
-                    configurarParaE2E();
-                } else {
-                    configurarParaIT();
-                }
-            }
-            */
 
-            //Detectar si necesita OpenLiberty
-            /*
-            boolean needLiberty = context.getTestClass()
-                    .map(cls -> cls.isAnnotationPresent(NeedsLiberty.class))
+            // Verifica si la clase de prueba actual está anotada con @SystemTest
+            // Esto indica que la prueba es de tipo sistema (E2E)
+            boolean isSystemTest = context.getTestClass()
+
+                    // Obtiene la clase de prueba y verifica si tiene la anotación @SystemTest
+                    .map(cls -> cls.isAnnotationPresent(SystemTest.class))
+
+                    // Si no hay clase (caso raro), por defecto asume que NO es SystemTest
                     .orElse(false);
-            */
+
+            // Según el tipo de prueba, configura el entorno adecuado
+            if (isSystemTest) {
+                // Configuración para pruebas de sistema (E2E):
+                // Levanta OpenLiberty
+                // Usa base de datos preparada para E2E
+                configurarParaE2E();
+            } else {
+                // Configuración para pruebas de integración:
+                // Solo usa base de datos
+                // No levanta el servidor completo
+                configurarParaIT();
+            }
+
             numClassTest++;
+
             // Iniciar PostgreSQL una sola vez
             if (!postgresStart) {
                 postgres.start();
                 postgresStart = true;
             }
-            /*
-            // Iniciar OpenLiberty solo si se necesita
-            if(needLiberty && !libertyStart){
+
+            // Iniciar OpenLiberty solo si la prueba lo requiere (es decir, si es @SystemTest)
+            // y además evitar iniciarlo múltiples veces
+            if (isSystemTest && !libertyStart) {
+                // Arranca el contenedor de OpenLiberty
                 openliberty.start();
+                // Marca que ya fue iniciado para no volver a levantarlo en otras clases
                 libertyStart = true;
             }
-            */
 
-            //Hook para cerrar contenedores al finalizar la ejecución
+            // Hook para cerrar los contenedores cuando termina toda la ejecución de pruebas
+            // Se ejecuta una sola vez (cuando empieza la primera clase de test)
             if (numClassTest == 1) {
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                     synchronized (lock) {
-                        /*
-                        if(libertyStart){
+                        // Si OpenLiberty fue iniciado, lo detenemos
+                        if (libertyStart) {
                             openliberty.stop();
                             libertyStart = false;
                         }
-                        */
+
+                        // Si PostgreSQL fue iniciado, lo detenemos
                         if (postgresStart) {
                             postgres.stop();
                             postgresStart = false;
@@ -146,24 +161,23 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
         return postgres;
     }
 
-    /*
+
     //Metodo para OpenLiberty
     public static GenericContainer<?> getOpenLiberty() {
         return openliberty;
     }
-    */
 
-    /*
+
+
     //Obtener WAR
     private static MountableFile getWarFile() {
-        return MountableFile.forHostPath(Paths.get("target/ruta-1.0-SNAPSHOT.war").toAbsolutePath());
+        return MountableFile.forHostPath(Paths.get("target/IngresoUES-1.0-SNAPSHOT.war").toAbsolutePath());
     }
-    */
 
-    /*
+
     //Saber si es SystemTest
-    public static boolean isSystemTest() {
-        return SystemTest;
-    }
-    */
+   // public static boolean isSystemTest() {
+    //   return SystemTest;
+    //}
+
 }

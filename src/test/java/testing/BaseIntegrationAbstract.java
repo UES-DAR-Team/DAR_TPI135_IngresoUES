@@ -12,6 +12,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,17 +22,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 //Ahorita solo conexion a la base (PostgreSQL con Testcontainers) despues las pruebas con OpenLiberty (E2E)
 
 
-//@Testcontainers
+@Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(ContainerExtension.class)
 public abstract class BaseIntegrationAbstract {
 
 
     // variables para E2A
-//    protected Client cliente;
-//    protected WebTarget target;
-//
-    // EntityManagerFactory con el patron SINGLETON
+ protected Client cliente;
+ protected WebTarget target;
+
+ //EntityManagerFactory con el patron SINGLETON
     protected static EntityManagerFactory emf;
 
     @BeforeAll
@@ -46,8 +47,8 @@ public abstract class BaseIntegrationAbstract {
         // System.out.println(postgres.getLogs());
 
         //OPENLIBERTY (logica con el servidro)
-        /*
-        if(this.getClass().isAnnotationPresent(NeedsLiberty.class)){
+
+        if(this.getClass().isAnnotationPresent(SystemTest.class)){
             GenericContainer<?> openliberty = ContainerExtension.getOpenLiberty();
             assertTrue(openliberty.isRunning());
 
@@ -55,7 +56,7 @@ public abstract class BaseIntegrationAbstract {
             target = cliente.target(getBaseUrl());
             System.out.println("Testing URL: " + getBaseUrl());
         }
-        */
+
 
         // Configuracion de la BD
         String url = String.format(
@@ -77,10 +78,9 @@ public abstract class BaseIntegrationAbstract {
         System.out.println("URL PostgreSQL: " + url);
     }
 
-    // Metodo para E2E
-    /*
+    // Metodo para las pruebas de sistemas
     protected String getBaseUrl() {
-        if (this.getClass().isAnnotationPresent(NeedsLiberty.class)) {
+        if (this.getClass().isAnnotationPresent(SystemTest.class)) {
             String hostliberty = ContainerExtension.getOpenLiberty().getHost();
             return String.format("http://%s:%d/app/v1/",
                    hostliberty,
@@ -88,5 +88,5 @@ public abstract class BaseIntegrationAbstract {
         }
         return null;
     }
-    */
+
 }

@@ -41,11 +41,11 @@ public class DistractorAreaConocimientoResource implements Serializable {
     public Response findRange(
             @PathParam("idAreaConocimiento") UUID idAreaConocimiento,
             @Min(0) @DefaultValue("0") @QueryParam("first") int first,
-            @Max(20) @Min(1) @DefaultValue("10") @QueryParam("max") int max) {
+            @Max(10) @Min(1) @DefaultValue("10") @QueryParam("max") int max) {
         if (idAreaConocimiento == null) {
             return Response.status(422).header("Missing-parameter", "idAreaConocimiento").build();
         }
-        if (first < 0 || max <= 0 || max > 20) {
+        if (first < 0 || max <= 0 || max > 10) {
             return Response.status(422).header("Missing-parameter", "first,max").build();
         }
         try {

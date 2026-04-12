@@ -46,11 +46,11 @@ public class PreguntaDistractorResource implements Serializable {
     public Response findByPregunta(
             @PathParam("idPregunta") UUID idPregunta,
             @Min(0) @DefaultValue("0") @QueryParam("first") int first,
-            @Max(20) @Min(1) @DefaultValue("10") @QueryParam("max") int max) {
+            @Max(10) @Min(1) @DefaultValue("10") @QueryParam("max") int max) {
         if (idPregunta == null) {
             return Response.status(422).header("Missing-parameter", "idPregunta").build();
         }
-        if (first < 0 || max <= 0 || max > 20) {
+        if (first < 0 || max <= 0 || max > 10) {
             return Response.status(422).header("Missing-parameter", "first,max").build();
         }
         try {
@@ -125,7 +125,7 @@ public class PreguntaDistractorResource implements Serializable {
         if (entity.getId() != null) {
             return Response.status(422).header("Missing-parameter", "entity.id must be null").build();
         }
-        if (entity.getIdDistractor() == null || entity.getIdDistractor().getId() == null) {
+        if (entity.getIdDistractor() == null ) {
             return Response.status(422).header("Missing-parameter", "idDistractor must be provided in body").build();
         }
 

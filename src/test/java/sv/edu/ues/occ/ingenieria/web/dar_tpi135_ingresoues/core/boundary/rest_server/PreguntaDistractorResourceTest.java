@@ -1,6 +1,7 @@
 // java
 package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.boundary.rest_server;
 
+import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +50,9 @@ class PreguntaDistractorResourceTest {
 
     private static final int FIRST = 0;
     private static final int MAX = 10;
+    private static final int INVALIDFIRST = -1;
+    private static final int INVALIDMAX = 0;
+    private static final int EXCEEDMAX = 11;
 
     private UUID idPregunta;
     private UUID idDistractor;
@@ -105,9 +109,24 @@ class PreguntaDistractorResourceTest {
             verifyNoInteractions(preguntaDAO, preguntaDistractorDAO);
         }
 
+
         @Test
-        void retorna422_cuandoParametrosInvalidos() {
-            var resp = resource.findByPregunta(idPregunta, -1, 0);
+        void retorna422_cuandoFirstInvalido(){
+            Response resp = resource.findByPregunta(idPregunta, INVALIDFIRST, MAX);
+            assertEquals(422, resp.getStatus());
+            assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(preguntaDAO, preguntaDistractorDAO);
+        }
+        @Test
+        void retorna422_cuandoMaxEsInvalido(){
+            Response resp = resource.findByPregunta(idPregunta, FIRST, INVALIDMAX);
+            assertEquals(422, resp.getStatus());
+            assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(preguntaDAO, preguntaDistractorDAO);
+        }
+        @Test
+        void retorna422_cuandoMaxEsInvalidoPorMas(){
+            Response resp = resource.findByPregunta(idPregunta, FIRST, EXCEEDMAX);
             assertEquals(422, resp.getStatus());
             assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDAO, preguntaDistractorDAO);
@@ -147,8 +166,15 @@ class PreguntaDistractorResourceTest {
         }
 
         @Test
-        void retorna422_cuandoParametrosNulos() {
-            var resp = resource.findOne(null, null);
+        void retorna422_cuandoIdDistractorNoEsNull() {
+            var resp = resource.findOne(null, idDistractor);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPregunta,idDistractor", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(preguntaDistractorDAO);
+        }
+        @Test
+        void retorna422_cuandoIdPreguntaNoEsNull() {
+            var resp = resource.findOne(idPregunta, null);
             assertEquals(422, resp.getStatus());
             assertEquals("idPregunta,idDistractor", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDistractorDAO);
@@ -231,13 +257,13 @@ class PreguntaDistractorResourceTest {
 
         @Test
         void retorna422_cuandoIdDistractorNoProvistoEnBody() {
-            entity.setId(null);
             entity.setIdDistractor(null);
             var resp = resource.create(idPregunta, entity, uriInfo);
             assertEquals(422, resp.getStatus());
             assertEquals("idDistractor must be provided in body", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDAO, distractorDAO, preguntaDistractorDAO);
         }
+
 
         @Test
         void retorna404_cuandoPreguntaNoExiste() {
@@ -317,8 +343,15 @@ class PreguntaDistractorResourceTest {
         }
 
         @Test
-        void retorna422_cuandoParametrosNulos() {
-            var resp = resource.update(null, null, entity);
+        void retorna422_cuandoIdDistractorNoEsNull() {
+            var resp = resource.update(null, idDistractor, entity);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPregunta,idDistractor", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(preguntaDistractorDAO);
+        }
+        @Test
+        void retorna422_cuandoIdPreguntaNoEsNull() {
+            var resp = resource.update(idPregunta, null, entity);
             assertEquals(422, resp.getStatus());
             assertEquals("idPregunta,idDistractor", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDistractorDAO);
@@ -366,6 +399,20 @@ class PreguntaDistractorResourceTest {
         @Test
         void retorna422_cuandoParametrosNulos() {
             var resp = resource.delete(null, null);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPregunta,idDistractor", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(preguntaDistractorDAO);
+        }
+        @Test
+        void retorna422_cuandoIdDistractorNoEsNull() {
+            var resp = resource.delete(null, idDistractor);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPregunta,idDistractor", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(preguntaDistractorDAO);
+        }
+        @Test
+        void retorna422_cuandoIdPreguntaNoEsNull() {
+            var resp = resource.delete(idPregunta, null);
             assertEquals(422, resp.getStatus());
             assertEquals("idPregunta,idDistractor", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDistractorDAO);

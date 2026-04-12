@@ -37,8 +37,9 @@ class PreguntaResourceTest {
 
     private static final int FIRST = 0;
     private static final int MAX = 10;
-    private static final int INVALIDFIRST = 0;
+    private static final int INVALIDFIRST = -1;
     private static final int INVALIDMAX = 0;
+    private static final int EXCEEDMAX = 11;
     private static final List<Pregunta> LISTA = List.of(
             new Pregunta(), new Pregunta(), new Pregunta()
     );
@@ -74,9 +75,22 @@ class PreguntaResourceTest {
         }
 
         @Test
-        void retorna422_cuandoParametrosSonInvalidos(){
-            Response response = preguntaResource.findRange(INVALIDFIRST, INVALIDMAX);
-
+        void retorna422_cuandoFirstInvalido(){
+            Response response = preguntaResource.findRange(INVALIDFIRST, MAX);
+            assertEquals(422,response.getStatus());
+            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(preguntaDAO);
+        }
+        @Test
+        void retorna422_cuandoMaxEsInvalido(){
+            Response response = preguntaResource.findRange(FIRST, INVALIDMAX);
+            assertEquals(422,response.getStatus());
+            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(preguntaDAO);
+        }
+        @Test
+        void retorna422_cuandoMaxEsInvalidoPorMas(){
+            Response response = preguntaResource.findRange(FIRST, EXCEEDMAX);
             assertEquals(422,response.getStatus());
             assertEquals("first,max", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDAO);

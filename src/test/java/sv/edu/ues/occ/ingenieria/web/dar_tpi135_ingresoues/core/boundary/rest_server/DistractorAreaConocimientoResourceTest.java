@@ -49,6 +49,9 @@ class DistractorAreaConocimientoResourceTest {
 
     private static final int FIRST = 0;
     private static final int MAX = 10;
+    private static final int INVALIDFIRST = -1;
+    private static final int INVALIDMAX = 0;
+    private static final int EXCEEDMAX = 11;
 
     private UUID idAreaConocimiento;
     private UUID idDistractor;
@@ -105,8 +108,22 @@ class DistractorAreaConocimientoResourceTest {
         }
 
         @Test
-        void retorna422_cuandoParametrosInvalidos() {
-            Response resp = resource.findRange(idAreaConocimiento, -1, 0);
+        void retorna422_cuandoFirstInvalido(){
+                Response resp = resource.findRange(idAreaConocimiento, INVALIDFIRST, MAX);
+                assertEquals(422, resp.getStatus());
+                assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
+                verifyNoInteractions(areaConocimientoDAO, distractorAreaConocimientoDAO);
+        }
+        @Test
+        void retorna422_cuandoMaxEsInvalido(){
+            Response resp = resource.findRange(idAreaConocimiento, FIRST, INVALIDMAX);
+            assertEquals(422, resp.getStatus());
+            assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(areaConocimientoDAO, distractorAreaConocimientoDAO);
+        }
+        @Test
+        void retorna422_cuandoMaxEsInvalidoPorMas(){
+            Response resp = resource.findRange(idAreaConocimiento, FIRST, EXCEEDMAX);
             assertEquals(422, resp.getStatus());
             assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(areaConocimientoDAO, distractorAreaConocimientoDAO);

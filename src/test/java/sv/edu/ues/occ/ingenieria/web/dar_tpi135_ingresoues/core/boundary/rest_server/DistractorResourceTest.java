@@ -39,6 +39,7 @@ class DistractorResourceTest {
     private static final int MAX = 10;
     private static final int INVALIDFIRST = -1;
     private static final int INVALIDMAX = 0;
+    private static final int EXCEEDMAX = 11;
     private static final List<Distractor> LISTA = List.of(
             new Distractor(),
             new Distractor()
@@ -75,13 +76,30 @@ class DistractorResourceTest {
         }
 
         @Test
-        void retorna422_cuandoParametrosSonInvalidos() {
-            Response response = distractorResource.findRange(INVALIDFIRST, INVALIDMAX);
+        void retorna422_cuandoMaxEsInvalido() {
+            Response response = distractorResource.findRange(FIRST, INVALIDMAX);
 
             assertEquals(422, response.getStatus());
             assertEquals("first,max", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(distractorDAO);
         }
+        @Test
+        void rertorna422_cuandoMaxEsExcedido() {
+            Response response = distractorResource.findRange(FIRST, EXCEEDMAX);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(distractorDAO);
+        }
+        @Test
+        void rertorna422_cuandoFirstEsInvalido() {
+            Response response = distractorResource.findRange(INVALIDFIRST, MAX);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(distractorDAO);
+        }
+
 
         @Test
         void retorna500_cuandoDAOLanzaExcepcion() {

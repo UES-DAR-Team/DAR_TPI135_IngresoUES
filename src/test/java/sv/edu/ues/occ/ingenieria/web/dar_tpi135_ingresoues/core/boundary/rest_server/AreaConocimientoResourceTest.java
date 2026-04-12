@@ -42,6 +42,7 @@ class AreaConocimientoResourceTest {
     private static final int MAX = 10;
     private static final int INVALIDFIRST = -1;
     private static final int INVALIDMAX = 0;
+    private static final int EXCEEDMAX = 11;
     private static final List<AreaConocimiento> LISTA = List.of(
             new AreaConocimiento(),
             new AreaConocimiento()
@@ -79,12 +80,27 @@ class AreaConocimientoResourceTest {
         }
 
         @Test
-        void retorna422_cuandoParametrosSonInvalidos() {
-            Response response = areaConocimientoResource.findRange(INVALIDFIRST, INVALIDMAX);
+        void retorna422_cuandoFirstInvalido(){
+                Response response = areaConocimientoResource.findRange(INVALIDFIRST, MAX);
+
+                assertEquals(422, response.getStatus());
+                assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+                verifyNoInteractions(areaConocimientoDAO);
+        }
+        @Test
+        void retorna422_cuandoMaxEsInvalido(){
+            Response response = areaConocimientoResource.findRange(FIRST, INVALIDMAX);
 
             assertEquals(422, response.getStatus());
             assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(areaConocimientoDAO);
+        }
+        @Test
+        void retorna422_cuandoMaxEsInvalidoPorMas(){
+            Response response = areaConocimientoResource.findRange(FIRST, EXCEEDMAX);
 
+            assertEquals(422, response.getStatus());
+            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(areaConocimientoDAO);
         }
 

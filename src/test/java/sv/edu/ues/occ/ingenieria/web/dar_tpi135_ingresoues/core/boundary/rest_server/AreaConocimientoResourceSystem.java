@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @ExtendWith(ContainerExtension.class)
 @NeedsLiberty
-public class AreaConocimientoResourceIT extends BaseIntegrationAbstract {
+public class AreaConocimientoResourceSystem extends BaseIntegrationAbstract {
 
     private AreaConocimientoResource cut;
     private AreaConocimientoDAO dao;

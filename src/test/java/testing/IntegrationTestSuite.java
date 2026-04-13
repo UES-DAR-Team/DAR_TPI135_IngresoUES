@@ -14,7 +14,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.*;
         PreguntaAreaDAOIT.class,
         PreguntaDAOIT.class,
         PreguntaDistractorDAOIT.class,
-        AreaConocimientoResourceIT.class,
+        AreaConocimientoResourceSystem.class,
         DistractorAreaConocimientoResourceIT.class,
         DistractorResourceIT.class,
         PreguntaAreaConocimientoResourceIT.class,

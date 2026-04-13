@@ -16,7 +16,7 @@ import java.util.UUID;
 public class PruebaAreaPreguntaDAO extends IngresoDefaultDataAcces<PruebaAreaPregunta, Object> implements Serializable {
 
     @PersistenceContext(unitName = "IngresoPU")
-    private EntityManager em;
+    EntityManager em;
 
     public PruebaAreaPreguntaDAO() {
         super(PruebaAreaPregunta.class);

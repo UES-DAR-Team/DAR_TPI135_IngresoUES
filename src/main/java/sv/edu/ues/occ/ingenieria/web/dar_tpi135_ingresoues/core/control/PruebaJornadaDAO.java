@@ -16,7 +16,7 @@ import java.util.UUID;
 public class PruebaJornadaDAO extends IngresoDefaultDataAcces<PruebaJornada,Object> implements Serializable {
 
     @PersistenceContext(unitName = "IngresoPU")
-    private EntityManager em;
+    EntityManager em;
 
     public PruebaJornadaDAO() {
         super(PruebaJornada.class);
@@ -87,7 +87,7 @@ public class PruebaJornadaDAO extends IngresoDefaultDataAcces<PruebaJornada,Obje
      * @throws IllegalStateException si ocurre un error al consultar la base de datos.
      */
 
-    public List<PruebaJornada> findByPruebaAndJornada(final Integer idPrueba, Integer idJornada, int first, int max)
+    public List<PruebaJornada> findByPruebaAndJornada(final UUID idPrueba, UUID idJornada, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
         if (idPrueba == null) {
             throw new IllegalArgumentException("idPrueba inválido");

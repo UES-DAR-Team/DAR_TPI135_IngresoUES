@@ -2,9 +2,9 @@ package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Prueba;
@@ -26,17 +26,8 @@ class PruebaDAOTest {
     @Mock
     TypedQuery<Prueba> query;
 
+    @InjectMocks
     PruebaDAO dao;
-
-    @BeforeEach
-    void setUp() {
-        dao = new PruebaDAO() {
-            @Override
-            public EntityManager getEntityManager() {
-                return em;
-            }
-        };
-    }
 
     private PruebaDAO daoConEntityNulo() {
         return new PruebaDAO() {

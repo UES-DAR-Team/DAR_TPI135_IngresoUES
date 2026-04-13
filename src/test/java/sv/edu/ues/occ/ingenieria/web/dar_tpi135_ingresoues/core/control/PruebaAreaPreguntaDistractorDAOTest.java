@@ -3,9 +3,9 @@ package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Distractor;
@@ -29,17 +29,8 @@ class PruebaAreaPreguntaDistractorDAOTest {
     @Mock
     TypedQuery<PruebaAreaPreguntaDistractor> query;
 
+    @InjectMocks
     PruebaAreaPreguntaDistractorDAO dao;
-
-    @BeforeEach
-    void setUp() {
-        dao = new PruebaAreaPreguntaDistractorDAO() {
-            @Override
-            public EntityManager getEntityManager() {
-                return em;
-            }
-        };
-    }
 
     private PruebaAreaPreguntaDistractorDAO daoConEntityNulo() {
         return new PruebaAreaPreguntaDistractorDAO() {

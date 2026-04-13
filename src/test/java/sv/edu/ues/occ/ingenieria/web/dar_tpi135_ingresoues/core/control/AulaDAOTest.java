@@ -2,9 +2,9 @@ package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aula;
@@ -26,17 +26,8 @@ class AulaDAOTest {
     @Mock
     TypedQuery<Aula> query;
 
+    @InjectMocks
     AulaDAO dao;
-
-    @BeforeEach
-    void setUp() {
-        dao = new AulaDAO() {
-            @Override
-            public EntityManager getEntityManager() {
-                return em;
-            }
-        };
-    }
 
     private AulaDAO daoConEntityNulo() {
         return new AulaDAO() {

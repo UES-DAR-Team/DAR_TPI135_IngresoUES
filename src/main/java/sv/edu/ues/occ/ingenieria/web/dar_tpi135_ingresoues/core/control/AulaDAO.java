@@ -15,7 +15,7 @@ import java.util.List;
 public class AulaDAO extends IngresoDefaultDataAcces<Aula, Object> implements Serializable {
 
     @PersistenceContext(unitName = "IngresoPU")
-    private EntityManager em;
+    EntityManager em;
 
     public AulaDAO() {
         super(Aula.class);

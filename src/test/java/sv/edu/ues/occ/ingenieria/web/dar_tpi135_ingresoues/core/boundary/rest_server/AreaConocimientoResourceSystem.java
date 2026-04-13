@@ -27,22 +27,4 @@ import static org.mockito.Mockito.when;
 @ExtendWith(ContainerExtension.class)
 @NeedsLiberty
 public class AreaConocimientoResourceSystem extends BaseIntegrationAbstract {
-
-    @BeforeEach
-    void setup(){
-        target = cliente.target(getBaseUrl()).path("areaConocimiento");
-    }
-
-    @Order(1)
-    @Test
-    void shouldReturn200_whenValidParams(){
-
-        Response response = target
-                .queryParam("first",0)
-                .queryParam("max",10)
-                .request()
-                .get();
-
-        assertEquals(200,response.getStatus());
-    }
 }

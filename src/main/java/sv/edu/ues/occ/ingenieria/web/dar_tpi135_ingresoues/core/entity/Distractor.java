@@ -14,6 +14,7 @@ import java.util.UUID;
 })
 public class Distractor {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id_distractor", nullable = false)
     private UUID id;
 

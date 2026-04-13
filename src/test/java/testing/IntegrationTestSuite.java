@@ -15,11 +15,11 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.*;
         PreguntaDAOIT.class,
         PreguntaDistractorDAOIT.class,
         AreaConocimientoResourceSystem.class,
-        DistractorAreaConocimientoResourceIT.class,
-        DistractorResourceIT.class,
-        PreguntaAreaConocimientoResourceIT.class,
-        PreguntaDistractorResourceIT.class,
-        PreguntaResourceIT.class
+        DistractorAreaConocimientoResourceSystem.class,
+        DistractorResourceSystem.class,
+        PreguntaAreaConocimientoResourceSystem.class,
+        PreguntaDistractorResourceSystem.class,
+        PreguntaResourceSystem.class
 
 })
 public class IntegrationTestSuite {

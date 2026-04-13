@@ -19,7 +19,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 //Clase base para pruebas de integracion
- //Ahorita solo conexion a la base (PostgreSQL con Testcontainers) despues las pruebas con OpenLiberty (E2E)
+//Ahorita solo conexion a la base (PostgreSQL con Testcontainers) despues las pruebas con OpenLiberty (E2E)
 
 
 @Testcontainers
@@ -43,7 +43,7 @@ public abstract class BaseIntegrationAbstract {
         assertTrue(postgres.isRunning());
 
         //(solo si son necesarios)
-       // System.out.println("=== PostgreSQL Logs ===");
+        // System.out.println("=== PostgreSQL Logs ===");
         // System.out.println(postgres.getLogs());
 
         //OPENLIBERTY (logica con el servidro)

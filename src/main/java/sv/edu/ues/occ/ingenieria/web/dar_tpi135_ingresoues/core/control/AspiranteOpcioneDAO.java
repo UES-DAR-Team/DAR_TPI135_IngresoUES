@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 public class AspiranteOpcioneDAO extends IngresoDefaultDataAcces<AspiranteOpcione, Object> implements Serializable {
 
     @PersistenceContext(unitName = "IngresoPU")
-    private EntityManager em;
+    EntityManager em;
 
     public AspiranteOpcioneDAO() {
         super(AspiranteOpcione.class);

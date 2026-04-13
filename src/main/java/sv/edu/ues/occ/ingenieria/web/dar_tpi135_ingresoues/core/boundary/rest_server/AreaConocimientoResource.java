@@ -30,8 +30,6 @@ public class AreaConocimientoResource implements Serializable {
             @Min(0) @DefaultValue("0") @QueryParam("first") int first,
             @Max(10) @Min(1) @DefaultValue("10") @QueryParam("max") int max
     ) {
-        //validacion duplicada para especificar el status
-        //en un futuro interceptar la Bean validation para customizar el mensaje de error y status
         if(first>=0 && max > 0 && max <= 10 ){
             try{
                 List<AreaConocimiento> encontrados = areaConocimientoDAO.findRange(first, max);

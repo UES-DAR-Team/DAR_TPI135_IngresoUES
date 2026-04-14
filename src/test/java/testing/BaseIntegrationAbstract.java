@@ -53,7 +53,7 @@ public abstract class BaseIntegrationAbstract {
             target = cliente.target(getBaseUrl());
             System.out.println("Testing URL: " + getBaseUrl());
 
-
+            //si falla la construccion del cliente, se puede intentar con estas opciones para evitar redirecciones automáticas
 //            cliente = ClientBuilder.newClient()
 //                    .property("jersey.config.client.followRedirects", false)
 //                    // Resteasy:

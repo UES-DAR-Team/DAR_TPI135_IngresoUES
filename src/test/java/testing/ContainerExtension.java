@@ -48,6 +48,7 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
 
 
     // contenedor de openLiberty
+    // Construye la imagen de OpenLiberty a partir del Dockerfile ubicado en src/test/resources/liberty/Dockerfile
     protected static final GenericContainer<?> openliberty = new GenericContainer<>(
             new ImageFromDockerfile()
                     .withDockerfile(Paths.get("src/test/resources/liberty/Dockerfile"))
@@ -57,10 +58,7 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
             //war del proyecto
             .withCopyFileToContainer(
                     getWarFile(), "/config/dropins/DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war")
-//            .withCopyFileToContainer(
-//                    MountableFile.forClasspathResource("liberty/server.xml"),"/config/server.xml")
-//            .withCopyFileToContainer(
-//                    MountableFile.forClasspathResource("liberty/postgresql-42.7.7.jar"),"/config/lib/postgresql-42.7.7.jar")
+            //logs de openliberty a slf4j
             .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("LIBERTY")))
            //conecta a la red docker
             .withNetwork(red)
@@ -78,7 +76,6 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
             .waitingFor(Wait.forLogMessage(".*CWWKF0011I.*", 1)
                     .withStartupTimeout(java.time.Duration.ofSeconds(180))
             );
-
 
 
     //CONFIGURACIONES
@@ -135,7 +132,8 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
             if (isSystemTest && !libertyStart) {
                 // Arranca el contenedor de OpenLiberty
                 openliberty.start();
-                // Temporal - diagnóstico del 500 en Create
+
+                // Agrega un shutdown hook para imprimir los logs de OpenLiberty al finalizar las pruebas
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                     System.out.println("=== LIBERTY MESSAGES.LOG ===");
                     try {
@@ -146,12 +144,11 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
                         e.printStackTrace();
                     }
                 }));
-                // Temporal para diagnóstico — agregar justo después de openliberty.start()
+
+                // Imprime los logs de OpenLiberty al iniciar las pruebas (para debug)
                 System.out.println("=== LIBERTY LOGS ===");
                 System.out.println(openliberty.getLogs());
                 System.out.println("=== FIN LIBERTY LOGS ===");
-
-
 
                 // Marca que ya fue iniciado para no volver a levantarlo en otras clases
                 libertyStart = true;

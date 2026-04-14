@@ -17,12 +17,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * Pruebas de sistema para {@link DistractorResource}.
  *
  * <p>Levantan un entorno real con Docker (PostgreSQL + OpenLiberty) y verifican
- * el comportamiento del API REST de extremo a extremo sin mocks.
+ * el comportamiento del API REST de extremo a extremo.
  *
  * <p>Convenciones:
  * <ul>
  *   <li>Un {@code @Nested} por endpoint, ordenado con {@code @TestClassOrder}.</li>
- *   <li>Nombre de método: {@code respondeXXX_cuandoCondicion}.</li>
+ *   <li>Nombre de metodo: {@code respondeXXX_cuandoCondicion}.</li>
  *   <li>Patrón AAA (Arrange / Act / Assert) en cada test.</li>
  *   <li>{@code idCreado} se puebla en {@code Create} y se reutiliza en
  *       {@code FindById}, {@code Update} y {@code DeleteById}.</li>
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * <ul>
  *   <li>Bean Validation ({@code @Min}/{@code @Max}) interceptada por Liberty → {@code 400}.</li>
  *   <li>Body JSON vacío o malformado → fallo de deserialización en Liberty → {@code 400} o {@code 500}
- *       (no llega al método del resource).</li>
+ *       (no llega al metodo del resource).</li>
  *   <li>UUID asignado por el DAO tras {@code em.persist()} + {@code em.flush()} → disponible
  *       en el body JSON del {@code 201}.</li>
  * </ul>
@@ -47,36 +47,40 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(ContainerExtension.class)
 public class DistractorResourceSystem extends BaseIntegrationAbstract {
 
+    //Arrange General
     /** Segmento de ruta que mapea a {@code @Path("distractor")} en el resource. */
     private static final String PATH = "distractor";
 
+    //se modifico la entidad para que el id se genere con @GeneratedValue(strategy = GenerationType.UUID)
+    //y se asigna en el DAO tras em.persist() + em.flush(), por lo que el UUID del registro creado se obtiene
+    // del body JSON de la respuesta al crear, no es un valor fijo predefinido. Se declara como variable de clase para compartirlo entre los tests anidados.
+
     /**
-     * UUID del registro creado en {@code Create.responde201_cuandoEntidadValida}.
-     * Se comparte con {@code FindById}, {@code Update} y {@code DeleteById}.
+     * <li>UUID del registro creado en {@code Create.responde201_cuandoEntidadValida}.
+     * Se comparte con {@code FindById}, {@code Update} y {@code DeleteById}.</li>
+     * <li>UUID del id inexistente utilizado en {@code DeleteById}, {@code Update} y {@code FindById},
+     * para la comprobacion del registro inexistente para la devolucion del {@code 404}</li>
+     * <li>int del First, parametro de paginacion valido para la busqueda en {@code FindRange}</li>
+     * <li>int del Max, parametro de paginacion valido para la busqueda en {@code FindRange}</li>
+     * <li>int del INVALIDFIRST, parametro de paginacion Invalido para la busqueda en {@code FindRange}</li>
+     * <li>int del INVALIDMAX, parametro de paginacion Invalido para la busqueda en {@code FindRange}</li>
+     * <li>int del EXCEEDMAX, parametro de paginacion Excedido para la busqueda en {@code FindRange}</li>
      */
-    private static UUID idCreado;
+    private static UUID IDCREADO;
+    private static final UUID IDINEXISTENTE= UUID.randomUUID();
+    private static final int FIRST = 0;
+    private static final int MAX = 10;
+    private static final int INVALIDFIRST = -1;
+    private static final int INVALIDMAX = 0;
+    private static final int EXCEEDMAX = 11;
 
-    @BeforeEach
-    void setUp() {
-        // El cliente JAX-RS y el WebTarget son inicializados por
-        // BaseIntegrationAbstract.initializeClient() en @BeforeAll.
-    }
-
-    @AfterEach
-    void tearDown() {
-        // Limpieza delegada al ShutdownHook de ContainerExtension.
-    }
-
-    // =========================================================================
     // GET /distractor?first=&max=
-    // =========================================================================
-
     /**
      * Pruebas del endpoint {@code GET /distractor}.
      *
      * <p>Verifica paginación con parámetros válidos e inválidos.
      * Las violaciones de {@code @Min}/{@code @Max} son interceptadas por
-     * Bean Validation de Liberty antes de entrar al método, devolviendo {@code 400}.
+     * Bean Validation de Liberty antes de entrar al metodo, devolviendo {@code 400}.
      */
     @Nested
     @Order(1)
@@ -90,15 +94,11 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(1)
         @Test
         void responde200_cuandoParametrosValidos() {
-            // Arrange
-            int first = 0;
-            int max = 10;
-
             // Act
             Response response = target
                     .path(PATH)
-                    .queryParam("first", first)
-                    .queryParam("max", max)
+                    .queryParam("first", FIRST)
+                    .queryParam("max", MAX)
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
@@ -119,15 +119,11 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(2)
         @Test
         void responde400_cuandoFirstNegativo() {
-            // Arrange
-            int firstInvalido = -1;
-            int max = 5;
-
             // Act
             Response response = target
                     .path(PATH)
-                    .queryParam("first", firstInvalido)
-                    .queryParam("max", max)
+                    .queryParam("first", INVALIDFIRST)
+                    .queryParam("max", MAX)
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
@@ -143,15 +139,11 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(3)
         @Test
         void responde400_cuandoMaxNegativo() {
-            // Arrange
-            int first = 0;
-            int maxInvalido = -1;
-
             // Act
             Response response = target
                     .path(PATH)
-                    .queryParam("first", first)
-                    .queryParam("max", maxInvalido)
+                    .queryParam("first", FIRST)
+                    .queryParam("max", INVALIDMAX)
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
@@ -167,15 +159,11 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(4)
         @Test
         void responde400_cuandoMaxExcedeLimite() {
-            // Arrange
-            int first = 0;
-            int maxExcedido = 11;
-
             // Act
             Response response = target
                     .path(PATH)
-                    .queryParam("first", first)
-                    .queryParam("max", maxExcedido)
+                    .queryParam("first", FIRST)
+                    .queryParam("max", EXCEEDMAX)
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
@@ -183,10 +171,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
             assertEquals(400, response.getStatus());
         }
     }
-
-    // =========================================================================
-    // POST /distractor
-    // =========================================================================
 
     /**
      * Pruebas del endpoint {@code POST /distractor}.
@@ -241,8 +225,8 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
 
             int idStart = body.indexOf("\"id\":\"") + 6;
             int idEnd = body.indexOf("\"", idStart);
-            idCreado = UUID.fromString(body.substring(idStart, idEnd));
-            assertNotNull(idCreado, "El UUID extraído del body no debe ser nulo");
+            IDCREADO = UUID.fromString(body.substring(idStart, idEnd));
+            assertNotNull(IDCREADO, "El UUID extraído del body no debe ser nulo");
         }
 
         /**
@@ -304,10 +288,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         }
     }
 
-    // =========================================================================
-    // GET /distractor/{id}
-    // =========================================================================
-
     /**
      * Pruebas del endpoint {@code GET /distractor/{id}}.
      *
@@ -326,13 +306,13 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Test
         void responde200_cuandoIdExiste() {
             // Arrange
-            assertNotNull(idCreado,
+            assertNotNull(IDCREADO,
                     "idCreado debe estar poblado por Create.responde201_cuandoEntidadValida");
 
             // Act
             Response response = target
                     .path(PATH)
-                    .path(idCreado.toString())
+                    .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
@@ -350,13 +330,10 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(2)
         @Test
         void responde404_cuandoIdNoExiste() {
-            // Arrange
-            UUID idInexistente = UUID.randomUUID();
-
             // Act
             Response response = target
                     .path(PATH)
-                    .path(idInexistente.toString())
+                    .path(IDINEXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
@@ -367,10 +344,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
                     "El header Not-found-id debe estar presente");
         }
     }
-
-    // =========================================================================
-    // PUT /distractor/{id}
-    // =========================================================================
 
     /**
      * Pruebas del endpoint {@code PUT /distractor/{id}}.
@@ -392,7 +365,7 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Test
         void responde200_cuandoIdExisteYEntidadValida() {
             // Arrange
-            assertNotNull(idCreado,
+            assertNotNull(IDCREADO,
                     "idCreado debe estar poblado por Create.responde201_cuandoEntidadValida");
 
             String bodyActualizado = """
@@ -407,7 +380,7 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
             // Act
             Response response = target
                     .path(PATH)
-                    .path(idCreado.toString())
+                    .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(bodyActualizado));
 
@@ -425,8 +398,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(2)
         @Test
         void responde404_cuandoIdNoExiste() {
-            // Arrange
-            UUID idInexistente = UUID.randomUUID();
             String body = """
                     {
                         "contenidoDistractor": "No debe actualizarse",
@@ -439,7 +410,7 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
             // Act
             Response response = target
                     .path(PATH)
-                    .path(idInexistente.toString())
+                    .path(IDINEXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(body));
 
@@ -453,20 +424,20 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         /**
          * Verifica que un body JSON malformado (vacío) resulta en error de servidor.
          *
-         * <p>Liberty no llega a ejecutar el método del resource porque el deserializador
+         * <p>Liberty no llega a ejecutar el metodo del resource porque el deserializador
          * JSON falla primero. El código real devuelto es {@code 400} o {@code 500}.
          */
         @Order(3)
         @Test
         void respondeFallo_cuandoBodyJsonMalformado() {
             // Arrange
-            assertNotNull(idCreado,
+            assertNotNull(IDCREADO,
                     "idCreado debe estar poblado por Create.responde201_cuandoEntidadValida");
 
             // Act
             Response response = target
                     .path(PATH)
-                    .path(idCreado.toString())
+                    .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.entity("", MediaType.APPLICATION_JSON));
 
@@ -478,10 +449,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
             );
         }
     }
-
-    // =========================================================================
-    // DELETE /distractor/{id}
-    // =========================================================================
 
     /**
      * Pruebas del endpoint {@code DELETE /distractor/{id}}.
@@ -501,13 +468,10 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(1)
         @Test
         void responde404_cuandoIdNoExiste() {
-            // Arrange
-            UUID idInexistente = UUID.randomUUID();
-
             // Act
             Response response = target
                     .path(PATH)
-                    .path(idInexistente.toString())
+                    .path(IDINEXISTENTE.toString())
                     .request()
                     .delete();
 
@@ -529,13 +493,13 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Test
         void responde204_cuandoIdExiste() {
             // Arrange
-            assertNotNull(idCreado,
+            assertNotNull(IDCREADO,
                     "idCreado debe estar poblado por Create.responde201_cuandoEntidadValida");
 
             // Act
             Response response = target
                     .path(PATH)
-                    .path(idCreado.toString())
+                    .path(IDCREADO.toString())
                     .request()
                     .delete();
 
@@ -554,13 +518,13 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Test
         void responde404_cuandoSeIntentaAccederAlRegistroEliminado() {
             // Arrange
-            assertNotNull(idCreado,
+            assertNotNull(IDCREADO,
                     "idCreado debe estar poblado por Create.responde201_cuandoEntidadValida");
 
             // Act
             Response response = target
                     .path(PATH)
-                    .path(idCreado.toString())
+                    .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 

@@ -5,6 +5,7 @@ import jakarta.persistence.Persistence;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,10 +18,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-//Clase base para pruebas de integracion
-//Ahorita solo conexion a la base (PostgreSQL con Testcontainers) despues las pruebas con OpenLiberty (E2E)
-
 
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -55,6 +52,25 @@ public abstract class BaseIntegrationAbstract {
             cliente = ClientBuilder.newClient();
             target = cliente.target(getBaseUrl());
             System.out.println("Testing URL: " + getBaseUrl());
+
+            //si falla la construccion del cliente, se puede intentar con estas opciones para evitar redirecciones automáticas
+//            cliente = ClientBuilder.newClient()
+//                    .property("jersey.config.client.followRedirects", false)
+//                    // Resteasy:
+//                    .property("resteasy.disable.follow.redirect", true);
+
+//            cliente = ClientBuilder.newBuilder()
+//                    .register(new jakarta.ws.rs.ext.ExceptionMapper<Exception>() {
+//                        @Override
+//                        public Response toResponse(Exception exception) {
+//                            return null;
+//                        }
+//                    })
+//                    .build();
+
+//            target = cliente.target(getBaseUrl());
+//            System.out.println("Testing URL: " + getBaseUrl());
+
         }
 
 
@@ -82,7 +98,7 @@ public abstract class BaseIntegrationAbstract {
     protected String getBaseUrl() {
         if (this.getClass().isAnnotationPresent(SystemTest.class)) {
             String hostliberty = ContainerExtension.getOpenLiberty().getHost();
-            return String.format("http://%s:%d/app/v1/",
+            return String.format("http://%s:%d/DAR_TPI135_IngresoUES-1.0-SNAPSHOT/v1/",
                    hostliberty,
                    ContainerExtension.getOpenLiberty().getMappedPort(9080));
         }

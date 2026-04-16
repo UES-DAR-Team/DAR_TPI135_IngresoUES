@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server description="ingreso-ues-server">
+
+
+    <!-- Enable features -->
+    <featureManager>
+        <feature>restfulWS-3.1</feature>
+        <feature>jsonb-3.0</feature>
+        <feature>cdi-4.0</feature>
+        <feature>persistence-3.1</feature>
+        <feature>enterpriseBeansLite-4.0</feature>
+        <feature>beanValidation-3.0</feature>
+        <feature>jdbc-4.3</feature>
+        <feature>jndi-1.0</feature>
+    </featureManager>
+
+   <httpEndpoint id="defaultHttpEndpoint"
+                  httpPort="9080"
+                  httpsPort="9443" />
+    <applicationManager autoExpand="true"/>
+
+<!--    <webApplication-->
+<!--            id="ingreso-ues"-->
+<!--            location="DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war"-->
+<!--            contextRoot="/ingreso"/>-->
+
+    <library id="postgresql-library">
+        <fileset dir="/config/lib" includes="postgresql-42.7.7.jar"/>
+    </library>
+
+    <jdbcDriver id="postgresql-driver"
+                javax.sql.DataSource="org.postgresql.ds.PGSimpleDataSource"
+                libraryRef="postgresql-library"/>
+
+    <dataSource id="DefaultDataSource"
+                jndiName="jdbc/pgdb"
+                jdbcDriverRef="postgresql-driver">
+        <properties serverName="${env.PGHOST}"
+                    portNumber="${env.PGPORT}"
+                    user="${env.PGUSER}"
+                    password="${env.PGPASSWORD}"
+                    databaseName="${env.PGDBNAME}"/>
+    </dataSource>
+</server>

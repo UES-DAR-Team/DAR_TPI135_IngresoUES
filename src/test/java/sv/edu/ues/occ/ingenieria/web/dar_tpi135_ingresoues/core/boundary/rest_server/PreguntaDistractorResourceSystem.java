@@ -11,5 +11,5 @@ import testing.NeedsLiberty;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @ExtendWith(ContainerExtension.class)
 @NeedsLiberty
-public class PreguntaDistractorResourceIT extends BaseIntegrationAbstract {
+public class PreguntaDistractorResourceSystem extends BaseIntegrationAbstract {
 }

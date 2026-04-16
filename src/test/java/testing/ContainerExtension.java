@@ -4,10 +4,13 @@ import java.nio.file.Paths;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.utility.MountableFile;
 
 //Extensión de JUnit 5 para manejar contenedores Docker.
@@ -45,11 +48,18 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
 
 
     // contenedor de openLiberty
-    protected static final GenericContainer<?> openliberty = new GenericContainer<>("openliberty:latest")
+    // Construye la imagen de OpenLiberty a partir del Dockerfile ubicado en src/test/resources/liberty/Dockerfile
+    protected static final GenericContainer<?> openliberty = new GenericContainer<>(
+            new ImageFromDockerfile()
+                    .withDockerfile(Paths.get("src/test/resources/liberty/Dockerfile"))
+    )
             //expone el puerto del contenedor donde corre el api rest
             .withExposedPorts(9080)
             //war del proyecto
-            .withCopyFileToContainer(getWarFile(), "/config/dropins/DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war")
+            .withCopyFileToContainer(
+                    getWarFile(), "/config/dropins/DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war")
+            //logs de openliberty a slf4j
+            .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("LIBERTY")))
            //conecta a la red docker
             .withNetwork(red)
 
@@ -58,13 +68,14 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
            .withEnv("PGPORT", "5432")
            .withEnv("PGDBNAME", "ingreso_ues_db")
            .withEnv("PGUSER", "postgres")
-           .withEnv("PGPASSWORD", "abc123")
+           .withEnv("PGPASSWORD", "postgresmy")
 
             //orden de arranque
             .dependsOn(postgres)
             //espera que este listo
-            .waitingFor(Wait.forLogMessage(".*The app server is ready to run a smarter planet.*", 1));
-
+            .waitingFor(Wait.forLogMessage(".*CWWKF0011I.*", 1)
+                    .withStartupTimeout(java.time.Duration.ofSeconds(180))
+            );
 
 
     //CONFIGURACIONES
@@ -121,6 +132,24 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
             if (isSystemTest && !libertyStart) {
                 // Arranca el contenedor de OpenLiberty
                 openliberty.start();
+
+                // Agrega un shutdown hook para imprimir los logs de OpenLiberty al finalizar las pruebas
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    System.out.println("=== LIBERTY MESSAGES.LOG ===");
+                    try {
+                        org.testcontainers.containers.Container.ExecResult result =
+                                openliberty.execInContainer("cat", "/logs/messages.log");
+                        System.out.println(result.getStdout());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }));
+
+                // Imprime los logs de OpenLiberty al iniciar las pruebas (para debug)
+                System.out.println("=== LIBERTY LOGS ===");
+                System.out.println(openliberty.getLogs());
+                System.out.println("=== FIN LIBERTY LOGS ===");
+
                 // Marca que ya fue iniciado para no volver a levantarlo en otras clases
                 libertyStart = true;
             }

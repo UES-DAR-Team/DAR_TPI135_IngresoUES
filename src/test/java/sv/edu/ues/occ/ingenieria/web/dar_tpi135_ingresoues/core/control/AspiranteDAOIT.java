@@ -33,26 +33,21 @@ public class AspiranteDAOIT extends BaseIntegrationAbstract {
     }
 
     /**
-     * Prueba: conteo de registros existentes.
-     * Propósito: verificar que el metodo count() devuelve un número mayor que cero.
-     * Precondiciones: la base de datos contiene registros iniciales.
-     * Resultado esperado: count() > 0.
+     * Prueba: conteo general de registros.
+     * Resultado esperado: total > 0.
      */
-    @Order(1)
     @Test
+    @Order(1)
     public void testCount(){
-        int total = cut.count();
-        assertTrue(total > 0);
+        assertTrue(cut.count() > 0);
     }
 
     /**
-     * Prueba: búsqueda de aspirantes por nombre.
-     * Propósito: verificar que findByNombre retorna resultados válidos.
-     * Precondiciones: existe al menos un aspirante en la base.
-     * Resultado esperado: lista no nula y no vacía.
+     * Prueba: búsqueda por nombre válido.
+     * Resultado esperado: lista no vacía.
      */
-    @Order(2)
     @Test
+    @Order(2)
     public void testFindByNombre(){
         Aspirante ref = cut.findRange(0,1).getFirst();
 
@@ -66,12 +61,10 @@ public class AspiranteDAOIT extends BaseIntegrationAbstract {
 
     /**
      * Prueba: búsqueda de aspirantes activos.
-     * Propósito: verificar que findActivos retorna resultados.
-     * Precondiciones: existen aspirantes activos en la base.
-     * Resultado esperado: lista no nula y no vacía.
+     * Resultado esperado: lista no vacía.
      */
-    @Order(3)
     @Test
+    @Order(3)
     public void testFindActivos(){
         List<Aspirante> resultado = cut.findActivos(0,10);
 
@@ -80,13 +73,11 @@ public class AspiranteDAOIT extends BaseIntegrationAbstract {
     }
 
     /**
-     * Prueba: búsqueda por documento.
-     * Propósito: verificar que findByDocumento retorna resultados válidos.
-     * Precondiciones: existe un aspirante con identificación registrada.
-     * Resultado esperado: lista no nula y no vacía.
+     * Prueba: búsqueda por documento válido.
+     * Resultado esperado: lista no vacía.
      */
-    @Order(4)
     @Test
+    @Order(4)
     public void testFindByDocumento(){
         Aspirante ref = cut.findRange(0,1).getFirst();
 
@@ -99,13 +90,11 @@ public class AspiranteDAOIT extends BaseIntegrationAbstract {
     }
 
     /**
-     * Prueba: búsqueda por estado (activo).
-     * Propósito: verificar que findByEstado retorna resultados válidos.
-     * Precondiciones: existe al menos un aspirante con estado definido.
-     * Resultado esperado: lista no nula y no vacía.
+     * Prueba: búsqueda por estado válido.
+     * Resultado esperado: lista no vacía.
      */
-    @Order(5)
     @Test
+    @Order(5)
     public void testFindByEstado(){
         Aspirante ref = cut.findRange(0,1).getFirst();
 
@@ -118,13 +107,11 @@ public class AspiranteDAOIT extends BaseIntegrationAbstract {
     }
 
     /**
-     * Prueba: conteo por nombre.
-     * Propósito: verificar que countByNombre retorna un valor mayor que cero.
-     * Precondiciones: existen registros con nombres coincidentes.
-     * Resultado esperado: valor mayor que cero.
+     * Prueba: conteo por nombre válido.
+     * Resultado esperado: total > 0.
      */
-    @Order(6)
     @Test
+    @Order(6)
     public void testCountByNombre(){
         Aspirante ref = cut.findRange(0,1).getFirst();
 
@@ -135,85 +122,85 @@ public class AspiranteDAOIT extends BaseIntegrationAbstract {
     }
 
     /**
-     * Prueba: validación de nombre inválido.
+     * Prueba: nombre inválido (null y blank).
      * Resultado esperado: IllegalArgumentException.
      */
+    @Test
     @Order(7)
-    @Test
     public void testFindByNombreInvalid(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByNombre(" ",0,10);
-        });
+        assertThrows(IllegalArgumentException.class, () -> cut.findByNombre(null,0,10));
+        assertThrows(IllegalArgumentException.class, () -> cut.findByNombre(" ",0,10));
     }
 
     /**
-     * Prueba: validación de documento inválido.
+     * Prueba: documento inválido.
      * Resultado esperado: IllegalArgumentException.
      */
+    @Test
     @Order(8)
-    @Test
     public void testFindByDocumentoInvalid(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByDocumento(null,0,10);
-        });
+        assertThrows(IllegalArgumentException.class, () -> cut.findByDocumento(null,0,10));
+        assertThrows(IllegalArgumentException.class, () -> cut.findByDocumento(" ",0,10));
     }
 
     /**
-     * Prueba: validación de estado nulo.
+     * Prueba: estado nulo.
      * Resultado esperado: IllegalArgumentException.
      */
+    @Test
     @Order(9)
-    @Test
     public void testFindByEstadoInvalid(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByEstado(null,0,10);
-        });
+        assertThrows(IllegalArgumentException.class, () -> cut.findByEstado(null,0,10));
     }
 
     /**
-     * Prueba: validación de paginación inválida.
+     * Prueba: paginación inválida en todos los métodos.
      * Resultado esperado: IllegalArgumentException.
      */
-    @Order(10)
     @Test
+    @Order(10)
     public void testInvalidPagination(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByNombre("JUAN",-1,10);
-        });
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findActivos(0,0);
-        });
+        assertThrows(IllegalArgumentException.class, () -> cut.findByNombre("JUAN",-1,10));
+        assertThrows(IllegalArgumentException.class, () -> cut.findByNombre("JUAN",0,0));
+        assertThrows(IllegalArgumentException.class, () -> cut.findByNombre("JUAN",0,-1));
+
+        assertThrows(IllegalArgumentException.class, () -> cut.findActivos(-1,10));
+        assertThrows(IllegalArgumentException.class, () -> cut.findActivos(0,0));
+        assertThrows(IllegalArgumentException.class, () -> cut.findActivos(0,-1));
+
+        assertThrows(IllegalArgumentException.class, () -> cut.findByDocumento("123",-1,10));
+        assertThrows(IllegalArgumentException.class, () -> cut.findByDocumento("123",0,0));
+
+        assertThrows(IllegalArgumentException.class, () -> cut.findByEstado(true,-1,10));
+        assertThrows(IllegalArgumentException.class, () -> cut.findByEstado(true,0,0));
     }
 
     /**
-     * Prueba: manejo de excepciones internas.
-     * Propósito: verificar que se lanza IllegalStateException si ocurre un error interno.
+     * Prueba: nombre inválido en conteo.
+     * Resultado esperado: IllegalArgumentException.
+     */
+    @Test
+    @Order(11)
+    public void testCountByNombreInvalid(){
+        assertThrows(IllegalArgumentException.class, () -> cut.countByNombre(null));
+        assertThrows(IllegalArgumentException.class, () -> cut.countByNombre(" "));
+    }
+
+    /**
+     * Prueba: manejo de errores internos.
      * Resultado esperado: IllegalStateException.
      */
-    @Order(11)
     @Test
+    @Order(12)
     public void testExceptionHandling(){
+
         em.close();
 
-        assertThrows(IllegalStateException.class, () -> {
-            cut.findByNombre("JUAN",0,10);
-        });
-
-        assertThrows(IllegalStateException.class, () -> {
-            cut.findActivos(0,10);
-        });
-
-        assertThrows(IllegalStateException.class, () -> {
-            cut.findByDocumento("123",0,10);
-        });
-
-        assertThrows(IllegalStateException.class, () -> {
-            cut.findByEstado(true,0,10);
-        });
-
-        assertThrows(IllegalStateException.class, () -> {
-            cut.countByNombre("JUAN");
-        });
+        assertThrows(IllegalStateException.class, () -> cut.findByNombre("JUAN",0,10));
+        assertThrows(IllegalStateException.class, () -> cut.findActivos(0,10));
+        assertThrows(IllegalStateException.class, () -> cut.findByDocumento("123",0,10));
+        assertThrows(IllegalStateException.class, () -> cut.findByEstado(true,0,10));
+        assertThrows(IllegalStateException.class, () -> cut.countByNombre("JUAN"));
     }
 }

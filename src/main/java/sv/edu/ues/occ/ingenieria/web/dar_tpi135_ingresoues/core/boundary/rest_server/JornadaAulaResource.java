@@ -108,7 +108,7 @@ public class JornadaAulaResource implements Serializable {
     @Path("{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response update(@PathParam("id") UUID id,
+    public Response update(@PathParam("id") Integer id,
                            @PathParam("idJornada") UUID idJornada,
                            @PathParam("idAula") UUID idAula,
                            JornadaAula entity) {

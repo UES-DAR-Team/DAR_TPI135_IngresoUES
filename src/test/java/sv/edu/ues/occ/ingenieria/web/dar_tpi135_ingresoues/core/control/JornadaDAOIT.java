@@ -208,4 +208,55 @@ public class JornadaDAOIT extends BaseIntegrationAbstract {
             cut.countByActivo(true);
         });
     }
+
+    @Test
+    @Order(13)
+    public void testFindByNombreInvalidCompleto(){
+        assertThrows(IllegalArgumentException.class, () -> {
+            cut.findByNombre(null,0,10);
+        });
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            cut.findByNombre(" ",0,10);
+        });
+    }
+
+    @Test
+    @Order(14)
+    public void testInvalidPaginationCompleto(){
+
+        // findByNombre
+        assertThrows(IllegalArgumentException.class, () -> {
+            cut.findByNombre("TEST",0,-1);
+        });
+
+        // findByActivo
+        assertThrows(IllegalArgumentException.class, () -> {
+            cut.findByActivo(true,-1,10);
+        });
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            cut.findByActivo(true,0,-1);
+        });
+    }
+
+    @Test
+    @Order(15)
+    public void testCountByNombreInvalid(){
+        assertThrows(IllegalArgumentException.class, () -> {
+            cut.countByNombre(null);
+        });
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            cut.countByNombre(" ");
+        });
+    }
+
+    @Test
+    @Order(16)
+    public void testCountByActivoInvalid(){
+        assertThrows(IllegalArgumentException.class, () -> {
+            cut.countByActivo(null);
+        });
+    }
 }

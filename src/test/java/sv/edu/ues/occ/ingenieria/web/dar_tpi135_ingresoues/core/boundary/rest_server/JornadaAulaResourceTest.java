@@ -89,7 +89,7 @@ class JornadaAulaResourceTest {
         when(aulaDAO.findById(idAula)).thenReturn(aula);
 
         doAnswer(inv -> {
-            entity.setId(UUID.randomUUID());
+            entity.setId(1);
             return null;
         }).when(jaDAO).create(entity);
 
@@ -112,7 +112,7 @@ class JornadaAulaResourceTest {
     @Test
     void create_entityWithId() {
         JornadaAula entity = new JornadaAula();
-        entity.setId(UUID.randomUUID());
+        entity.setId(1);
 
         Response r = resource.create(UUID.randomUUID(), UUID.randomUUID(), entity, mock(UriInfo.class));
 
@@ -152,7 +152,7 @@ class JornadaAulaResourceTest {
 
     @Test
     void update_success() {
-        UUID id = UUID.randomUUID();
+        Integer id = 1;
         UUID idJornada = UUID.randomUUID();
         UUID idAula = UUID.randomUUID();
 
@@ -177,14 +177,14 @@ class JornadaAulaResourceTest {
     void update_notFound() {
         when(jaDAO.findById(any())).thenReturn(null);
 
-        Response r = resource.update(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new JornadaAula());
+        Response r = resource.update(1, UUID.randomUUID(), UUID.randomUUID(), new JornadaAula());
 
         assertEquals(404, r.getStatus());
     }
 
     @Test
     void update_jornadaOrAulaNotFound() {
-        UUID id = UUID.randomUUID();
+        Integer id = 1;
         UUID idJornada = UUID.randomUUID();
         UUID idAula = UUID.randomUUID();
 
@@ -200,7 +200,7 @@ class JornadaAulaResourceTest {
     void update_exception() {
         when(jaDAO.findById(any())).thenThrow(new RuntimeException());
 
-        Response r = resource.update(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new JornadaAula());
+        Response r = resource.update(1, UUID.randomUUID(), UUID.randomUUID(), new JornadaAula());
 
         assertEquals(500, r.getStatus());
     }

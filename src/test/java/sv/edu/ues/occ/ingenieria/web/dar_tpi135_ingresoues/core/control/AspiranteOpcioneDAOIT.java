@@ -34,48 +34,48 @@ public class AspiranteOpcioneDAOIT extends BaseIntegrationAbstract {
     }
 
     /**
-     * Prueba: búsqueda por aspirante.
-     * Propósito: verificar que findByAspirante retorna resultados válidos.
+     * Prueba: búsqueda por aspirante válida.
      * Resultado esperado: lista no nula.
      */
-    @Order(1)
     @Test
+    @Order(1)
     public void testFindByAspirante(){
         AspiranteOpcione ref = cut.findRange(0,1).getFirst();
-
         UUID id = ref.getIdAspirante().getId();
 
         List<AspiranteOpcione> resultado = cut.findByAspirante(id, 0, 10);
+
+        assertNotNull(resultado);
     }
 
     /**
-     * Prueba: búsqueda por código de programa.
+     * Prueba: búsqueda por código de programa válida.
      * Resultado esperado: lista no nula.
      */
-    @Order(2)
     @Test
+    @Order(2)
     public void testFindByCodigoPrograma(){
         List<AspiranteOpcione> resultado = cut.findByCodigoPrograma("ING",0,10);
         assertNotNull(resultado);
     }
 
     /**
-     * Prueba: búsqueda por nombre de programa.
+     * Prueba: búsqueda por nombre de programa válida.
      * Resultado esperado: lista no nula.
      */
-    @Order(3)
     @Test
+    @Order(3)
     public void testFindByNombrePrograma(){
         List<AspiranteOpcione> resultado = cut.findByNombrePrograma("ING",0,10);
         assertNotNull(resultado);
     }
 
     /**
-     * Prueba: conteo por aspirante.
-     * Resultado esperado: valor >= 0.
+     * Prueba: conteo por aspirante válido.
+     * Resultado esperado: >= 0.
      */
-    @Order(4)
     @Test
+    @Order(4)
     public void testCountByAspirante(){
         AspiranteOpcione ref = cut.findRange(0,1).getFirst();
 
@@ -86,75 +86,108 @@ public class AspiranteOpcioneDAOIT extends BaseIntegrationAbstract {
     }
 
     /**
-     * Prueba: validación id aspirante nulo.
+     * Prueba: id aspirante nulo.
+     * Resultado esperado: IllegalArgumentException.
      */
+    @Test
     @Order(5)
-    @Test
     public void testFindByAspiranteNull(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByAspirante(null,0,10);
-        });
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAspirante(null,0,10));
     }
 
     /**
-     * Prueba: validación código programa inválido.
+     * Prueba: código programa inválido.
      */
+    @Test
     @Order(6)
-    @Test
     public void testFindByCodigoProgramaInvalid(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByCodigoPrograma(" ",0,10);
-        });
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByCodigoPrograma(null,0,10));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByCodigoPrograma(" ",0,10));
     }
 
     /**
-     * Prueba: validación nombre programa inválido.
+     * Prueba: nombre programa inválido.
      */
+    @Test
     @Order(7)
-    @Test
     public void testFindByNombreProgramaInvalid(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByNombrePrograma(null,0,10);
-        });
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByNombrePrograma(null,0,10));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByNombrePrograma(" ",0,10));
     }
 
     /**
-     * Prueba: validación paginación inválida.
+     * Prueba: paginación inválida en todos los métodos.
      */
+    @Test
     @Order(8)
-    @Test
     public void testInvalidPagination(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByAspirante(UUID.randomUUID(),-1,10);
-        });
+
+        UUID id = UUID.randomUUID();
+
+        // findByAspirante
+        assertThrows(IllegalArgumentException.class, () -> cut.findByAspirante(id,-1,10));
+        assertThrows(IllegalArgumentException.class, () -> cut.findByAspirante(id,0,0));
+        assertThrows(IllegalArgumentException.class, () -> cut.findByAspirante(id,0,-1));
+
+        // findByCodigoPrograma
+        assertThrows(IllegalArgumentException.class, () -> cut.findByCodigoPrograma("ING",-1,10));
+        assertThrows(IllegalArgumentException.class, () -> cut.findByCodigoPrograma("ING",0,0));
+
+        // findByNombrePrograma
+        assertThrows(IllegalArgumentException.class, () -> cut.findByNombrePrograma("ING",-1,10));
+        assertThrows(IllegalArgumentException.class, () -> cut.findByNombrePrograma("ING",0,0));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByCodigoPrograma("ING",0,-1));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByNombrePrograma("ING",0,-1));
     }
 
     /**
-     * Prueba: manejo de errores internos en findByAspirante.
-     * Resultado esperado: lista vacía.
+     * Prueba: manejo de errores en consultas (lista vacía).
      */
-    @Order(9)
     @Test
-    public void testFindByAspiranteException(){
+    @Order(9)
+    public void testExceptionHandlingList(){
+
         em.close();
 
-        List<AspiranteOpcione> resultado = cut.findByAspirante(UUID.randomUUID(),0,10);
-
-        assertNotNull(resultado);
-        assertTrue(resultado.isEmpty());
+        assertTrue(cut.findByAspirante(UUID.randomUUID(),0,10).isEmpty());
+        assertTrue(cut.findByCodigoPrograma("ING",0,10).isEmpty());
+        assertTrue(cut.findByNombrePrograma("ING",0,10).isEmpty());
     }
 
     /**
-     * Prueba: manejo de errores en countByAspirante.
+     * Prueba: manejo de errores en conteo.
      * Resultado esperado: 0L.
      */
-    @Order(10)
     @Test
+    @Order(10)
     public void testCountByAspiranteException(){
+
         em.close();
 
         Long total = cut.countByAspirante(UUID.randomUUID());
 
         assertEquals(0L, total);
+    }
+
+    /**
+     * Prueba: id aspirante nulo en conteo.
+     * Resultado esperado: IllegalArgumentException.
+     */
+    @Test
+    @Order(11)
+    public void testCountByAspiranteInvalid(){
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.countByAspirante(null));
     }
 }

@@ -10,12 +10,10 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAu
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
-public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, UUID> implements Serializable {
+public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Integer> implements Serializable {
 
     @PersistenceContext(unitName = "IngresoPU")
     EntityManager em;
@@ -26,6 +24,9 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, UUID> i
 
     @Override
     public EntityManager getEntityManager() {
+        if (em == null) {
+            throw new IllegalStateException("EntityManager no inicializado");
+        }
         return em;
     }
 
@@ -34,8 +35,7 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, UUID> i
         return JornadaAula.class;
     }
 
-    public List<JornadaAula> findByJornada(UUID idJornada, int first, int max)
-            throws IllegalArgumentException, IllegalStateException {
+    public List<JornadaAula> findByJornada(UUID idJornada, int first, int max) {
 
         if (idJornada == null) {
             throw new IllegalArgumentException("Id de jornada inválido");
@@ -46,10 +46,8 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, UUID> i
         }
 
         try {
-            TypedQuery<JornadaAula> q = em.createNamedQuery(
-                    "JornadaAula.buscarPorJornada",
-                    JornadaAula.class
-            );
+            TypedQuery<JornadaAula> q = getEntityManager()
+                    .createNamedQuery("JornadaAula.buscarPorJornada", JornadaAula.class);
 
             q.setParameter("idJornada", idJornada);
             q.setFirstResult(first);
@@ -58,14 +56,11 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, UUID> i
             return q.getResultList();
 
         } catch (Exception ex) {
-            Logger.getLogger(JornadaAulaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar por jornada", ex);
         }
-
-        return List.of();
     }
 
-    public List<JornadaAula> findByAula(UUID idAula, int first, int max)
-            throws IllegalArgumentException, IllegalStateException {
+    public List<JornadaAula> findByAula(UUID idAula, int first, int max) {
 
         if (idAula == null) {
             throw new IllegalArgumentException("Id de aula inválido");
@@ -76,10 +71,8 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, UUID> i
         }
 
         try {
-            TypedQuery<JornadaAula> q = em.createNamedQuery(
-                    "JornadaAula.buscarPorAula",
-                    JornadaAula.class
-            );
+            TypedQuery<JornadaAula> q = getEntityManager()
+                    .createNamedQuery("JornadaAula.buscarPorAula", JornadaAula.class);
 
             q.setParameter("idAula", idAula);
             q.setFirstResult(first);
@@ -88,57 +81,45 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, UUID> i
             return q.getResultList();
 
         } catch (Exception ex) {
-            Logger.getLogger(JornadaAulaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar por aula", ex);
         }
-
-        return List.of();
     }
 
-    public Long countByJornada(UUID idJornada)
-            throws IllegalArgumentException, IllegalStateException {
+    public Long countByJornada(UUID idJornada) {
 
         if (idJornada == null) {
             throw new IllegalArgumentException("Id de jornada inválido");
         }
 
         try {
-            TypedQuery<Long> q = em.createNamedQuery(
-                    "JornadaAula.countByJornada",
-                    Long.class
-            );
+            TypedQuery<Long> q = getEntityManager()
+                    .createNamedQuery("JornadaAula.countByJornada", Long.class);
 
             q.setParameter("idJornada", idJornada);
 
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            Logger.getLogger(JornadaAulaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al contar por jornada", ex);
         }
-
-        return 0L;
     }
 
-    public Long countByAula(UUID idAula)
-            throws IllegalArgumentException, IllegalStateException {
+    public Long countByAula(UUID idAula) {
 
         if (idAula == null) {
             throw new IllegalArgumentException("Id de aula inválido");
         }
 
         try {
-            TypedQuery<Long> q = em.createNamedQuery(
-                    "JornadaAula.countByAula",
-                    Long.class
-            );
+            TypedQuery<Long> q = getEntityManager()
+                    .createNamedQuery("JornadaAula.countByAula", Long.class);
 
             q.setParameter("idAula", idAula);
 
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            Logger.getLogger(JornadaAulaDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al contar por aula", ex);
         }
-
-        return 0L;
     }
 }

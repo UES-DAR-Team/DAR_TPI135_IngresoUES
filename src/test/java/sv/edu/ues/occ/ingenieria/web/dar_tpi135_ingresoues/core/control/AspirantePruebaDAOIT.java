@@ -33,16 +33,17 @@ public class AspirantePruebaDAOIT extends BaseIntegrationAbstract {
         }
     }
 
-    /**
-     * Prueba: búsqueda por aspirante.
-     * Propósito: verificar que findByAspirante retorna resultados válidos.
-     * Precondiciones: existe al menos un registro en la base.
-     * Resultado esperado: lista no nula.
-     */
-    @Order(1)
+
+    private AspirantePrueba getSample() {
+        List<AspirantePrueba> data = cut.findRange(0,1);
+        assertFalse(data.isEmpty(), "Debe existir data en la BD");
+        return data.get(0);
+    }
+
     @Test
+    @Order(1)
     public void testFindByAspirante(){
-        AspirantePrueba ref = cut.findRange(0,1).getFirst();
+        AspirantePrueba ref = getSample();
 
         UUID id = ref.getIdAspirante().getId();
 
@@ -51,30 +52,22 @@ public class AspirantePruebaDAOIT extends BaseIntegrationAbstract {
         assertNotNull(resultado);
     }
 
-    /**
-     * Prueba: búsqueda por prueba.
-     * Propósito: verificar que findByPrueba retorna resultados válidos.
-     * Resultado esperado: lista no nula.
-     */
-    @Order(2)
     @Test
+    @Order(2)
     public void testFindByPrueba(){
-        AspirantePrueba ref = cut.findRange(0,1).getFirst();
+        AspirantePrueba ref = getSample();
 
         UUID id = ref.getIdPrueba().getId();
 
         List<AspirantePrueba> resultado = cut.findByPrueba(id, 0, 10);
+
+        assertNotNull(resultado);
     }
 
-    /**
-     * Prueba: conteo por aspirante.
-     * Propósito: verificar que countByAspirante retorna un valor válido.
-     * Resultado esperado: valor mayor o igual a cero.
-     */
-    @Order(3)
     @Test
+    @Order(3)
     public void testCountByAspirante(){
-        AspirantePrueba ref = cut.findRange(0,1).getFirst();
+        AspirantePrueba ref = getSample();
 
         UUID id = ref.getIdAspirante().getId();
 
@@ -84,79 +77,85 @@ public class AspirantePruebaDAOIT extends BaseIntegrationAbstract {
         assertTrue(total >= 0);
     }
 
-    /**
-     * Prueba: validación de id aspirante nulo.
-     * Resultado esperado: IllegalArgumentException.
-     */
+    @Test
     @Order(4)
-    @Test
     public void testFindByAspiranteNull(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByAspirante(null,0,10);
-        });
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAspirante(null,0,10));
     }
 
-    /**
-     * Prueba: validación de id prueba nulo.
-     * Resultado esperado: IllegalArgumentException.
-     */
+    @Test
     @Order(5)
-    @Test
     public void testFindByPruebaNull(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByPrueba(null,0,10);
-        });
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByPrueba(null,0,10));
     }
 
-    /**
-     * Prueba: validación de paginación inválida.
-     * Resultado esperado: IllegalArgumentException.
-     */
+    @Test
     @Order(6)
-    @Test
     public void testInvalidPagination(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByAspirante(UUID.randomUUID(),-1,10);
-        });
+
+        UUID id = UUID.randomUUID();
+
+        // findByAspirante
+        assertThrows(IllegalArgumentException.class, () -> cut.findByAspirante(id,-1,10));
+        assertThrows(IllegalArgumentException.class, () -> cut.findByAspirante(id,0,0));
+        assertThrows(IllegalArgumentException.class, () -> cut.findByAspirante(id,0,-1));
+
+        // findByPrueba
+        assertThrows(IllegalArgumentException.class, () -> cut.findByPrueba(id,-1,10));
+        assertThrows(IllegalArgumentException.class, () -> cut.findByPrueba(id,0,0));
+        assertThrows(IllegalArgumentException.class, () -> cut.findByPrueba(id,0,-1));
     }
 
-    /**
-     * Prueba: manejo de excepciones internas en findByAspirante.
-     * Propósito: verificar que se lanza IllegalStateException.
-     */
-    @Order(7)
     @Test
+    @Order(7)
+    public void testCountByAspiranteInvalid(){
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.countByAspirante(null));
+    }
+
+
+    @Test
+    @Order(8)
     public void testFindByAspiranteException(){
         em.close();
 
-        assertThrows(IllegalStateException.class, () -> {
-            cut.findByAspirante(UUID.randomUUID(),0,10);
-        });
+        assertThrows(IllegalStateException.class,
+                () -> cut.findByAspirante(UUID.randomUUID(),0,10));
     }
 
-    /**
-     * Prueba: manejo de excepciones en findByPrueba.
-     */
-    @Order(8)
     @Test
+    @Order(9)
     public void testFindByPruebaException(){
         em.close();
 
-        assertThrows(IllegalStateException.class, () -> {
-            cut.findByPrueba(UUID.randomUUID(), 0, 10);
-        });
+        assertThrows(IllegalStateException.class,
+                () -> cut.findByPrueba(UUID.randomUUID(), 0, 10));
     }
 
-    /**
-     * Prueba: manejo de excepciones en countByAspirante.
-     */
-    @Order(9)
     @Test
+    @Order(10)
     public void testCountByAspiranteException(){
         em.close();
 
-        assertThrows(IllegalStateException.class, () -> {
-            cut.countByAspirante(UUID.randomUUID());
-        });
+        assertThrows(IllegalStateException.class,
+                () -> cut.countByAspirante(UUID.randomUUID()));
+    }
+
+    @Test
+    @Order(11)
+    public void testGetEntityManagerOk() {
+        EntityManager result = cut.getEntityManager();
+        assertNotNull(result);
+    }
+
+    @Test
+    @Order(12)
+    public void testGetEntityManagerNull() {
+        cut.em = null;
+
+        assertThrows(IllegalStateException.class,
+                () -> cut.getEntityManager());
     }
 }

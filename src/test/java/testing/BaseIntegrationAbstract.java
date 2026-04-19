@@ -5,6 +5,7 @@ import jakarta.persistence.Persistence;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,10 +26,10 @@ public abstract class BaseIntegrationAbstract {
 
 
     // variables para E2A
-    protected Client cliente;
-    protected WebTarget target;
+ protected Client cliente;
+ protected WebTarget target;
 
-    //EntityManagerFactory con el patron SINGLETON
+ //EntityManagerFactory con el patron SINGLETON
     protected static EntityManagerFactory emf;
 
     @BeforeAll
@@ -48,14 +49,28 @@ public abstract class BaseIntegrationAbstract {
             GenericContainer<?> openliberty = ContainerExtension.getOpenLiberty();
             assertTrue(openliberty.isRunning());
 
-            //logs para verificar el despliegue
-            System.out.println("=== LIBERTY LOGS ===");
-            System.out.println(openliberty.getLogs());
-            System.out.println("=== BASE URL: " + getBaseUrl());
-
             cliente = ClientBuilder.newClient();
             target = cliente.target(getBaseUrl());
             System.out.println("Testing URL: " + getBaseUrl());
+
+            //si falla la construccion del cliente, se puede intentar con estas opciones para evitar redirecciones automáticas
+//            cliente = ClientBuilder.newClient()
+//                    .property("jersey.config.client.followRedirects", false)
+//                    // Resteasy:
+//                    .property("resteasy.disable.follow.redirect", true);
+
+//            cliente = ClientBuilder.newBuilder()
+//                    .register(new jakarta.ws.rs.ext.ExceptionMapper<Exception>() {
+//                        @Override
+//                        public Response toResponse(Exception exception) {
+//                            return null;
+//                        }
+//                    })
+//                    .build();
+
+//            target = cliente.target(getBaseUrl());
+//            System.out.println("Testing URL: " + getBaseUrl());
+
         }
 
 
@@ -84,8 +99,8 @@ public abstract class BaseIntegrationAbstract {
         if (this.getClass().isAnnotationPresent(SystemTest.class)) {
             String hostliberty = ContainerExtension.getOpenLiberty().getHost();
             return String.format("http://%s:%d/DAR_TPI135_IngresoUES-1.0-SNAPSHOT/v1/",
-                    hostliberty,
-                    ContainerExtension.getOpenLiberty().getMappedPort(9080));
+                   hostliberty,
+                   ContainerExtension.getOpenLiberty().getMappedPort(9080));
         }
         return null;
     }

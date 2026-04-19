@@ -42,7 +42,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(1)
         @Test
         void responde200_cuandoParametrosValidos() {
-            // Act
             Response response = target
                     .path(PATH)
                     .queryParam("first", FIRST)
@@ -50,7 +49,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
             assertEquals(200, response.getStatus());
             assertNotNull(response.getHeaderString("X-Total-Count"),
                     "El header X-Total-Count debe estar presente");
@@ -61,7 +59,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(2)
         @Test
         void responde400_cuandoFirstNegativo() {
-            // Act
             Response response = target
                     .path(PATH)
                     .queryParam("first", INVALIDFIRST)
@@ -69,14 +66,12 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
             assertEquals(400, response.getStatus());
         }
 
         @Order(3)
         @Test
         void responde400_cuandoMaxNegativo() {
-            // Act
             Response response = target
                     .path(PATH)
                     .queryParam("first", FIRST)
@@ -84,14 +79,12 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
             assertEquals(400, response.getStatus());
         }
 
         @Order(4)
         @Test
         void responde400_cuandoMaxExcedeLimite() {
-            // Act
             Response response = target
                     .path(PATH)
                     .queryParam("first", FIRST)
@@ -99,7 +92,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
             assertEquals(400, response.getStatus());
         }
     }
@@ -112,7 +104,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(1)
         @Test
         void responde201_cuandoEntidadValida() {
-            // Arrange
             String bodyJson = """
                     {
                         "contenidoDistractor": "Distractor de prueba de sistema",
@@ -122,19 +113,16 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH)
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(bodyJson));
 
-            // Assert
             assertEquals(201, response.getStatus(),
                     "Debe retornar 201 Created al crear un Distractor válido");
             assertNotNull(response.getHeaderString("Location"),
                     "El header Location debe contener la URI del nuevo recurso");
 
-            // Extraer el UUID del body JSON y almacenarlo para tests posteriores
             String body = response.readEntity(String.class);
             assertNotNull(body, "El body no debe ser nulo");
             assertTrue(body.contains("\"id\""), "El body debe contener el campo id");
@@ -149,14 +137,11 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(2)
         @Test
         void respondeFallo_cuandoBodyJsonMalformado() {
-            // Arrange — string vacío es JSON inválido
-            // Act
             Response response = target
                     .path(PATH)
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.entity("", MediaType.APPLICATION_JSON));
 
-            // Assert — Liberty falla en deserialización antes del resource
             assertTrue(
                     response.getStatus() == 400 || response.getStatus() == 500,
                     "Debe retornar 400 o 500 cuando el body JSON está vacío o malformado, " +
@@ -164,16 +149,10 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
             );
         }
 
-        /**
-         * Verifica {@code 422} cuando la entidad enviada trae un {@code id} pre-asignado.
-         *
-         * <p>El contrato del endpoint exige {@code entity.id == null} para que el servidor
-         * asigne el UUID. Si el cliente manda un {@code id}, el resource lo rechaza con {@code 422}.
-         */
+
         @Order(3)
         @Test
         void responde422_cuandoEntidadTieneIdPreasignado() {
-            // Arrange
             String bodyConId = """
                     {
                         "id": "00000000-0000-0000-0000-000000000001",
@@ -184,13 +163,11 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH)
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(bodyConId));
 
-            // Assert
             assertEquals(422, response.getStatus(),
                     "Debe retornar 422 cuando la entidad trae un id pre-asignado");
             assertNotNull(response.getHeaderString("Missing-parameter"),
@@ -203,24 +180,18 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class FindById {
 
-        /**
-         * Verifica {@code 200 OK} y cuerpo JSON cuando el {@code id} existe.
-         */
         @Order(1)
         @Test
         void responde200_cuandoIdExiste() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "idCreado debe estar poblado por Create.responde201_cuandoEntidadValida");
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
             assertEquals(200, response.getStatus(),
                     "Debe retornar 200 cuando el id existe");
             assertTrue(response.hasEntity(),
@@ -230,14 +201,12 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(2)
         @Test
         void responde404_cuandoIdNoExiste() {
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDINEXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 cuando el id no existe");
             assertNotNull(response.getHeaderString("Not-found-id"),
@@ -253,7 +222,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(1)
         @Test
         void responde200_cuandoIdExisteYEntidadValida() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "idCreado debe estar poblado por Create.responde201_cuandoEntidadValida");
 
@@ -266,14 +234,12 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(bodyActualizado));
 
-            // Assert
             assertEquals(200, response.getStatus(),
                     "Debe retornar 200 cuando el id existe y la entidad es válida");
             assertTrue(response.hasEntity(),
@@ -292,14 +258,12 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDINEXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(body));
 
-            // Assert
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 cuando el id no existe");
             assertNotNull(response.getHeaderString("Not-found-id"),
@@ -309,18 +273,15 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(3)
         @Test
         void respondeFallo_cuandoBodyJsonMalformado() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "idCreado debe estar poblado por Create.responde201_cuandoEntidadValida");
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.entity("", MediaType.APPLICATION_JSON));
 
-            // Assert — Liberty falla en deserialización antes del resource
             assertTrue(
                     response.getStatus() == 400 || response.getStatus() == 500,
                     "Debe retornar 400 o 500 cuando el body JSON está vacío o malformado, " +
@@ -337,14 +298,12 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(1)
         @Test
         void responde404_cuandoIdNoExiste() {
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDINEXISTENTE.toString())
                     .request()
                     .delete();
 
-            // Assert
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 cuando el id no existe");
             assertNotNull(response.getHeaderString("Not-found-id"),
@@ -354,18 +313,12 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(2)
         @Test
         void responde204_cuandoIdExiste() {
-            // Arrange
-            assertNotNull(IDCREADO,
-                    "idCreado debe estar poblado por Create.responde201_cuandoEntidadValida");
-
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
                     .request()
                     .delete();
 
-            // Assert
             assertEquals(204, response.getStatus(),
                     "Debe retornar 204 No Content al eliminar un registro existente");
             assertFalse(response.hasEntity(),
@@ -375,18 +328,13 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(3)
         @Test
         void responde404_cuandoSeIntentaAccederAlRegistroEliminado() {
-            // Arrange
-            assertNotNull(IDCREADO,
-                    "idCreado debe estar poblado por Create.responde201_cuandoEntidadValida");
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 al intentar acceder a un registro ya eliminado");
         }

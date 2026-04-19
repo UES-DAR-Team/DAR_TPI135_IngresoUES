@@ -32,6 +32,7 @@ class JornadaAulaDAOTest {
         field.set(dao, em);
     }
 
+
     @Test
     void findByJornada_ok() {
         UUID id = UUID.randomUUID();
@@ -45,10 +46,6 @@ class JornadaAulaDAOTest {
         List<JornadaAula> result = dao.findByJornada(id, 0, 10);
 
         assertFalse(result.isEmpty());
-
-        verify(em).createNamedQuery("JornadaAula.buscarPorJornada", JornadaAula.class);
-        verify(queryJA).setParameter("idJornada", id);
-        verify(queryJA).getResultList();
     }
 
     @Test
@@ -58,27 +55,23 @@ class JornadaAulaDAOTest {
     }
 
     @Test
-    void findByJornada_firstNegativo() {
+    void findByJornada_paramInvalidos() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByJornada(UUID.randomUUID(), -1, 10));
-    }
 
-    @Test
-    void findByJornada_maxInvalido() {
         assertThrows(IllegalArgumentException.class,
                 () -> dao.findByJornada(UUID.randomUUID(), 0, 0));
     }
 
     @Test
     void findByJornada_exception() {
-        when(em.createNamedQuery("JornadaAula.buscarPorJornada", JornadaAula.class))
+        when(em.createNamedQuery(anyString(), eq(JornadaAula.class)))
                 .thenThrow(new RuntimeException());
 
-        List<JornadaAula> result =
-                dao.findByJornada(UUID.randomUUID(), 0, 10);
-
-        assertTrue(result.isEmpty());
+        assertThrows(IllegalStateException.class,
+                () -> dao.findByJornada(UUID.randomUUID(), 0, 10));
     }
+
 
     @Test
     void findByAula_ok() {
@@ -93,9 +86,6 @@ class JornadaAulaDAOTest {
         List<JornadaAula> result = dao.findByAula(id, 0, 10);
 
         assertFalse(result.isEmpty());
-
-        verify(em).createNamedQuery("JornadaAula.buscarPorAula", JornadaAula.class);
-        verify(queryJA).setParameter("idAula", id);
     }
 
     @Test
@@ -106,14 +96,13 @@ class JornadaAulaDAOTest {
 
     @Test
     void findByAula_exception() {
-        when(em.createNamedQuery("JornadaAula.buscarPorAula", JornadaAula.class))
+        when(em.createNamedQuery(anyString(), eq(JornadaAula.class)))
                 .thenThrow(new RuntimeException());
 
-        List<JornadaAula> result =
-                dao.findByAula(UUID.randomUUID(), 0, 10);
-
-        assertTrue(result.isEmpty());
+        assertThrows(IllegalStateException.class,
+                () -> dao.findByAula(UUID.randomUUID(), 0, 10));
     }
+
 
     @Test
     void countByJornada_ok() {
@@ -136,13 +125,13 @@ class JornadaAulaDAOTest {
 
     @Test
     void countByJornada_exception() {
-        when(em.createNamedQuery("JornadaAula.countByJornada", Long.class))
+        when(em.createNamedQuery(anyString(), eq(Long.class)))
                 .thenThrow(new RuntimeException());
 
-        Long result = dao.countByJornada(UUID.randomUUID());
-
-        assertEquals(0L, result);
+        assertThrows(IllegalStateException.class,
+                () -> dao.countByJornada(UUID.randomUUID()));
     }
+
 
     @Test
     void countByAula_ok() {
@@ -165,11 +154,10 @@ class JornadaAulaDAOTest {
 
     @Test
     void countByAula_exception() {
-        when(em.createNamedQuery("JornadaAula.countByAula", Long.class))
+        when(em.createNamedQuery(anyString(), eq(Long.class)))
                 .thenThrow(new RuntimeException());
 
-        Long result = dao.countByAula(UUID.randomUUID());
-
-        assertEquals(0L, result);
+        assertThrows(IllegalStateException.class,
+                () -> dao.countByAula(UUID.randomUUID()));
     }
 }

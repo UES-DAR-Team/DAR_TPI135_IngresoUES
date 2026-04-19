@@ -33,158 +33,121 @@ public class JornadaAulaDAOIT extends BaseIntegrationAbstract {
         }
     }
 
-    /**
-     * Prueba: búsqueda por jornada.
-     * Propósito: verificar que findByJornada retorna resultados válidos.
-     * Resultado esperado: lista no nula.
-     */
+
+    @Test
     @Order(1)
-    @Test
-    public void testFindByJornada(){
+    public void testFindByJornada() {
         UUID id = UUID.randomUUID();
 
-        List<JornadaAula> resultado = cut.findByJornada(id, 0, 10);
+        List<JornadaAula> result = cut.findByJornada(id, 0, 10);
 
-        assertNotNull(resultado);
+        assertNotNull(result);
     }
 
-    /**
-     * Prueba: búsqueda por aula.
-     * Propósito: verificar que findByAula retorna resultados válidos.
-     * Resultado esperado: lista no nula.
-     */
+    @Test
     @Order(2)
-    @Test
-    public void testFindByAula(){
+    public void testFindByAula() {
         UUID id = UUID.randomUUID();
 
-        List<JornadaAula> resultado = cut.findByAula(id, 0, 10);
+        List<JornadaAula> result = cut.findByAula(id, 0, 10);
 
-        assertNotNull(resultado);
+        assertNotNull(result);
     }
 
-    /**
-     * Prueba: conteo por jornada.
-     * Propósito: verificar que countByJornada retorna un valor válido.
-     * Resultado esperado: valor mayor o igual a cero.
-     */
+    @Test
     @Order(3)
-    @Test
-    public void testCountByJornada(){
+    public void testCountByJornada() {
         UUID id = UUID.randomUUID();
 
-        Long total = cut.countByJornada(id);
+        Long result = cut.countByJornada(id);
 
-        assertNotNull(total);
-        assertTrue(total >= 0);
+        assertNotNull(result);
+        assertTrue(result >= 0);
     }
 
-    /**
-     * Prueba: conteo por aula.
-     * Propósito: verificar que countByAula retorna un valor válido.
-     * Resultado esperado: valor mayor o igual a cero.
-     */
+    @Test
     @Order(4)
-    @Test
-    public void testCountByAula(){
+    public void testCountByAula() {
         UUID id = UUID.randomUUID();
 
-        Long total = cut.countByAula(id);
+        Long result = cut.countByAula(id);
 
-        assertNotNull(total);
-        assertTrue(total >= 0);
+        assertNotNull(result);
+        assertTrue(result >= 0);
     }
 
-    /**
-     * Prueba: validación de id jornada nulo.
-     * Resultado esperado: IllegalArgumentException.
-     */
+
+    @Test
     @Order(5)
-    @Test
-    public void testFindByJornadaNull(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByJornada(null,0,10);
-        });
+    public void testFindByJornadaNull() {
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByJornada(null, 0, 10));
     }
 
-    /**
-     * Prueba: validación de id aula nulo.
-     * Resultado esperado: IllegalArgumentException.
-     */
+    @Test
     @Order(6)
-    @Test
-    public void testFindByAulaNull(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByAula(null,0,10);
-        });
+    public void testFindByAulaNull() {
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAula(null, 0, 10));
     }
 
-    /**
-     * Prueba: validación de paginación inválida.
-     * Resultado esperado: IllegalArgumentException.
-     */
+    @Test
     @Order(7)
-    @Test
-    public void testInvalidPagination(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByJornada(UUID.randomUUID(),-1,10);
-        });
+    public void testCountByJornadaNull() {
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.countByJornada(null));
     }
 
-    /**
-     * Prueba: manejo de errores en findByJornada.
-     * Propósito: verificar que retorna lista vacía.
-     */
+    @Test
     @Order(8)
-    @Test
-    public void testFindByJornadaException(){
-        em.close();
-
-        List<JornadaAula> resultado = cut.findByJornada(UUID.randomUUID(),0,10);
-
-        assertNotNull(resultado);
-        assertTrue(resultado.isEmpty());
+    public void testCountByAulaNull() {
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.countByAula(null));
     }
 
-    /**
-     * Prueba: manejo de errores en findByAula.
-     */
+    @Test
     @Order(9)
-    @Test
-    public void testFindByAulaException(){
-        em.close();
+    public void testInvalidPaginationJornada() {
+        UUID id = UUID.randomUUID();
 
-        List<JornadaAula> resultado = cut.findByAula(UUID.randomUUID(),0,10);
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByJornada(id, -1, 10));
 
-        assertNotNull(resultado);
-        assertTrue(resultado.isEmpty());
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByJornada(id, 0, 0));
     }
 
-    /**
-     * Prueba: manejo de errores en countByJornada.
-     * Resultado esperado: 0L.
-     */
+    @Test
     @Order(10)
-    @Test
-    public void testCountByJornadaException(){
-        em.close();
+    public void testInvalidPaginationAula() {
+        UUID id = UUID.randomUUID();
 
-        Long total = cut.countByJornada(UUID.randomUUID());
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAula(id, -1, 10));
 
-        assertEquals(0L, total);
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAula(id, 0, 0));
     }
 
-    /**
-     * Prueba: manejo de errores en countByAula.
-     * Resultado esperado: 0L.
-     */
-    @Order(11)
+
     @Test
-    public void testCountByAulaException(){
-        em.close();
+    @Order(11)
+    public void testGetEntityManagerOK() {
+        assertNotNull(cut.getEntityManager());
+    }
 
-        Long total = cut.countByAula(UUID.randomUUID());
+    @Test
+    @Order(12)
+    public void testGetEntityManagerNull() {
+        cut.em = null;
 
-        assertEquals(0L, total);
+        assertThrows(IllegalStateException.class,
+                () -> cut.getEntityManager());
+    }
+
+    @Test
+    @Order(13)
+    public void testGetEntityClass() {
+        assertEquals(JornadaAula.class, cut.getEntityClass());
     }
 }

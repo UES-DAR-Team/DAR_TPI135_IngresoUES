@@ -5,38 +5,46 @@ import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.*;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.*;
 
-import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class JornadaAulaAspiranteResourceTest {
 
     private JornadaAulaAspiranteResource resource;
+
     private JornadaAulaAspiranteDAO jaaDAO;
-    private JornadaAulaDAO jaDAO;
-    private AspirantePruebaDAO apDAO;
+    private JornadaAulaDAO jornadaAulaDAO;
+    private AspirantePruebaDAO aspirantePruebaDAO;
+
+    private UriInfo uriInfo;
 
     @BeforeEach
     void setUp() {
         resource = new JornadaAulaAspiranteResource();
+
         jaaDAO = mock(JornadaAulaAspiranteDAO.class);
-        jaDAO = mock(JornadaAulaDAO.class);
-        apDAO = mock(AspirantePruebaDAO.class);
+        jornadaAulaDAO = mock(JornadaAulaDAO.class);
+        aspirantePruebaDAO = mock(AspirantePruebaDAO.class);
+        uriInfo = mock(UriInfo.class);
 
         resource.jaaDAO = jaaDAO;
-        resource.jornadaAulaDAO = jaDAO;
-        resource.aspirantePruebaDAO = apDAO;
+        resource.jornadaAulaDAO = jornadaAulaDAO;
+        resource.aspirantePruebaDAO = aspirantePruebaDAO;
     }
 
     @Test
-    void findById_success() {
-        when(jaaDAO.findById(1)).thenReturn(new JornadaAulaAspirante());
+    void findById_ok() {
+        Integer id = 1;
+        JornadaAulaAspirante entity = new JornadaAulaAspirante();
 
-        Response r = resource.findById(1);
+        when(jaaDAO.findById(id)).thenReturn(entity);
+
+        Response r = resource.findById(id);
 
         assertEquals(200, r.getStatus());
     }
@@ -67,29 +75,24 @@ class JornadaAulaAspiranteResourceTest {
     }
 
     @Test
-    void create_success() {
-        UUID idJornadaAula = UUID.randomUUID();
+    void create_ok() {
+        Integer idJornadaAula = 1;
         Integer idAspirantePrueba = 1;
 
         JornadaAula ja = new JornadaAula();
-        ja.setId(idJornadaAula);
-
         AspirantePrueba ap = new AspirantePrueba();
-        ap.setId(idAspirantePrueba);
-
         JornadaAulaAspirante entity = new JornadaAulaAspirante();
 
-        when(jaDAO.findById(idJornadaAula)).thenReturn(ja);
-        when(apDAO.findById(idAspirantePrueba)).thenReturn(ap);
+        when(jornadaAulaDAO.findById(idJornadaAula)).thenReturn(ja);
+        when(aspirantePruebaDAO.findById(idAspirantePrueba)).thenReturn(ap);
+
+        UriBuilder builder = UriBuilder.fromUri("http://localhost/");
+        when(uriInfo.getAbsolutePathBuilder()).thenReturn(builder);
 
         doAnswer(inv -> {
             entity.setId(1);
             return null;
         }).when(jaaDAO).create(entity);
-
-        UriInfo uriInfo = mock(UriInfo.class);
-        when(uriInfo.getAbsolutePathBuilder())
-                .thenReturn(UriBuilder.fromUri("http://localhost"));
 
         Response r = resource.create(idJornadaAula, idAspirantePrueba, entity, uriInfo);
 
@@ -97,58 +100,58 @@ class JornadaAulaAspiranteResourceTest {
     }
 
     @Test
-    void create_invalidParams() {
-        Response r = resource.create(null, null, null, mock(UriInfo.class));
-
-        assertEquals(422, r.getStatus());
-    }
-
-    @Test
-    void create_entityWithId() {
-        JornadaAulaAspirante entity = new JornadaAulaAspirante();
-        entity.setId(1);
-
-        Response r = resource.create(UUID.randomUUID(), 1, entity, mock(UriInfo.class));
+    void create_paramInvalid() {
+        Response r = resource.create(null, null, null, uriInfo);
 
         assertEquals(422, r.getStatus());
     }
 
     @Test
     void create_notFound() {
-        when(jaDAO.findById(any())).thenReturn(null);
+        Integer idJornadaAula = 1;
 
-        Response r = resource.create(UUID.randomUUID(), 1, new JornadaAulaAspirante(), mock(UriInfo.class));
+        when(jornadaAulaDAO.findById(idJornadaAula)).thenReturn(null);
+
+        Response r = resource.create(idJornadaAula, 1, new JornadaAulaAspirante(), uriInfo);
 
         assertEquals(404, r.getStatus());
     }
 
     @Test
     void create_exception() {
-        when(jaDAO.findById(any())).thenThrow(new RuntimeException());
+        Integer idJornadaAula = 1;
 
-        Response r = resource.create(UUID.randomUUID(), 1, new JornadaAulaAspirante(), mock(UriInfo.class));
+        when(jornadaAulaDAO.findById(idJornadaAula)).thenThrow(new RuntimeException());
+
+        Response r = resource.create(idJornadaAula, 1, new JornadaAulaAspirante(), uriInfo);
 
         assertEquals(500, r.getStatus());
     }
 
+
     @Test
-    void update_success() {
-        UUID idJornadaAula = UUID.randomUUID();
-        Integer idAspirantePrueba = 1;
+    void update_ok() {
         Integer id = 1;
+        Integer idJornadaAula = 1;
+        Integer idAspirantePrueba = 1;
 
-        when(jaaDAO.findById(id)).thenReturn(new JornadaAulaAspirante());
-        when(jaDAO.findById(idJornadaAula)).thenReturn(new JornadaAula());
-        when(apDAO.findById(idAspirantePrueba)).thenReturn(new AspirantePrueba());
-        when(jaaDAO.update(any())).thenReturn(new JornadaAulaAspirante());
+        JornadaAulaAspirante existing = new JornadaAulaAspirante();
+        JornadaAula ja = new JornadaAula();
+        AspirantePrueba ap = new AspirantePrueba();
+        JornadaAulaAspirante entity = new JornadaAulaAspirante();
 
-        Response r = resource.update(id, idJornadaAula, idAspirantePrueba, new JornadaAulaAspirante());
+        when(jaaDAO.findById(id)).thenReturn(existing);
+        when(jornadaAulaDAO.findById(idJornadaAula)).thenReturn(ja);
+        when(aspirantePruebaDAO.findById(idAspirantePrueba)).thenReturn(ap);
+        when(jaaDAO.update(entity)).thenReturn(entity);
+
+        Response r = resource.update(id, idJornadaAula, idAspirantePrueba, entity);
 
         assertEquals(200, r.getStatus());
     }
 
     @Test
-    void update_invalid() {
+    void update_paramInvalid() {
         Response r = resource.update(null, null, null, null);
 
         assertEquals(422, r.getStatus());
@@ -158,19 +161,17 @@ class JornadaAulaAspiranteResourceTest {
     void update_notFound() {
         when(jaaDAO.findById(1)).thenReturn(null);
 
-        Response r = resource.update(1, UUID.randomUUID(), 1, new JornadaAulaAspirante());
+        Response r = resource.update(1, 1, 1, new JornadaAulaAspirante());
 
         assertEquals(404, r.getStatus());
     }
 
     @Test
-    void update_relationsNotFound() {
-        UUID idJornadaAula = UUID.randomUUID();
-
+    void update_fkNotFound() {
         when(jaaDAO.findById(1)).thenReturn(new JornadaAulaAspirante());
-        when(jaDAO.findById(idJornadaAula)).thenReturn(null);
+        when(jornadaAulaDAO.findById(any())).thenReturn(null);
 
-        Response r = resource.update(1, idJornadaAula, 1, new JornadaAulaAspirante());
+        Response r = resource.update(1, 1, 1, new JornadaAulaAspirante());
 
         assertEquals(404, r.getStatus());
     }
@@ -179,7 +180,7 @@ class JornadaAulaAspiranteResourceTest {
     void update_exception() {
         when(jaaDAO.findById(1)).thenThrow(new RuntimeException());
 
-        Response r = resource.update(1, UUID.randomUUID(), 1, new JornadaAulaAspirante());
+        Response r = resource.update(1, 1, 1, new JornadaAulaAspirante());
 
         assertEquals(500, r.getStatus());
     }

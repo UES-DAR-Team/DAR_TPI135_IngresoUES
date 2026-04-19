@@ -10,8 +10,6 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aspirante
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -26,6 +24,9 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
 
     @Override
     public EntityManager getEntityManager() {
+        if (em == null) {
+            throw new IllegalStateException("EntityManager no inicializado");
+        }
         return em;
     }
 
@@ -34,8 +35,7 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
         return AspirantePrueba.class;
     }
 
-    public List<AspirantePrueba> findByAspirante(UUID idAspirante, int first, int max)
-            throws IllegalArgumentException, IllegalStateException {
+    public List<AspirantePrueba> findByAspirante(UUID idAspirante, int first, int max) {
 
         if (idAspirante == null) {
             throw new IllegalArgumentException("Id de aspirante inválido");
@@ -46,10 +46,8 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
         }
 
         try {
-            TypedQuery<AspirantePrueba> q = getEntityManager().createNamedQuery(
-                    "AspirantePrueba.buscarPorAspirante",
-                    AspirantePrueba.class
-            );
+            TypedQuery<AspirantePrueba> q = getEntityManager()
+                    .createNamedQuery("AspirantePrueba.buscarPorAspirante", AspirantePrueba.class);
 
             q.setParameter("idAspirante", idAspirante);
             q.setFirstResult(first);
@@ -60,11 +58,9 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
         } catch (Exception ex) {
             throw new IllegalStateException("Error al buscar pruebas por aspirante", ex);
         }
-
     }
 
-    public List<AspirantePrueba> findByPrueba(UUID idPrueba, int first, int max)
-            throws IllegalArgumentException, IllegalStateException {
+    public List<AspirantePrueba> findByPrueba(UUID idPrueba, int first, int max) {
 
         if (idPrueba == null) {
             throw new IllegalArgumentException("Id de prueba inválido");
@@ -75,10 +71,8 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
         }
 
         try {
-            TypedQuery<AspirantePrueba> q = getEntityManager().createNamedQuery(
-                    "AspirantePrueba.buscarPorPrueba",
-                    AspirantePrueba.class
-            );
+            TypedQuery<AspirantePrueba> q = getEntityManager()
+                    .createNamedQuery("AspirantePrueba.buscarPorPrueba", AspirantePrueba.class);
 
             q.setParameter("idPrueba", idPrueba);
             q.setFirstResult(first);
@@ -89,21 +83,17 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
         } catch (Exception ex) {
             throw new IllegalStateException("Error al buscar aspirantes por prueba", ex);
         }
-
     }
 
-    public Long countByAspirante(UUID idAspirante)
-            throws IllegalArgumentException, IllegalStateException {
+    public Long countByAspirante(UUID idAspirante) {
 
         if (idAspirante == null) {
             throw new IllegalArgumentException("Id de aspirante inválido");
         }
 
         try {
-            TypedQuery<Long> q = getEntityManager().createNamedQuery(
-                    "AspirantePrueba.countByAspirante",
-                    Long.class
-            );
+            TypedQuery<Long> q = getEntityManager()
+                    .createNamedQuery("AspirantePrueba.countByAspirante", Long.class);
 
             q.setParameter("idAspirante", idAspirante);
 

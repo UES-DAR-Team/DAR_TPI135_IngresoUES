@@ -1,16 +1,15 @@
 package testing;
 
 import java.nio.file.Paths;
+import java.time.Duration;
+
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.utility.MountableFile;
 
 //Extensión de JUnit 5 para manejar contenedores Docker.
@@ -40,7 +39,7 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
     //CONTENEDOR DE POSTGRES
     protected static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17.5-alpine")
             .withDatabaseName("ingreso_ues_db")
-            .withPassword("postgresmy")
+            .withPassword("abc123")
             .withUsername("postgres")
             .withExposedPorts(5432)
             .withNetwork(red)
@@ -48,34 +47,46 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
 
 
     // contenedor de openLiberty
-    // Construye la imagen de OpenLiberty a partir del Dockerfile ubicado en src/test/resources/liberty/Dockerfile
-    protected static final GenericContainer<?> openliberty = new GenericContainer<>(
-            new ImageFromDockerfile()
-                    .withDockerfile(Paths.get("src/test/resources/liberty/Dockerfile"))
-    )
+    /**CAMBIO: se usa la imagen liberty:latest descargada localmente en lugar de construir
+    desde Dockerfile con ImageFromDockerfile,se requiere ejecutar previamente
+     */
+
+    protected static final GenericContainer<?> openliberty = new GenericContainer<>("liberty:latest")
             //expone el puerto del contenedor donde corre el api rest
             .withExposedPorts(9080)
             //war del proyecto
+            .withCopyFileToContainer(getWarFile(), "/config/dropins/DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war")
+
+            /** CAMBIO: se copian manualmente el server.xml y el driver de PostgreSQL al contenedor
+            porque la imagen liberty:latest no los incluye por defecto
+            el server.xml configura el servidor y el driver permite la conexion a Postgres
+             */
+
             .withCopyFileToContainer(
-                    getWarFile(), "/config/dropins/DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war")
-            //logs de openliberty a slf4j
-            .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("LIBERTY")))
-           //conecta a la red docker
+                    MountableFile.forHostPath(Paths.get("src/test/resources/liberty/server.xml").toAbsolutePath()),
+                    "/config/server.xml")
+            .withCopyFileToContainer(
+                    MountableFile.forHostPath(Paths.get("src/test/resources/liberty/postgresql-42.7.7.jar").toAbsolutePath()),
+                    "/config/lib/postgresql-42.7.7.jar")
+            //conecta a la red docker
             .withNetwork(red)
 
             //variables de entorno
-           .withEnv("PGHOST", "db")
-           .withEnv("PGPORT", "5432")
-           .withEnv("PGDBNAME", "ingreso_ues_db")
-           .withEnv("PGUSER", "postgres")
-           .withEnv("PGPASSWORD", "postgresmy")
+            .withEnv("PGHOST", "db")
+            .withEnv("PGPORT", "5432")
+            .withEnv("PGDBNAME", "ingreso_ues_db")
+            .withEnv("PGUSER", "postgres")
+            .withEnv("PGPASSWORD", "abc123")
 
             //orden de arranque
             .dependsOn(postgres)
-            //espera que este listo
-            .waitingFor(Wait.forLogMessage(".*CWWKF0011I.*", 1)
-                    .withStartupTimeout(java.time.Duration.ofSeconds(180))
-            );
+
+            /** CAMBIO: se espera el mensaje exacto que imprime la imagen liberty:latest al arrancar
+            el servidor se llama defaultServer en esta imagen, no app como en la imagen anterior
+            */
+
+            .waitingFor(Wait.forLogMessage(".*The defaultServer server is ready to run a smarter planet.*", 1)
+                    .withStartupTimeout(Duration.ofMinutes(3)));
 
 
     //CONFIGURACIONES
@@ -133,22 +144,8 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
                 // Arranca el contenedor de OpenLiberty
                 openliberty.start();
 
-                // Agrega un shutdown hook para imprimir los logs de OpenLiberty al finalizar las pruebas
-                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                    System.out.println("=== LIBERTY MESSAGES.LOG ===");
-                    try {
-                        org.testcontainers.containers.Container.ExecResult result =
-                                openliberty.execInContainer("cat", "/logs/messages.log");
-                        System.out.println(result.getStdout());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }));
-
-                // Imprime los logs de OpenLiberty al iniciar las pruebas (para debug)
                 System.out.println("=== LIBERTY LOGS ===");
                 System.out.println(openliberty.getLogs());
-                System.out.println("=== FIN LIBERTY LOGS ===");
 
                 // Marca que ya fue iniciado para no volver a levantarlo en otras clases
                 libertyStart = true;
@@ -190,23 +187,13 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
         return postgres;
     }
 
-
     //Metodo para OpenLiberty
     public static GenericContainer<?> getOpenLiberty() {
         return openliberty;
     }
 
-
-
     //Obtener WAR
     private static MountableFile getWarFile() {
         return MountableFile.forHostPath(Paths.get("target/DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war").toAbsolutePath());
     }
-
-
-    //Saber si es SystemTest
-   // public static boolean isSystemTest() {
-    //   return SystemTest;
-    //}
-
 }

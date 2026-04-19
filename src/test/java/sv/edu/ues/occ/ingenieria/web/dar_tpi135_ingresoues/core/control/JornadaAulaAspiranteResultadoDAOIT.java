@@ -33,52 +33,18 @@ public class JornadaAulaAspiranteResultadoDAOIT extends BaseIntegrationAbstract 
         }
     }
 
-    /**
-     * Prueba: búsqueda por id de jornada aula aspirante.
-     * Propósito: verificar que retorna una lista válida.
-     * Resultado esperado: lista no nula.
-     */
-    @Order(1)
     @Test
-    public void testFindByJornadaAulaAspirante(){
-        try {
-            List<JornadaAulaAspiranteResultado> resultado =
+    @Order(1)
+    public void testFinds_OK() {
+
+        assertDoesNotThrow(() -> {
+            List<JornadaAulaAspiranteResultado> r1 =
                     cut.findByJornadaAulaAspirante(1, 0, 10);
 
-            assertNotNull(resultado);
-
-        } catch (IllegalStateException ex) {
-            assertTrue(true);
-        }
-    }
-
-    /**
-     * Prueba: búsqueda por estado aprobado.
-     * Resultado esperado: lista no nula.
-     */
-    @Order(2)
-    @Test
-    public void testFindByAprobado(){
-        try {
-            List<JornadaAulaAspiranteResultado> resultado =
+            List<JornadaAulaAspiranteResultado> r2 =
                     cut.findByAprobado(true, 0, 10);
 
-            assertNotNull(resultado);
-
-        } catch (IllegalStateException ex) {
-            assertTrue(true);
-        }
-    }
-
-    /**
-     * Prueba: búsqueda por rango de puntaje.
-     * Resultado esperado: lista no nula.
-     */
-    @Order(3)
-    @Test
-    public void testFindByRangoPuntaje(){
-        try {
-            List<JornadaAulaAspiranteResultado> resultado =
+            List<JornadaAulaAspiranteResultado> r3 =
                     cut.findByRangoPuntaje(
                             BigDecimal.ZERO,
                             new BigDecimal("100"),
@@ -86,140 +52,132 @@ public class JornadaAulaAspiranteResultadoDAOIT extends BaseIntegrationAbstract 
                             10
                     );
 
-            assertNotNull(resultado);
-
-        } catch (IllegalStateException ex) {
-            assertTrue(true);
-        }
+            assertNotNull(r1);
+            assertNotNull(r2);
+            assertNotNull(r3);
+        });
     }
 
-    /**
-     * Prueba: conteo por estado aprobado.
-     * Resultado esperado: valor mayor o igual a cero.
-     */
-    @Order(4)
     @Test
-    public void testCountByAprobado(){
+    @Order(2)
+    public void testCount_OK() {
         Long total = cut.countByAprobado(true);
 
         assertNotNull(total);
         assertTrue(total >= 0);
     }
 
-    /**
-     * Prueba: id nulo en búsqueda por jornada aula aspirante.
-     */
+    @Test
+    @Order(3)
+    public void testGetters() {
+        assertEquals(JornadaAulaAspiranteResultado.class, cut.getEntityClass());
+        assertNotNull(cut.getEntityManager());
+    }
+
+    @Test
+    @Order(4)
+    public void testNullValidations() {
+
+        assertAll(
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> cut.findByJornadaAulaAspirante(null, 0, 10)),
+
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> cut.findByAprobado(null, 0, 10)),
+
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> cut.countByAprobado(null)),
+
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> cut.findByRangoPuntaje(null, null, 0, 10)),
+
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> cut.findByRangoPuntaje(null, new BigDecimal("10"), 0, 10)),
+
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> cut.findByRangoPuntaje(new BigDecimal("10"), null, 0, 10))
+        );
+    }
+
+    @Test
     @Order(5)
-    @Test
-    public void testFindByJornadaAulaAspiranteNull(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByJornadaAulaAspirante(null,0,10);
-        });
+    public void testInvalidRanges() {
+
+        assertThrows(IllegalArgumentException.class, () ->
+                cut.findByRangoPuntaje(
+                        new BigDecimal("10"),
+                        new BigDecimal("5"),
+                        0,
+                        10
+                )
+        );
     }
 
-    /**
-     * Prueba: estado aprobado nulo.
-     */
+    @Test
     @Order(6)
-    @Test
-    public void testFindByAprobadoNull(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByAprobado(null,0,10);
-        });
+    public void testInvalidPagination() {
+
+        assertAll(
+                // jornada
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> cut.findByJornadaAulaAspirante(1, -1, 10)),
+
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> cut.findByJornadaAulaAspirante(1, 0, 0)),
+
+                // aprobado
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> cut.findByAprobado(true, -1, 10)),
+
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> cut.findByAprobado(true, 0, 0)),
+
+                // rango
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> cut.findByRangoPuntaje(BigDecimal.ZERO, new BigDecimal("10"), -1, 10)),
+
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> cut.findByRangoPuntaje(BigDecimal.ZERO, new BigDecimal("10"), 0, 0))
+        );
     }
 
-    /**
-     * Prueba: rango inválido (valores nulos).
-     */
+
+    @Test
     @Order(7)
-    @Test
-    public void testFindByRangoNull(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByRangoPuntaje(null,null,0,10);
-        });
+    public void testExceptions_entityManagerClosed() {
+
+        em.close();
+
+        assertAll(
+                () -> assertThrows(IllegalStateException.class,
+                        () -> cut.findByJornadaAulaAspirante(1, 0, 10)),
+
+                () -> assertThrows(IllegalStateException.class,
+                        () -> cut.findByAprobado(true, 0, 10)),
+
+                () -> assertThrows(IllegalStateException.class,
+                        () -> cut.findByRangoPuntaje(BigDecimal.ZERO, new BigDecimal("10"), 0, 10)),
+
+                () -> assertThrows(IllegalStateException.class,
+                        () -> cut.countByAprobado(true))
+        );
     }
 
-    /**
-     * Prueba: rango inválido (min > max).
-     */
+    @Test
     @Order(8)
-    @Test
-    public void testFindByRangoInvalido(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByRangoPuntaje(
-                    new BigDecimal("10"),
-                    new BigDecimal("5"),
-                    0,
-                    10
-            );
-        });
-    }
+    public void testExceptions_entityManagerNull() {
 
-    /**
-     * Prueba: paginación inválida.
-     */
-    @Order(9)
-    @Test
-    public void testInvalidPagination(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByAprobado(true,-1,10);
-        });
-    }
+        cut.em = null;
 
-    /**
-     * Prueba: manejo de excepción en findByJornadaAulaAspirante.
-     */
-    @Order(10)
-    @Test
-    public void testFindByJornadaAulaAspiranteException(){
-        em.close();
+        assertAll(
+                () -> assertThrows(IllegalStateException.class,
+                        () -> cut.findByJornadaAulaAspirante(1, 0, 10)),
 
-        assertThrows(IllegalStateException.class, () -> {
-            cut.findByJornadaAulaAspirante(1,0,10);
-        });
-    }
+                () -> assertThrows(IllegalStateException.class,
+                        () -> cut.findByRangoPuntaje(BigDecimal.ZERO, new BigDecimal("10"), 0, 10)),
 
-    /**
-     * Prueba: manejo de excepción en findByAprobado.
-     */
-    @Order(11)
-    @Test
-    public void testFindByAprobadoException(){
-        em.close();
-
-        assertThrows(IllegalStateException.class, () -> {
-            cut.findByAprobado(true,0,10);
-        });
-    }
-
-    /**
-     * Prueba: manejo de excepción en findByRangoPuntaje.
-     */
-    @Order(12)
-    @Test
-    public void testFindByRangoException(){
-        em.close();
-
-        assertThrows(IllegalStateException.class, () -> {
-            cut.findByRangoPuntaje(
-                    BigDecimal.ZERO,
-                    new BigDecimal("10"),
-                    0,
-                    10
-            );
-        });
-    }
-
-    /**
-     * Prueba: manejo de excepción en countByAprobado.
-     */
-    @Order(13)
-    @Test
-    public void testCountByAprobadoException(){
-        em.close();
-
-        assertThrows(IllegalStateException.class, () -> {
-            cut.countByAprobado(true);
-        });
+                () -> assertThrows(IllegalStateException.class,
+                        () -> cut.countByAprobado(true))
+        );
     }
 }

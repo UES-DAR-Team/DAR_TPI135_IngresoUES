@@ -28,8 +28,9 @@ import java.util.UUID;
 })
 public class JornadaAula {
     @Id
-    @Column(name = "id_jornada_aula", nullable = false, updatable = false)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_jornada_aula", nullable = false)
+    private Integer id;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -45,18 +46,12 @@ public class JornadaAula {
     @Column(name = "fecha_asignacion", nullable = false)
     private OffsetDateTime fechaAsignacion;
 
-    @PrePersist
-    public void prePersist() {
-        if (id == null) {
-            id = UUID.randomUUID();
-        }
-    }
 
-    public UUID getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

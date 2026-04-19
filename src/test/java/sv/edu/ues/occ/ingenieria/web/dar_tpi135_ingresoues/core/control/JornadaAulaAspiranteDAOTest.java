@@ -29,7 +29,7 @@ class JornadaAulaAspiranteDAOTest {
 
     @Test
     void findByJornadaAula_ok() {
-        UUID id = UUID.randomUUID();
+        Integer id = 1;
 
         TypedQuery<JornadaAulaAspirante> q = mock(TypedQuery.class);
 
@@ -54,10 +54,10 @@ class JornadaAulaAspiranteDAOTest {
     @Test
     void findByJornadaAula_paramInvalidos() {
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByJornadaAula(UUID.randomUUID(), -1, 10));
+                () -> dao.findByJornadaAula(1, -1, 10));
 
         assertThrows(IllegalArgumentException.class,
-                () -> dao.findByJornadaAula(UUID.randomUUID(), 0, 0));
+                () -> dao.findByJornadaAula(1, 0, 0));
     }
 
     @Test
@@ -66,7 +66,7 @@ class JornadaAulaAspiranteDAOTest {
                 .thenThrow(new RuntimeException());
 
         List<JornadaAulaAspirante> result =
-                dao.findByJornadaAula(UUID.randomUUID(), 0, 10);
+                dao.findByJornadaAula(1, 0, 10);
 
         assertTrue(result.isEmpty());
     }

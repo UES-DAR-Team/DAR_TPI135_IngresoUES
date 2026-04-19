@@ -8,7 +8,6 @@ import testing.BaseIntegrationAbstract;
 import testing.ContainerExtension;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,12 +17,29 @@ public class JornadaAulaAspiranteDAOIT extends BaseIntegrationAbstract {
 
     private EntityManager em;
     private JornadaAulaAspiranteDAO cut;
+    private JornadaAulaAspiranteDAO daoNoEm;
+
+    private Integer idJornadaAula;
+    private Integer idAspirantePrueba;
+    private Boolean asistencia;
 
     @BeforeEach
     public void setUp() {
         em = emf.createEntityManager();
+
         cut = new JornadaAulaAspiranteDAO();
         cut.em = em;
+
+        daoNoEm = new JornadaAulaAspiranteDAO();
+
+        List<JornadaAulaAspirante> data = cut.findRange(0, 1);
+        assertFalse(data.isEmpty(), "Debe existir data en la BD");
+
+        JornadaAulaAspirante sample = data.get(0);
+
+        idJornadaAula = sample.getIdJornadaAula().getId();
+        idAspirantePrueba = sample.getIdAspirantePrueba().getId();
+        asistencia = sample.getAsistio();
     }
 
     @AfterEach
@@ -33,187 +49,204 @@ public class JornadaAulaAspiranteDAOIT extends BaseIntegrationAbstract {
         }
     }
 
-    /**
-     * Prueba: búsqueda por jornada aula.
-     * Propósito: verificar que findByJornadaAula retorna una lista válida.
-     * Resultado esperado: lista no nula.
-     */
+
+    @Test
     @Order(1)
-    @Test
-    public void testFindByJornadaAula(){
-        List<JornadaAulaAspirante> resultado =
-                cut.findByJornadaAula(UUID.randomUUID(), 0, 10);
+    public void findByJornadaAula_ok() {
+        List<JornadaAulaAspirante> result =
+                cut.findByJornadaAula(idJornadaAula, 0, 10);
 
-        assertNotNull(resultado);
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
     }
 
-    /**
-     * Prueba: búsqueda por aspirante prueba.
-     * Resultado esperado: lista no nula.
-     */
+    @Test
     @Order(2)
-    @Test
-    public void testFindByAspirantePrueba(){
-        List<JornadaAulaAspirante> resultado =
-                cut.findByAspirantePrueba(1, 0, 10);
+    public void findByJornadaAula_paramInvalid() {
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByJornadaAula(null, 0, 10));
 
-        assertNotNull(resultado);
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByJornadaAula(idJornadaAula, -1, 10));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByJornadaAula(idJornadaAula, 0, 0));
     }
 
-    /**
-     * Prueba: búsqueda por asistencia.
-     * Resultado esperado: lista no nula.
-     */
+    @Test
     @Order(3)
-    @Test
-    public void testFindByAsistencia(){
-        List<JornadaAulaAspirante> resultado =
-                cut.findByAsistencia(true, 0, 10);
+    public void findByJornadaAula_dbError() {
+        em.close();
 
-        assertNotNull(resultado);
+        List<JornadaAulaAspirante> result =
+                cut.findByJornadaAula(idJornadaAula, 0, 10);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 
-    /**
-     * Prueba: conteo por jornada aula.
-     * Resultado esperado: valor mayor o igual a cero.
-     */
+
+    @Test
     @Order(4)
-    @Test
-    public void testCountByJornadaAula(){
-        Long total = cut.countByJornadaAula(1);
+    public void findByAspirantePrueba_ok() {
+        List<JornadaAulaAspirante> result =
+                cut.findByAspirantePrueba(idAspirantePrueba, 0, 10);
 
-        assertNotNull(total);
-        assertTrue(total >= 0);
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
     }
 
-    /**
-     * Prueba: conteo por asistencia.
-     * Resultado esperado: valor mayor o igual a cero.
-     */
+    @Test
     @Order(5)
-    @Test
-    public void testCountByAsistencia(){
-        Long total = cut.countByAsistencia(true);
-
-        assertNotNull(total);
-        assertTrue(total >= 0);
+    public void findByAspirantePrueba_paramInvalid() {
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAspirantePrueba(null, 0, 10));
     }
 
-    /**
-     * Prueba: validación de id jornada aula nulo.
-     */
+    @Test
     @Order(6)
-    @Test
-    public void testFindByJornadaAulaNull(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByJornadaAula(null,0,10);
-        });
+    public void findByAspirantePrueba_empty() {
+        List<JornadaAulaAspirante> result =
+                cut.findByAspirantePrueba(-999, 0, 10);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 
-    /**
-     * Prueba: validación de id aspirante prueba nulo.
-     */
+
+    @Test
     @Order(7)
-    @Test
-    public void testFindByAspirantePruebaNull(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByAspirantePrueba(null,0,10);
-        });
+    public void findByAsistencia_ok() {
+        List<JornadaAulaAspirante> result =
+                cut.findByAsistencia(asistencia, 0, 10);
+
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
     }
 
-    /**
-     * Prueba: validación de asistencia nula.
-     */
+    @Test
     @Order(8)
-    @Test
-    public void testFindByAsistenciaNull(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByAsistencia(null,0,10);
-        });
+    public void findByAsistencia_paramInvalid() {
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAsistencia(null, 0, 10));
     }
 
-    /**
-     * Prueba: validación de paginación inválida.
-     */
+
+    @Test
     @Order(9)
-    @Test
-    public void testInvalidPagination(){
-        assertThrows(IllegalArgumentException.class, () -> {
-            cut.findByJornadaAula(UUID.randomUUID(),-1,10);
-        });
+    public void countByJornadaAula_ok() {
+        Long count = cut.countByJornadaAula(idJornadaAula);
+
+        assertNotNull(count);
+        assertTrue(count > 0);
     }
 
-    /**
-     * Prueba: manejo de errores en findByJornadaAula.
-     * Resultado esperado: lista vacía.
-     */
+    @Test
     @Order(10)
-    @Test
-    public void testFindByJornadaAulaException(){
-        em.close();
-
-        List<JornadaAulaAspirante> resultado =
-                cut.findByJornadaAula(UUID.randomUUID(),0,10);
-
-        assertNotNull(resultado);
-        assertTrue(resultado.isEmpty());
+    public void countByJornadaAula_paramInvalid() {
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.countByJornadaAula(null));
     }
 
-    /**
-     * Prueba: manejo de errores en findByAspirantePrueba.
-     */
+    @Test
     @Order(11)
-    @Test
-    public void testFindByAspirantePruebaException(){
+    public void countByJornadaAula_dbError() {
         em.close();
 
-        List<JornadaAulaAspirante> resultado =
-                cut.findByAspirantePrueba(1,0,10);
+        Long count = cut.countByJornadaAula(idJornadaAula);
 
-        assertNotNull(resultado);
-        assertTrue(resultado.isEmpty());
+        assertEquals(0L, count);
     }
 
-    /**
-     * Prueba: manejo de errores en findByAsistencia.
-     */
+    @Test
     @Order(12)
-    @Test
-    public void testFindByAsistenciaException(){
-        em.close();
+    public void countByAsistencia_ok() {
+        Long count = cut.countByAsistencia(asistencia);
 
-        List<JornadaAulaAspirante> resultado =
-                cut.findByAsistencia(true,0,10);
-
-        assertNotNull(resultado);
-        assertTrue(resultado.isEmpty());
+        assertNotNull(count);
+        assertTrue(count > 0);
     }
 
-    /**
-     * Prueba: manejo de errores en countByJornadaAula.
-     * Resultado esperado: 0L.
-     */
+    @Test
     @Order(13)
-    @Test
-    public void testCountByJornadaAulaException(){
-        em.close();
-
-        Long total = cut.countByJornadaAula(1);
-
-        assertEquals(0L, total);
+    public void countByAsistencia_paramInvalid() {
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.countByAsistencia(null));
     }
 
-    /**
-     * Prueba: manejo de errores en countByAsistencia.
-     * Resultado esperado: 0L.
-     */
-    @Order(14)
     @Test
-    public void testCountByAsistenciaException(){
+    @Order(14)
+    public void countByAsistencia_dbError() {
         em.close();
 
-        Long total = cut.countByAsistencia(true);
+        Long count = cut.countByAsistencia(asistencia);
 
-        assertEquals(0L, total);
+        assertEquals(0L, count);
+    }
+
+    @Test
+    @Order(15)
+    public void findByAspirantePrueba_dbError_noEm() {
+
+        List<JornadaAulaAspirante> result =
+                daoNoEm.findByAspirantePrueba(idAspirantePrueba, 0, 10);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @Order(16)
+    public void findByAsistencia_dbError_noEm() {
+
+        List<JornadaAulaAspirante> result =
+                daoNoEm.findByAsistencia(asistencia, 0, 10);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void findByAspirantePrueba_invalidPagination() {
+
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAspirantePrueba(idAspirantePrueba, -1, 10));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAspirantePrueba(idAspirantePrueba, 0, 0));
+    }
+
+    @Test
+    public void findByAsistencia_invalidPagination() {
+
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAsistencia(asistencia, -1, 10));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAsistencia(asistencia, 0, 0));
+    }
+
+    @Test
+    public void findByAspirantePrueba_dbError_real() {
+
+        cut.em = null;
+
+        List<JornadaAulaAspirante> result =
+                cut.findByAspirantePrueba(idAspirantePrueba, 0, 10);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void findByAsistencia_dbError_real() {
+
+        cut.em = null;
+
+        List<JornadaAulaAspirante> result =
+                cut.findByAsistencia(asistencia, 0, 10);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 }

@@ -51,7 +51,7 @@ public class JornadaAulaAspiranteResource implements Serializable {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response create(@PathParam("idJornadaAula") UUID idJornadaAula,
+    public Response create(@PathParam("idJornadaAula") Integer idJornadaAula,
                            @PathParam("idAspirantePrueba") Integer idAspirantePrueba,
                            JornadaAulaAspirante entity,
                            @Context UriInfo uriInfo) {
@@ -90,7 +90,7 @@ public class JornadaAulaAspiranteResource implements Serializable {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response update(@PathParam("id") Integer id,
-                           @PathParam("idJornadaAula") UUID idJornadaAula,
+                           @PathParam("idJornadaAula") Integer idJornadaAula,
                            @PathParam("idAspirantePrueba") Integer idAspirantePrueba,
                            JornadaAulaAspirante entity) {
 

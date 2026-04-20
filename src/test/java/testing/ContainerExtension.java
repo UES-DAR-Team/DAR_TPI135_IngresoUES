@@ -55,7 +55,7 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
             //expone el puerto del contenedor donde corre el api rest
             .withExposedPorts(9080)
             //war del proyecto
-            .withCopyFileToContainer(getWarFile(), "/config/dropins/DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war")
+            .withCopyFileToContainer(getWarFile(), "/config/apps/DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war")
 
             /** CAMBIO: se copian manualmente el server.xml y el driver de PostgreSQL al contenedor
             porque la imagen liberty:latest no los incluye por defecto

@@ -30,21 +30,21 @@ public class AreaConocimientoResource implements Serializable {
             @Min(0) @DefaultValue("0") @QueryParam("first") int first,
             @Max(10) @Min(1) @DefaultValue("10") @QueryParam("max") int max
     ) {
-        if(first>=0 && max > 0 && max <= 10 ){
-            try{
+        if (first >= 0 && max > 0 && max <= 10) {
+            try {
                 List<AreaConocimiento> encontrados = areaConocimientoDAO.findRange(first, max);
                 int total = areaConocimientoDAO.count();
                 return Response.ok(encontrados)
                         .header("X-Total-Count", total)
                         .build();
-            }catch (Exception ex){
+            } catch (Exception ex) {
                 LOG.log(Level.SEVERE, "Error retrieving AreaConocimiento range", ex);
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                         .header("Server-exception", "Cannot access db")
                         .build();
             }
         }
-       return Response.status(422).header("Missing-parameter", "first,max").build();
+        return Response.status(422).header("Missing-parameter", "first,max").build();
     }
 
     @GET
@@ -58,7 +58,7 @@ public class AreaConocimientoResource implements Serializable {
                     return Response.ok(encontrados).build();
                 }
                 return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record with id "+id+" not found")
+                        .header("Not-found-id", "Record with id " + id + " not found")
                         .build();
             } catch (Exception e) {
                 LOG.log(Level.SEVERE, "Error retrieving AreaConocimiento by id", e);
@@ -77,7 +77,15 @@ public class AreaConocimientoResource implements Serializable {
             try {
                 AreaConocimiento encontrados = areaConocimientoDAO.findById(id);
                 if (encontrados != null) {
-                    AreaConocimiento padre = encontrados.getIdAutoReferenciaArea();
+
+                    //verificar que no tenga hijos
+                        List<AreaConocimiento> hijos = areaConocimientoDAO.findHijosByPadre(id);
+                        if (!hijos.isEmpty()) {
+                            return Response.status(Response.Status.CONFLICT)
+                                    .header("Conflict-id", "Record with id " + id + " has child records and cannot be deleted")
+                                    .build();
+                        }
+
                     areaConocimientoDAO.delete(encontrados);
                     return Response.noContent().build();
                 }
@@ -98,14 +106,23 @@ public class AreaConocimientoResource implements Serializable {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response create(AreaConocimiento entity, @Context UriInfo uriInfo) {
-        if(entity != null){
-            if(entity.getId() == null){
-                try{
+        if (entity != null) {
+            if (entity.getId() == null) {
+                try {
+                    //verificar que el area padre exista, si es que se le asigno uno
+                    if (entity.getIdAutoReferenciaArea() != null) {
+                        AreaConocimiento padre = areaConocimientoDAO.findById(entity.getIdAutoReferenciaArea().getId());
+                        if (padre == null) {
+                            return Response.status(Response.Status.NOT_FOUND)
+                                    .header("Invalid-parameter", "idAutoReferenciaArea with id " + entity.getIdAutoReferenciaArea().getId() + " not found")
+                                    .build();
+                        }
+                    }
                     areaConocimientoDAO.create(entity);
                     return Response.created(uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build())
                             .entity(entity)
                             .build();
-                }catch (Exception ex){
+                } catch (Exception ex) {
                     LOG.log(Level.SEVERE, "Error creating AreaConocimiento", ex);
                     return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                             .header("Server-exception", "Cannot access db")
@@ -127,19 +144,28 @@ public class AreaConocimientoResource implements Serializable {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response update(@PathParam("id") UUID id, AreaConocimiento entity) {
-        if(id != null){
-            if(entity != null){
-                try{
+        if (id != null) {
+            if (entity != null) {
+                try {
                     AreaConocimiento existing = areaConocimientoDAO.findById(id);
-                    if(existing != null){
+                    if (existing != null) {
+                        //verificar que el area padre exista, si es que se le asigno o reasigno uno
+                        if (entity.getIdAutoReferenciaArea() != null) {
+                            AreaConocimiento padre = areaConocimientoDAO.findById(entity.getIdAutoReferenciaArea().getId());
+                            if (padre == null) {
+                                return Response.status(Response.Status.NOT_FOUND)
+                                        .header("Invalid-parameter", "idAutoReferenciaArea with id " + entity.getIdAutoReferenciaArea().getId() + " not found")
+                                        .build();
+                            }
+                        }
                         entity.setId(id);
                         AreaConocimiento update = areaConocimientoDAO.update(entity);
                         return Response.ok(update).build();
                     }
                     return Response.status(Response.Status.NOT_FOUND)
-                            .header("Not-found-id", "Record with id "+id+" not found")
+                            .header("Not-found-id", "Record with id " + id + " not found")
                             .build();
-                }catch (Exception ex){
+                } catch (Exception ex) {
                     LOG.log(Level.SEVERE, "Error updating AreaConocimiento", ex);
                     return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                             .header("Server-exception", "Cannot access db")

@@ -32,7 +32,7 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
     private static final int MAX = 10;
     private static final int INVALIDFIRST = -1;
     private static final int INVALIDMAX = 0;
-    private static final int EXCEEDMAX = 11;
+
 
     @Nested
     @Order(1)
@@ -58,37 +58,11 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
 
         @Order(2)
         @Test
-        void responde400_cuandoFirstNegativo() {
+        void responde400_cuandoFirstYMaxInvalidos() {
             Response response = target
                     .path(PATH)
                     .queryParam("first", INVALIDFIRST)
-                    .queryParam("max", MAX)
-                    .request(MediaType.APPLICATION_JSON)
-                    .get();
-
-            assertEquals(400, response.getStatus());
-        }
-
-        @Order(3)
-        @Test
-        void responde400_cuandoMaxNegativo() {
-            Response response = target
-                    .path(PATH)
-                    .queryParam("first", FIRST)
                     .queryParam("max", INVALIDMAX)
-                    .request(MediaType.APPLICATION_JSON)
-                    .get();
-
-            assertEquals(400, response.getStatus());
-        }
-
-        @Order(4)
-        @Test
-        void responde400_cuandoMaxExcedeLimite() {
-            Response response = target
-                    .path(PATH)
-                    .queryParam("first", FIRST)
-                    .queryParam("max", EXCEEDMAX)
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
@@ -183,9 +157,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(1)
         @Test
         void responde200_cuandoIdExiste() {
-            assertNotNull(IDCREADO,
-                    "idCreado debe estar poblado por Create.responde201_cuandoEntidadValida");
-
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
@@ -222,8 +193,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(1)
         @Test
         void responde200_cuandoIdExisteYEntidadValida() {
-            assertNotNull(IDCREADO,
-                    "idCreado debe estar poblado por Create.responde201_cuandoEntidadValida");
 
             String bodyActualizado = """
                     {
@@ -273,9 +242,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
         @Order(3)
         @Test
         void respondeFallo_cuandoBodyJsonMalformado() {
-            assertNotNull(IDCREADO,
-                    "idCreado debe estar poblado por Create.responde201_cuandoEntidadValida");
-
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())

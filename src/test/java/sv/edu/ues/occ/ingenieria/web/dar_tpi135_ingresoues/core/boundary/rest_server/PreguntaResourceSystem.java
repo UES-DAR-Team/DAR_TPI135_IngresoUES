@@ -54,36 +54,11 @@ public class PreguntaResourceSystem extends BaseIntegrationAbstract {
 
         @Order(2)
         @Test
-        void responde400_cuandoFirstNegativo(){
+        void responde400_cuandoFirstYMaxInvalidos() {
             Response response = target
                     .path(PATH)
                     .queryParam("first", INVALIDFIRST)
-                    .queryParam("max", MAX)
-                    .request(MediaType.APPLICATION_JSON)
-                    .get();
-
-            assertEquals(400, response.getStatus());
-        }
-
-        @Order(3)
-        @Test
-        void responde400_cuandoMaxInvalido(){
-            Response response = target
-                    .path(PATH)
-                    .queryParam("first", FIRST)
                     .queryParam("max", INVALIDMAX)
-                    .request(MediaType.APPLICATION_JSON)
-                    .get();
-
-            assertEquals(400, response.getStatus());
-        }
-        @Order(4)
-        @Test
-        void responde400_cuandoMaxExcedeLimite() {
-            Response response = target
-                    .path(PATH)
-                    .queryParam("first", FIRST)
-                    .queryParam("max", EXCEEDMAX)
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 

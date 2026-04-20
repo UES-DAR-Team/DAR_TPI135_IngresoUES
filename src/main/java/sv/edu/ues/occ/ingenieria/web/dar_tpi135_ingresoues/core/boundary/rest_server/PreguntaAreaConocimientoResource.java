@@ -37,6 +37,7 @@ public class PreguntaAreaConocimientoResource implements Serializable {
 
     private static final Logger LOG= Logger.getLogger(PreguntaAreaConocimientoResource.class.getName());
 
+    // Obtener preguntas asociadas a un area de conocimiento con paginacion
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response findRange(

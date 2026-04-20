@@ -60,6 +60,7 @@ public class AreaConocimientoDAO extends IngresoDefaultDataAcces<AreaConocimient
         }
     }
 
+    //falto paginar
     public List<AreaConocimiento> findHijosByPadre(final UUID idPadre)
             throws IllegalArgumentException, IllegalStateException {
         if(idPadre == null ){

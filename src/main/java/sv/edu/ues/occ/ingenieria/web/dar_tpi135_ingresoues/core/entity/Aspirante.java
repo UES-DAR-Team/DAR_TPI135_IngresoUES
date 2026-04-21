@@ -1,13 +1,11 @@
 package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity;
 
-import jakarta.json.bind.annotation.JsonbDateFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.Date;
 import java.util.UUID;
 
 @Entity
@@ -61,10 +59,8 @@ public class Aspirante {
     private LocalDate fechaNacimiento;
 
     @NotNull
-    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss")//para que funcione con JSON-B ya que no soporta Date, deberia usarse LocalDateTime
-    @Temporal(TemporalType.TIMESTAMP) // Necesario para almacenar fecha y hora
     @Column(name = "fecha_registro", nullable = false)
-    private Date fechaRegistro;
+    private OffsetDateTime fechaRegistro;
 
     @NotNull
     @Column(name = "activo", nullable = false)
@@ -118,11 +114,11 @@ public class Aspirante {
         this.fechaNacimiento = fechaNacimiento;
     }
 
-    public Date getFechaRegistro() {
+    public OffsetDateTime getFechaRegistro() {
         return fechaRegistro;
     }
 
-    public void setFechaRegistro(Date fechaRegistro) {
+    public void setFechaRegistro(OffsetDateTime fechaRegistro) {
         this.fechaRegistro = fechaRegistro;
     }
 

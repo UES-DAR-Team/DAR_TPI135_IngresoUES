@@ -27,7 +27,6 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aspirante
 
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -81,8 +80,8 @@ public class CrearStepDefitions {
         nuevoAspirante = new Aspirante();
         nuevoAspirante.setNombreAspirante("chepe");
         nuevoAspirante.setApellidoAspirante("Funes");
-        nuevoAspirante.setFechaRegistro(Date.from(OffsetDateTime.now().toInstant()));
-        //nuevoAspirante.setActivo(true);
+        nuevoAspirante.setFechaRegistro(OffsetDateTime.now());
+        nuevoAspirante.setActivo(true);
         int esperado = 201;
         Response response = target
                 .request(MediaType.APPLICATION_JSON)
@@ -100,7 +99,7 @@ public class CrearStepDefitions {
         Assertions.assertNotNull(codigoPrograma);
         AspiranteOpcione aspiranteOpcione = new AspiranteOpcione();
         aspiranteOpcione.setCodigoPrograma(codigoPrograma);
-        aspiranteOpcione.setFechaSeleccion(Date.from(OffsetDateTime.now().toInstant()));
+        aspiranteOpcione.setFechaSeleccion(OffsetDateTime.now());
         aspiranteOpcione.setIdAspirante(nuevoAspirante);
         //debemos modificar toda la linea de aspiranteOpcione para asignaerle preferencias
         //aspiranteOpcione.setPreferenca(1);

@@ -16,6 +16,7 @@ import java.util.UUID;
 })
 public class AreaConocimiento {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id_area_conocimiento", nullable = false)
     private UUID id;
 

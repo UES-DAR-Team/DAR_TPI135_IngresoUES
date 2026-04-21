@@ -48,7 +48,7 @@ public class PruebaResource implements Serializable {
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(@PathParam("id") UUID id) {
-        if (id != null){
+        if (id != null) {
             try {
                 Prueba encontrados = pruebaDAO.findById(id);
                 if (encontrados != null) {
@@ -68,37 +68,37 @@ public class PruebaResource implements Serializable {
     @DELETE
     @Path("{id}")
     public Response deleteById(@PathParam("id") UUID id) {
-        if(id != null){
-            try{
+        if (id != null) {
+            try {
                 Prueba encontrados = pruebaDAO.findById(id);
-                if(encontrados != null){
+                if (encontrados != null) {
                     pruebaDAO.delete(encontrados);
                     return Response.noContent().build();
                 }
                 return Response.status(Response.Status.NOT_FOUND)
                         .header("Not-found-id", "Record with id " + id + " not found").build();
-            }catch (Exception ex){
+            } catch (Exception ex) {
                 LOG.log(Level.SEVERE, "Error retrieving Prueba by id", ex);
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                         .header("Server-exception", "Cannot access db").build();
             }
         }
-        return  Response.status(422).header("Missing-parameter", "id").build();
+        return Response.status(422).header("Missing-parameter", "id").build();
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response create(Prueba entity, @Context UriInfo uriInfo) {
-        if(entity != null){
-            if(entity.getId() == null){
-                try{
+        if (entity != null) {
+            if (entity.getId() == null) {
+                try {
                     pruebaDAO.create(entity);
                     return Response.created(
-                            uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build())
-                                    .entity(entity)
-                                    .build();
-                }catch (Exception ex){
+                                    uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build())
+                            .entity(entity)
+                            .build();
+                } catch (Exception ex) {
                     LOG.log(Level.SEVERE, "Error creating Prueba", ex);
                     return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                             .header("Server-exception", "Cannot access db").build();
@@ -135,35 +135,4 @@ public class PruebaResource implements Serializable {
         }
         return Response.status(422).header("Missing-parameter", "id").build();
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

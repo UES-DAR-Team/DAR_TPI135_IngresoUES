@@ -15,6 +15,7 @@ import java.util.UUID;
 })
 public class Prueba {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id_prueba", nullable = false)
     private UUID id;
 

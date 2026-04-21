@@ -5,6 +5,7 @@ import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
+import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aspirante;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAula;
 
 import java.io.Serializable;
@@ -33,6 +34,12 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Integer
     @Override
     protected Class<JornadaAula> getEntityClass() {
         return JornadaAula.class;
+    }
+
+    @Override
+    public void create(JornadaAula entity) {
+        em.persist(entity);
+        em.flush();
     }
 
     public List<JornadaAula> findByJornada(UUID idJornada, int first, int max) {

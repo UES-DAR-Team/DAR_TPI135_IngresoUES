@@ -34,7 +34,7 @@ class JornadaAulaResourceTest {
 
     @Test
     void findById_success() {
-        UUID id = UUID.randomUUID();
+        Integer id = 1;
 
         when(jaDAO.findById(id)).thenReturn(new JornadaAula());
 
@@ -45,7 +45,7 @@ class JornadaAulaResourceTest {
 
     @Test
     void findById_notFound() {
-        UUID id = UUID.randomUUID();
+        Integer id = 1;
 
         when(jaDAO.findById(id)).thenReturn(null);
 
@@ -63,7 +63,7 @@ class JornadaAulaResourceTest {
 
     @Test
     void findById_exception() {
-        UUID id = UUID.randomUUID();
+        Integer id = 1;
 
         when(jaDAO.findById(id)).thenThrow(new RuntimeException());
 

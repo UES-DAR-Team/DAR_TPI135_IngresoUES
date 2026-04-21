@@ -35,6 +35,7 @@ import java.util.UUID;
 public class Aspirante {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id_aspirante", nullable = false)
     private UUID id;
 

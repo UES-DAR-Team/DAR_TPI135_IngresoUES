@@ -29,6 +29,7 @@ import java.time.OffsetDateTime;
 })
 public class AspiranteOpcione {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_aspirante_opciones", nullable = false)
     private Integer id;
 

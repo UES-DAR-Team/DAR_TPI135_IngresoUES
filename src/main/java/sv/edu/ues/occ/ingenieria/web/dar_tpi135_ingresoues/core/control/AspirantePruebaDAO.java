@@ -35,6 +35,12 @@ public class AspirantePruebaDAO extends IngresoDefaultDataAcces<AspirantePrueba,
         return AspirantePrueba.class;
     }
 
+    @Override
+    public void create(AspirantePrueba entity) {
+        em.persist(entity);
+        em.flush();
+    }
+
     public List<AspirantePrueba> findByAspirante(UUID idAspirante, int first, int max) {
 
         if (idAspirante == null) {

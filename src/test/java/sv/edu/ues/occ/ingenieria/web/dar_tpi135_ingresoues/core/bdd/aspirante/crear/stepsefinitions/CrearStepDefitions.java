@@ -71,7 +71,6 @@ public class CrearStepDefitions {
         Startables.deepStart(List.of(postgres, openliberty)).join();
         Assertions.assertTrue(postgres.isRunning());
         cliente = ClientBuilder.newClient();
-        // El WAR desplegado se llama DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war, el contexto por defecto será ese nombre.
         target = cliente.target(String.format("http://%s:%d/DAR_TPI135_IngresoUES-1.0-SNAPSHOT/v1/aspirante", openliberty.getHost(), openliberty.getMappedPort(9080)));
     }
 
@@ -81,8 +80,10 @@ public class CrearStepDefitions {
         nuevoAspirante = new Aspirante();
         nuevoAspirante.setNombreAspirante("chepe");
         nuevoAspirante.setApellidoAspirante("Funes");
-        nuevoAspirante.setFechaRegistro(OffsetDateTime.now());
-        nuevoAspirante.setActivo(true);
+        //en teoria abria que setearle todos los campos no nullables,
+        //pero en el recurso aun no se maneja eso, probablemente por eso da error
+//        nuevoAspirante.setFechaRegistro(OffsetDateTime.now());
+//        nuevoAspirante.setActivo(true);
         int esperado = 201;
         Response response = target
                 .request(MediaType.APPLICATION_JSON)
@@ -100,7 +101,7 @@ public class CrearStepDefitions {
         Assertions.assertNotNull(codigoPrograma);
         AspiranteOpcione aspiranteOpcione = new AspiranteOpcione();
         aspiranteOpcione.setCodigoPrograma(codigoPrograma);
-        aspiranteOpcione.setFechaSeleccion(OffsetDateTime.now());
+//        aspiranteOpcione.setFechaSeleccion(OffsetDateTime.now());
         aspiranteOpcione.setIdAspirante(nuevoAspirante);
         //debemos modificar toda la linea de aspiranteOpcione para asignaerle preferencias
         //aspiranteOpcione.setPreferenca(1);

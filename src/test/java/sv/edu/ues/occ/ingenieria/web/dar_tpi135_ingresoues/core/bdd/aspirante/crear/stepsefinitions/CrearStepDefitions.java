@@ -71,7 +71,8 @@ public class CrearStepDefitions {
         Startables.deepStart(List.of(postgres, openliberty)).join();
         Assertions.assertTrue(postgres.isRunning());
         cliente = ClientBuilder.newClient();
-        target = cliente.target(String.format("http://%s:%d/PupaSV-1.0-SNAPSHOT/v1/aspirante", openliberty.getHost(), openliberty.getMappedPort(9080)));
+        // El WAR desplegado se llama DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war, el contexto por defecto será ese nombre.
+        target = cliente.target(String.format("http://%s:%d/DAR_TPI135_IngresoUES-1.0-SNAPSHOT/v1/aspirante", openliberty.getHost(), openliberty.getMappedPort(9080)));
     }
 
     @When("puedo crear un aspirante")
@@ -104,8 +105,9 @@ public class CrearStepDefitions {
         //debemos modificar toda la linea de aspiranteOpcione para asignaerle preferencias
         //aspiranteOpcione.setPreferenca(1);
 
+        // corregir path: usar {idAspirante} para que resolveTemplate funcione
         Response response = target
-                .path("{{idAspirante}/opciones}")
+                .path("{idAspirante}/opciones")
                 .resolveTemplate("idAspirante", nuevoAspirante.getId())
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.json(aspiranteOpcione));

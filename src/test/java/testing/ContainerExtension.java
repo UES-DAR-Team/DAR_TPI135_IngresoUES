@@ -204,9 +204,4 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
     }
 
 
-    //Saber si es SystemTest
-   // public static boolean isSystemTest() {
-    //   return SystemTest;
-    //}
-
 }

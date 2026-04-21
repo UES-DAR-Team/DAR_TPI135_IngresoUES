@@ -3,68 +3,72 @@ package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.bdd.aspirante.c
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.WebTarget;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.extension.ExtendWith;
-import testing.CucumberContainerExtension;
-import testing.CucumberTest;
-
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
+import org.testcontainers.containers.Network;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.images.builder.ImageFromDockerfile;
+import org.testcontainers.lifecycle.Startables;
+import org.testcontainers.utility.MountableFile;
 
-@CucumberTest
-@ExtendWith(CucumberContainerExtension.class)
+import java.nio.file.Paths;
+import java.util.List;
+
 public class CrearStepDefitions {
 
+    static Client cliente;
+    static WebTarget target;
 
-    @SuppressWarnings("resource")
+    static Network red= Network.newNetwork();
+    static MountableFile getWarFile() {
+        return MountableFile.forHostPath(Paths.get("target/DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war").toAbsolutePath());
+    }
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17.5-alpine")
+            .withDatabaseName("ingreso_ues_db")
+            .withPassword("postgresmy")
+            .withUsername("postgres")
+            .withExposedPorts(5432)
+            .withNetwork(red)
+            .withNetworkAliases("db");
+
+    static final GenericContainer<?> openliberty = new GenericContainer<>(
+            new ImageFromDockerfile()
+                    .withDockerfile(Paths.get("src/test/resources/liberty/Dockerfile")))
+            .withExposedPorts(9080)
+            .withCopyFileToContainer(
+                    getWarFile(), "/config/dropins/DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war")
+            .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("LIBERTY")))
+            .withNetwork(red)
+            .withEnv("PGHOST", "db")
+            .withEnv("PGPORT", "5432")
+            .withEnv("PGDBNAME", "ingreso_ues_db")
+            .withEnv("PGUSER", "postgres")
+            .withEnv("PGPASSWORD", "postgresmy")
+            .dependsOn(postgres)
+            .waitingFor(Wait.forLogMessage(".*CWWKF0011I.*", 1)
+                    .withStartupTimeout(java.time.Duration.ofSeconds(180))
+            );
+
     @Given("se tiene un servidor contenido con la aplicacion desplegada")
     public void se_tiene_un_servidor_contenido_con_la_aplicacion_desplegada() {
         //verificar que el servidor esta corriendo y la aplicacion esta desplegada
-        // Obtener el contenedor de OpenLiberty desde la extensión de test
-        GenericContainer<?> openLiberty = CucumberContainerExtension.getOpenLiberty();
+        Startables.deepStart(List.of(postgres, openliberty)).join();
+        Assertions.assertTrue(postgres.isRunning());
+        cliente = ClientBuilder.newClient();
+        target = cliente.target(String.format("http://%s:%d/PupaSV-1.0-SNAPSHOT/v1/aspirante", openliberty.getHost(), openliberty.getMappedPort(9080)));
 
-        // Verificaciones básicas del contenedor
-        Assertions.assertNotNull(openLiberty, "El contenedor de OpenLiberty no está inicializado");
-        Assertions.assertTrue(openLiberty.isRunning(), "El contenedor de OpenLiberty no está corriendo");
-
-        // Intentar consultar la aplicación desplegada mediante HTTP
-        String host = openLiberty.getHost();
-        int port = openLiberty.getMappedPort(9080);
-
-        // Asumimos que la aplicación está desplegada bajo el contexto del WAR; ajusta si usas otro contexto
-        String context = "DAR_TPI135_IngresoUES-1.0-SNAPSHOT";
-        String urlStr = String.format("http://%s:%d/%s/index.jsp", host, port, context);
-
-        try {
-            HttpClient client = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(5))
-                    .build();
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(urlStr))
-                    .GET()
-                    .timeout(Duration.ofSeconds(5))
-                    .build();
-
-            HttpResponse<Void> response = client.send(request, HttpResponse.BodyHandlers.discarding());
-            int code = response.statusCode();
-
-            Assertions.assertTrue(code >= 200 && code < 400,
-                    "La aplicación no respondió con estado exitoso. HTTP: " + code + " al consultar: " + urlStr);
-        } catch (Exception e) {
-            Assertions.fail("No se pudo conectar a la aplicación desplegada en " + urlStr + ": " + e.getMessage());
-        }
-
-        System.out.println("as intended");
     }
 
     @When("puedo crear un aspirante")
     public void puedo_crear_un_aspirante() {
-        System.out.println("and running");
+        throw new io.cucumber.java.PendingException();
     }
     @When("puedo asociarle a una opcion de carrera, por ejemplo I30515")
     public void puedo_asociarle_a_una_opcion_de_carrera_por_ejemplo_I30515() {

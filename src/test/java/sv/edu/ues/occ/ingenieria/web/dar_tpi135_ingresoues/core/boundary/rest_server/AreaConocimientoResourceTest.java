@@ -205,6 +205,33 @@ class AreaConocimientoResourceTest {
             assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
             verify(areaConocimientoDAO).findById(id);
         }
+
+        @Test
+        void retorna204_cuandoIdEsValidoYNoTieneHijos() {
+            when(areaConocimientoDAO.findById(id)).thenReturn(areaConocimiento);
+            when(areaConocimientoDAO.findHijosByPadre(id)).thenReturn(List.of());
+
+            Response response = areaConocimientoResource.deleteById(id);
+
+            assertEquals(204, response.getStatus());
+            verify(areaConocimientoDAO).findById(id);
+            verify(areaConocimientoDAO).findHijosByPadre(id);
+            verify(areaConocimientoDAO).delete(areaConocimiento);
+        }
+
+        @Test
+        void retorna409_cuandoTieneHijos() {
+            when(areaConocimientoDAO.findById(id)).thenReturn(areaConocimiento);
+            when(areaConocimientoDAO.findHijosByPadre(id)).thenReturn(List.of(new AreaConocimiento()));
+
+            Response response = areaConocimientoResource.deleteById(id);
+
+            assertEquals(409, response.getStatus());
+            assertEquals("Record with id " + id + " has child records and cannot be deleted", response.getHeaderString("Conflict-id"));
+            verify(areaConocimientoDAO).findById(id);
+            verify(areaConocimientoDAO).findHijosByPadre(id);
+            verify(areaConocimientoDAO, never()).delete(any());
+        }
     }
 
     @Nested
@@ -213,7 +240,7 @@ class AreaConocimientoResourceTest {
         void retorna201_cuandoEntidadEsValida() {
             when(uriInfo.getAbsolutePathBuilder()).thenReturn(uriBuilder);
             when(uriBuilder.path(anyString())).thenReturn(uriBuilder);
-            when(uriBuilder.build()).thenReturn(URI.create("resources/v1/distractor/"));
+            when(uriBuilder.build()).thenReturn(URI.create("v1/areaConocimiento/"));
             doAnswer(inv -> {
                 entity.setId(id);
                 return null;
@@ -256,6 +283,47 @@ class AreaConocimientoResourceTest {
             assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
             verify(areaConocimientoDAO).create(entity);
         }
+
+        @Test
+        void retorna404_cuandoAreaPadreAsignadaNoExiste() {
+            AreaConocimiento padre = new AreaConocimiento();
+            UUID padreIdInexistente = UUID.randomUUID();
+            padre.setId(padreIdInexistente);
+            entity.setIdAutoReferenciaArea(padre);
+
+            when(areaConocimientoDAO.findById(padreIdInexistente)).thenReturn(null);
+
+            Response response = areaConocimientoResource.create(entity, uriInfo);
+
+            assertEquals(404, response.getStatus());
+            assertEquals("idAutoReferenciaArea with id " + padreIdInexistente + " not found", response.getHeaderString("Invalid-parameter"));
+            verify(areaConocimientoDAO).findById(padreIdInexistente);
+            verify(areaConocimientoDAO, never()).create(any());
+        }
+
+        @Test
+        void retorna201_cuandoEntidadEsValidaYAreaPadreExiste() {
+            AreaConocimiento padre = new AreaConocimiento();
+            UUID padreId = UUID.randomUUID();
+            padre.setId(padreId);
+            entity.setIdAutoReferenciaArea(padre);
+
+            when(areaConocimientoDAO.findById(padreId)).thenReturn(padre);
+            when(uriInfo.getAbsolutePathBuilder()).thenReturn(uriBuilder);
+            when(uriBuilder.path(anyString())).thenReturn(uriBuilder);
+            when(uriBuilder.build()).thenReturn(URI.create("v1/areaconocimiento/"));
+            doAnswer(inv -> {
+                entity.setId(id);
+                return null;
+            }).when(areaConocimientoDAO).create(entity);
+
+            Response response = areaConocimientoResource.create(entity, uriInfo);
+
+            assertEquals(201, response.getStatus());
+            verify(areaConocimientoDAO).findById(padreId);
+            verify(areaConocimientoDAO).create(entity);
+        }
+
     }
 
     @Nested
@@ -315,6 +383,49 @@ class AreaConocimientoResourceTest {
             assertEquals(500, response.getStatus());
             assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
             verify(areaConocimientoDAO).findById(id);
+        }
+        @Test
+        void retorna404_cuandoAreaPadreAsignadaNoExiste() {
+            AreaConocimiento existing = new AreaConocimiento();
+            existing.setId(id);
+
+            AreaConocimiento padre = new AreaConocimiento();
+            UUID padreId = UUID.randomUUID();
+            padre.setId(padreId);
+            entity.setIdAutoReferenciaArea(padre);
+
+            when(areaConocimientoDAO.findById(id)).thenReturn(existing);
+            when(areaConocimientoDAO.findById(padreId)).thenReturn(null);
+
+            Response response = areaConocimientoResource.update(id, entity);
+
+            assertEquals(404, response.getStatus());
+            assertEquals("idAutoReferenciaArea with id " + padreId + " not found", response.getHeaderString("Invalid-parameter"));
+            verify(areaConocimientoDAO).findById(id);
+            verify(areaConocimientoDAO).findById(padreId);
+            verify(areaConocimientoDAO, never()).update(any());
+        }
+
+        @Test
+        void retorna200_cuandoAreaPadreAsignadaExiste() {
+            AreaConocimiento existing = new AreaConocimiento();
+            existing.setId(id);
+
+            AreaConocimiento padre = new AreaConocimiento();
+            UUID padreId = UUID.randomUUID();
+            padre.setId(padreId);
+            entity.setIdAutoReferenciaArea(padre);
+
+            when(areaConocimientoDAO.findById(id)).thenReturn(existing);
+            when(areaConocimientoDAO.findById(padreId)).thenReturn(padre);
+            when(areaConocimientoDAO.update(entity)).thenReturn(entity);
+
+            Response response = areaConocimientoResource.update(id, entity);
+
+            assertEquals(200, response.getStatus());
+            verify(areaConocimientoDAO).findById(id);
+            verify(areaConocimientoDAO).findById(padreId);
+            verify(areaConocimientoDAO).update(entity);
         }
     }
 }

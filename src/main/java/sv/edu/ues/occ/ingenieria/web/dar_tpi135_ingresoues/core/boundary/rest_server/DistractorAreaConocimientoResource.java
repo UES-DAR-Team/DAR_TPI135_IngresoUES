@@ -16,6 +16,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Distracto
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.DistractorAreaConocimiento;
 
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -133,8 +134,9 @@ public class DistractorAreaConocimientoResource implements Serializable {
             }
             entity.setIdAreaConocimiento(areaConocimiento);
             entity.setIdDistractor(distractor);
+            entity.setFechaAsignacion(OffsetDateTime.now());
             distractorAreaConocimientoDAO.create(entity);
-            return Response.created(uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build())
+            return Response.created(uriInfo.getAbsolutePathBuilder().path(entity.getIdDistractor().getId().toString()).build())
                     .entity(entity)
                     .build();
         } catch (Exception ex) {

@@ -138,7 +138,7 @@ public class PruebaAreaResourceSystem extends BaseIntegrationAbstract {
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(body));
 
-            // ya existe puede lanzar error (constraint)
+            // ya existe puede lanzar error
             assertTrue(response.getStatus() == 500 || response.getStatus() == 409);
         }
 

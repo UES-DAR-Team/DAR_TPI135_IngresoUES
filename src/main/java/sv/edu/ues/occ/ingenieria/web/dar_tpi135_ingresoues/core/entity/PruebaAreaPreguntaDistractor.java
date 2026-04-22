@@ -14,6 +14,7 @@ import java.time.OffsetDateTime;
 })
 public class PruebaAreaPreguntaDistractor {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_prueba_area_pregunta_distractor", nullable = false)
     private Integer id;
 

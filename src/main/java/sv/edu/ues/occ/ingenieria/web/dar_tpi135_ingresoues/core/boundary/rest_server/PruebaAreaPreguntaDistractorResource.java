@@ -33,31 +33,39 @@ public class PruebaAreaPreguntaDistractorResource implements Serializable {
                              @PathParam("idDistractor") UUID idDistractor,
                              @PathParam("id") Integer id) {
 
-        if (idPruebaAreaPregunta != null && idDistractor != null && id != null) {
-            try {
-                PruebaAreaPreguntaDistractor resp = pruebaAreaPreguntaDistractorDAO.findById(id);
-
-                if (resp != null &&
-                        resp.getIdPruebaAreaPregunta().getId().equals(idPruebaAreaPregunta) &&
-                        resp.getIdDistractor().getId().equals(idDistractor)) {
-
-                    return Response.ok(resp).build();
-                }
-
+        if (idPruebaAreaPregunta == null || idDistractor == null || id == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "idPruebaAreaPregunta,idDistractor,id")
+                    .build();
+        }
+        try {
+            PruebaAreaPreguntaDistractor resp = pruebaAreaPreguntaDistractorDAO.findById(id);
+            if (resp == null) {
                 return Response.status(Response.Status.NOT_FOUND)
                         .header("Not-found", "Record not found")
                         .build();
+            }
 
-            } catch (Exception e) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db")
+            if (resp.getIdPruebaAreaPregunta() == null || resp.getIdDistractor() == null) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .header("Not-found", "Record not found")
                         .build();
             }
-        }
 
-        return Response.status(422)
-                .header("Missing-parameter", "idPruebaAreaPregunta,idDistractor,id")
-                .build();
+            if (!resp.getIdPruebaAreaPregunta().getId().equals(idPruebaAreaPregunta) ||
+                    !resp.getIdDistractor().getId().equals(idDistractor)) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .header("Not-found", "Record not found")
+                        .build();
+            }
+
+            return Response.ok(resp).build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .header("Server-exception", "Cannot access db")
+                    .build();
+        }
     }
 
     @POST
@@ -124,11 +132,19 @@ public class PruebaAreaPreguntaDistractorResource implements Serializable {
 
         try {
             PruebaAreaPreguntaDistractor existing = pruebaAreaPreguntaDistractorDAO.findById(id);
+            if (existing == null) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .header("Not-found", "Record not found")
+                        .build();
+            }
+            if (existing.getIdPruebaAreaPregunta() == null || existing.getIdDistractor() == null) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .header("Not-found", "Record not found")
+                        .build();
+            }
 
-            if (existing == null ||
-                    !existing.getIdPruebaAreaPregunta().getId().equals(idPruebaAreaPregunta) ||
+            if (!existing.getIdPruebaAreaPregunta().getId().equals(idPruebaAreaPregunta) ||
                     !existing.getIdDistractor().getId().equals(idDistractor)) {
-
                 return Response.status(Response.Status.NOT_FOUND)
                         .header("Not-found", "Record not found")
                         .build();

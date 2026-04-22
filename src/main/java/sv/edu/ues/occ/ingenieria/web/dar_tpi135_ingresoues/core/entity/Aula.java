@@ -16,6 +16,7 @@ import java.util.UUID;
 })
 public class Aula {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id_aula", nullable = false)
     private UUID id;
 

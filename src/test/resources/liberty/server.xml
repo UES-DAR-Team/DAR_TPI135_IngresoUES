@@ -19,8 +19,6 @@
                   httpsPort="9443" />
     <applicationManager autoExpand="true"/>
 
-    <!-- CAMBIO: se descomenta y ajusta el contextRoot para que coincida con el nombre
-     del WAR desplegado, necesario para que la URL de las pruebas de sistema funcione -->
     <webApplication
             id="ingreso-ues"
             location="DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war"

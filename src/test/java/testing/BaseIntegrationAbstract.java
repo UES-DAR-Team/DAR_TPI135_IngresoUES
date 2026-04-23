@@ -12,37 +12,83 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * Clase base abstracta para pruebas de integración y de sistema (E2E).
+ *
+ * <p>Proporciona la infraestructura común para todas las pruebas que necesitan
+ * interactuar con la base de datos PostgreSQL y, opcionalmente, con el servidor
+ * OpenLiberty desplegado en un contenedor Docker.</p>
+ *
+ * <p><b>Características principales:</b></p>
+ * <ul>
+ *   <li>Configuración automática del cliente HTTP para pruebas de sistema</li>
+ *   <li>Inicialización del EntityManagerFactory (patrón Singleton) para pruebas de integración</li>
+ *   <li>Verificación del estado de los contenedores Docker</li>
+ *   <li>Generación de la URL base del API REST para pruebas E2E</li>
+ * </ul>
+ *
+ */
 
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(ContainerExtension.class)
 public abstract class BaseIntegrationAbstract {
 
+    // VARIABLES DE INSTANCIA
 
-    // variables para E2A
+    /**
+     * Cliente HTTP para realizar peticiones a los endpoints REST.
+     * Solo se inicializa para pruebas de sistema (anotadas con {@code @SystemTest}).
+     */
+
     protected Client cliente;
+
+    /**
+     * Punto de entrada para construir peticiones HTTP a la API REST.
+     * Solo se inicializa para pruebas de sistema (anotadas con {@code @SystemTest}).
+     */
+
     protected WebTarget target;
 
-    //EntityManagerFactory con el patron SINGLETON
+    /**
+     * Fábrica de EntityManagers para interactuar directamente con la base de datos.
+     * Implementa el patrón Singleton para ser compartida entre todas las clases de prueba.
+     *
+     * <p>Se inicializa con la configuración de la base de datos PostgreSQL del contenedor.</p>
+     */
+
     protected static EntityManagerFactory emf;
+
+    // CONFIGURACIÓN INICIAL
+    /**
+     * Configura el entorno de prueba antes de ejecutar cualquier test.
+     *
+     * <p><b>Comportamiento:</b></p>
+     * <ol>
+     *   <li>Obtiene el contenedor de PostgreSQL desde {@link ContainerExtension}</li>
+     *   <li>Verifica que el contenedor esté corriendo</li>
+     *   <li>Si la clase está anotada con {@code @SystemTest}, inicializa el cliente HTTP</li>
+     *   <li>Configura el EntityManagerFactory con la URL de la base de datos</li>
+     * </ol>
+     *
+     * @throws AssertionError si el contenedor de PostgreSQL no está corriendo
+     */
 
     @BeforeAll
     public void initializeClient() {
+
+        // 1. OBTENER Y VERIFICAR CONTENEDOR POSTGRESQL
 
         PostgreSQLContainer<?> postgres = ContainerExtension.getPostgres();
         //Verificar que el contenedor está corriendo
         assertTrue(postgres.isRunning());
 
-        //(solo si son necesarios)
-        // System.out.println("=== PostgreSQL Logs ===");
-        // System.out.println(postgres.getLogs());
-
-        //OPENLIBERTY (logica con el servidro)
+        // 2. INICIALIZAR CLIENTE HTTP PARA PRUEBAS DE SISTEMA
 
         if(this.getClass().isAnnotationPresent(SystemTest.class)){
             GenericContainer<?> openliberty = ContainerExtension.getOpenLiberty();
@@ -58,8 +104,8 @@ public abstract class BaseIntegrationAbstract {
             System.out.println("Testing URL: " + getBaseUrl());
         }
 
+        // 3. CONFIGURAR ENTITYMANAGERFactory
 
-        // Configuracion de la BD
         String url = String.format(
                 "jdbc:postgresql://%s:%d/ingreso_ues_db",
                 postgres.getHost(),
@@ -72,14 +118,22 @@ public abstract class BaseIntegrationAbstract {
         propiedades.put("jakarta.persistence.jdbc.password", postgres.getPassword());
         propiedades.put("jakarta.persistence.jdbc.driver", postgres.getDriverClassName());
 
-        //Crear Entity Manager Factory solo una vez
+        // Crear EntityManagerFactory solo una vez (patron Singleton)
+
         if (emf == null) {
             emf = Persistence.createEntityManagerFactory("IngresoPUIT", propiedades);
         }
         System.out.println("URL PostgreSQL: " + url);
     }
 
-    // Metodo para las pruebas de sistemas
+      // METODOS AUXILIARES
+
+
+    /**
+     * Construye la URL base del API REST para las pruebas de sistema.
+     *
+     * @return URL base del API REST, o {@code null} si la clase no es de sistema
+     */
     protected String getBaseUrl() {
         if (this.getClass().isAnnotationPresent(SystemTest.class)) {
             String hostliberty = ContainerExtension.getOpenLiberty().getHost();

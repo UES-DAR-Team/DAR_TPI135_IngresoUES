@@ -5,27 +5,24 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-// Indica que la anotación estará disponible en tiempo de ejecución
-// Esto permite que clases como ContainerExtension puedan detectarla
-@Retention(RetentionPolicy.RUNTIME)
+/**
+ * Anotación de marcador  para identificar pruebas de sistema
+ *
+ * <p>Esta anotación se utiliza para distinguir las pruebas que requieren un entorno completo
+ * de ejecución, incluyendo el servidor OpenLiberty desplegado en un contenedor Docker,
+ * de las pruebas de integración que solo necesitan la base de datos PostgreSQL.</p>
+ *
+ * <p><b>Características:</b></p>
+ * <ul>
+ *   <li>Es una anotación de tipo {@code @interface} sin atributos (marker annotation)</li>
+ *   <li>Tiene visibilidad en tiempo de ejecución mediante {@code @Retention(RUNTIME)}</li>
+ *   <li>Solo puede aplicarse a clases mediante {@code @Target(TYPE)}</li>
+ * </ul>
+ */
 
+@Retention(RetentionPolicy.RUNTIME)
 // Indica que la anotación solo se puede usar sobre clases
 @Target(ElementType.TYPE)
 
-// Define una anotación personalizada llamada SystemTest
-// Se usa como una etiqueta para identificar pruebas de sistema (E2E)
 public @interface SystemTest {
-
-    // No tiene atributos es una "marker annotation"
-    // Solo sirve para marcar clases
 }
-
-/*
- * Esta anotación se utiliza para identificar clases que representan
- * pruebas de sistema (End-to-End).
- *
- * Permite que el sistema de pruebas (por ejemplo, ContainerExtension)
- * detecte estas clases y configure el entorno adecuado, como:
- * Levantar OpenLiberty
- * Configurar base de datos E2E
- */

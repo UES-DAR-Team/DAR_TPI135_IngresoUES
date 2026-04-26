@@ -34,6 +34,12 @@ public class AspiranteOpcioneDAO extends IngresoDefaultDataAcces<AspiranteOpcion
         return AspiranteOpcione.class;
     }
 
+    @Override
+    public void create(AspiranteOpcione entity) {
+        em.persist(entity);
+        em.flush();
+    }
+
     public List<AspiranteOpcione> findByAspirante(UUID idAspirante, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
 

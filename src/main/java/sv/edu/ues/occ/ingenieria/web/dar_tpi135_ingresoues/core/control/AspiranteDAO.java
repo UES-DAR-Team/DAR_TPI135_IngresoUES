@@ -33,6 +33,12 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
         return Aspirante.class;
     }
 
+    @Override
+    public void create(Aspirante entity) {
+        em.persist(entity);
+        em.flush();
+    }
+
     public List<Aspirante> findByNombre(String nombre, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
 

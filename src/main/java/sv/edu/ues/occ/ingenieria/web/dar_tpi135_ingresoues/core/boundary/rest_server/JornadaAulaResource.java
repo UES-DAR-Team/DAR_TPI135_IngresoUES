@@ -32,7 +32,7 @@ public class JornadaAulaResource implements Serializable {
     @GET
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response findById(@PathParam("id") UUID id) {
+    public Response findById(@PathParam("id") Integer id) {
 
         if (id != null) {
             try {

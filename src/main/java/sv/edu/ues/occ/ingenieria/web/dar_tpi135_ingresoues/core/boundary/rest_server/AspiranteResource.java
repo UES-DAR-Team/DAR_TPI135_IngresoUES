@@ -22,7 +22,7 @@ public class AspiranteResource implements Serializable {
     @Produces(MediaType.APPLICATION_JSON)
     public Response findRange(
             @Min(0) @DefaultValue("0") @QueryParam("first") int first,
-            @Max(100) @DefaultValue("100") @QueryParam("max") int max) {
+            @Max(100) @Min(1) @DefaultValue("100") @QueryParam("max") int max) {
 
         if (first >= 0 && max <= 100) {
             try {
@@ -103,27 +103,28 @@ public class AspiranteResource implements Serializable {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response create(Aspirante entity, @Context UriInfo uriInfo) {
-
-        if (entity == null || entity.getId() != null) {
+        if (entity != null) {
+            if (entity.getId() == null) {
+                try {
+                    aspiranteDAO.create(entity);
+                    return Response.created(
+                            uriInfo.getAbsolutePathBuilder()
+                                    .path(String.valueOf(entity.getId()))
+                                    .build()
+                    ).entity(entity).build();
+                } catch (Exception e) {
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                            .header("Server-exception", "Cannot access db")
+                            .build();
+                }
+            }
             return Response.status(422)
-                    .header("Missing-parameter", "entity must not be null and entity.id must be null")
+                    .header("Missing-parameter", "entity.id must be null")
                     .build();
         }
-
-        try {
-            aspiranteDAO.create(entity);
-
-            return Response.created(
-                    uriInfo.getAbsolutePathBuilder()
-                            .path(String.valueOf(entity.getId()))
-                            .build()
-            ).entity(entity).build();
-
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
-        }
+        return Response.status(422)
+                .header("Missing-parameter", "entity must not be null")
+                .build();
     }
 
     @PUT

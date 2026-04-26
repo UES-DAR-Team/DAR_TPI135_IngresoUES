@@ -19,10 +19,10 @@
                   httpsPort="9443" />
     <applicationManager autoExpand="true"/>
 
-<!--    <webApplication-->
-<!--            id="ingreso-ues"-->
-<!--            location="DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war"-->
-<!--            contextRoot="/ingreso"/>-->
+    <webApplication
+            id="ingreso-ues"
+            location="DAR_TPI135_IngresoUES-1.0-SNAPSHOT.war"
+            contextRoot="/DAR_TPI135_IngresoUES-1.0-SNAPSHOT"/>
 
     <library id="postgresql-library">
         <fileset dir="/config/lib" includes="postgresql-42.7.7.jar"/>

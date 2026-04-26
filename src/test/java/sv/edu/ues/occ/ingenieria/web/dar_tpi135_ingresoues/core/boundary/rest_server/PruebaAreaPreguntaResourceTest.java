@@ -20,7 +20,6 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Pregunta;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -134,6 +133,22 @@ class PruebaAreaPreguntaResourceTest {
             verify(pruebaAreaDAO).findById(idPruebaArea);
             verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, FIRST, MAX);
         }
+
+        @Test
+        void retorna422_cuandoMaxExcedeLimite() {
+            Response resp = resource.findRange(idPruebaArea, 0, 11);
+            assertEquals(422, resp.getStatus());
+            assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaDAO, pruebaAreaPreguntaDAO);
+        }
+
+        @Test
+        void retorna422_cuandoMaxEsCero() {
+            Response resp = resource.findRange(idPruebaArea, 0, 0);
+            assertEquals(422, resp.getStatus());
+            assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaDAO, pruebaAreaPreguntaDAO);
+        }
     }
 
     @Nested
@@ -172,6 +187,51 @@ class PruebaAreaPreguntaResourceTest {
             assertEquals(500, resp.getStatus());
             assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
             verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
+        }
+
+        @Test
+        void retorna404_cuandoPreguntaDelRegistroEsNull() {
+            PruebaAreaPregunta sinPregunta = new PruebaAreaPregunta();
+            sinPregunta.setId(2);
+            sinPregunta.setIdPregunta(null);
+
+            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE))
+                    .thenReturn(List.of(sinPregunta));
+
+            Response resp = resource.findOne(idPruebaArea, idPregunta);
+            assertEquals(404, resp.getStatus());
+            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
+        }
+
+        @Test
+        void retorna404_cuandoIdPreguntaNoCoincide() {
+            PruebaAreaPregunta otraPregunta = new PruebaAreaPregunta();
+            Pregunta preguntaDiferente = new Pregunta();
+            preguntaDiferente.setId(UUID.randomUUID());
+            otraPregunta.setIdPregunta(preguntaDiferente);
+
+            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE))
+                    .thenReturn(List.of(otraPregunta));
+
+            Response resp = resource.findOne(idPruebaArea, idPregunta);
+            assertEquals(404, resp.getStatus());
+            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
+        }
+
+        @Test
+        void retorna422_cuandoSoloIdPruebaAreaEsNulo() {
+            Response resp = resource.findOne(null, idPregunta);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPruebaArea,idPregunta", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
+        }
+
+        @Test
+        void retorna422_cuandoSoloIdPreguntaEsNulo() {
+            Response resp = resource.findOne(idPruebaArea, null);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPruebaArea,idPregunta", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
         }
     }
 
@@ -287,6 +347,19 @@ class PruebaAreaPreguntaResourceTest {
             assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
             verify(pruebaAreaPreguntaDAO).create(entity);
         }
+
+        @Test
+        void retorna422_cuandoIdPreguntaEnBodyEsNull() {
+            entity.setId(null);
+            Pregunta bodyPreg = new Pregunta();
+            bodyPreg.setId(null);
+            entity.setIdPregunta(bodyPreg);
+
+            Response resp = resource.create(idPruebaArea, entity, uriInfo);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPregunta must be provided in body", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaDAO, preguntaDAO, pruebaAreaPreguntaDAO);
+        }
     }
 
     @Nested
@@ -353,6 +426,57 @@ class PruebaAreaPreguntaResourceTest {
             assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
             verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
         }
+
+        @Test
+        void retorna404_cuandoPreguntaDelRegistroEsNull() {
+            PruebaAreaPregunta sinPregunta = new PruebaAreaPregunta();
+            sinPregunta.setId(2);
+            sinPregunta.setIdPregunta(null);
+
+            PruebaAreaPregunta updateBody = new PruebaAreaPregunta();
+            updateBody.setOrden((short) 3);
+
+            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE))
+                    .thenReturn(List.of(sinPregunta));
+
+            Response resp = resource.update(idPruebaArea, idPregunta, updateBody);
+            assertEquals(404, resp.getStatus());
+            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
+        }
+
+        @Test
+        void retorna404_cuandoIdPreguntaNoCoincide() {
+            PruebaAreaPregunta otraPregunta = new PruebaAreaPregunta();
+            Pregunta preguntaDiferente = new Pregunta();
+            preguntaDiferente.setId(UUID.randomUUID());
+            otraPregunta.setIdPregunta(preguntaDiferente);
+
+            PruebaAreaPregunta updateBody = new PruebaAreaPregunta();
+            updateBody.setOrden((short) 3);
+
+            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE))
+                    .thenReturn(List.of(otraPregunta));
+
+            Response resp = resource.update(idPruebaArea, idPregunta, updateBody);
+            assertEquals(404, resp.getStatus());
+            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
+        }
+
+        @Test
+        void retorna422_cuandoSoloIdPruebaAreaEsNulo() {
+            Response resp = resource.update(null, idPregunta, new PruebaAreaPregunta());
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPruebaArea,idPregunta", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
+        }
+
+        @Test
+        void retorna422_cuandoSoloIdPreguntaEsNulo() {
+            Response resp = resource.update(idPruebaArea, null, new PruebaAreaPregunta());
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPruebaArea,idPregunta", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
+        }
     }
 
     @Nested
@@ -391,6 +515,51 @@ class PruebaAreaPreguntaResourceTest {
             assertEquals(500, resp.getStatus());
             assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
             verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
+        }
+
+        @Test
+        void retorna404_cuandoPreguntaDelRegistroEsNull() {
+            PruebaAreaPregunta sinPregunta = new PruebaAreaPregunta();
+            sinPregunta.setId(2);
+            sinPregunta.setIdPregunta(null);
+
+            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE))
+                    .thenReturn(List.of(sinPregunta));
+
+            Response resp = resource.delete(idPruebaArea, idPregunta);
+            assertEquals(404, resp.getStatus());
+            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
+        }
+
+        @Test
+        void retorna404_cuandoIdPreguntaNoCoincide() {
+            PruebaAreaPregunta otraPregunta = new PruebaAreaPregunta();
+            Pregunta preguntaDiferente = new Pregunta();
+            preguntaDiferente.setId(UUID.randomUUID());
+            otraPregunta.setIdPregunta(preguntaDiferente);
+
+            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE))
+                    .thenReturn(List.of(otraPregunta));
+
+            Response resp = resource.delete(idPruebaArea, idPregunta);
+            assertEquals(404, resp.getStatus());
+            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
+        }
+
+        @Test
+        void retorna422_cuandoSoloIdPruebaAreaEsNulo() {
+            Response resp = resource.delete(null, idPregunta);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPruebaArea,idPregunta", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
+        }
+
+        @Test
+        void retorna422_cuandoSoloIdPreguntaEsNulo() {
+            Response resp = resource.delete(idPruebaArea, null);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPruebaArea,idPregunta", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
         }
     }
 }

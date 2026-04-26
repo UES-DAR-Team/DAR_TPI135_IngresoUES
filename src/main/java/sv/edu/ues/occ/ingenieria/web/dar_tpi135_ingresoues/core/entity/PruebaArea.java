@@ -14,6 +14,7 @@ import java.time.OffsetDateTime;
 })
 public class PruebaArea {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_prueba_area", nullable = false)
     private Integer id;
 

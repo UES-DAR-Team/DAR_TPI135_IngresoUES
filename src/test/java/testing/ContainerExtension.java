@@ -78,7 +78,7 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
             .withEnv("PGPASSWORD", "abc123")
             //orden de arranque
             .dependsOn(postgres)
-            .waitingFor(Wait.forLogMessage(".*The defaultServer server is ready to run a smarter planet.*", 1)
+            .waitingFor(Wait.forLogMessage(".*CWWKF0011I.*", 1)
                     .withStartupTimeout(Duration.ofMinutes(3)));
 
      // CONFIGURACIÓN DE ENTORNO

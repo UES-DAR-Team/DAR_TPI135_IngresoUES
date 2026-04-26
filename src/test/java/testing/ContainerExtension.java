@@ -27,9 +27,6 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
     // Contador de clases de prueba
     private static int numClassTest = 0;
 
-    //Indica si es prueba de sistema (E2E)
-    private static boolean SystemTest = false; // (no se usara en estas pruebas)
-
     // Indica si el contenedor de OpenLiberty ya fue iniciado
     private static boolean libertyStart = false;
 
@@ -86,14 +83,12 @@ public class ContainerExtension implements BeforeAllCallback, AfterAllCallback {
     //CONFIGURACIONES
     // Configuración para pruebas E2E
     public static void configurarParaE2E(){
-        SystemTest = true;
         postgres = postgres.withInitScript("ingreso_ues_db.sql");
     }
 
 
     // Configuración para pruebas de integración
     public static void configurarParaIT(){
-        SystemTest = false;
         postgres = postgres.withInitScript("ingreso_ues_db.sql");
     }
 

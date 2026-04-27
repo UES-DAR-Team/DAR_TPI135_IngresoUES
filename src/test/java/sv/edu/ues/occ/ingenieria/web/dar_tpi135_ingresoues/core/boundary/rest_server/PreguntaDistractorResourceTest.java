@@ -76,8 +76,7 @@ class PreguntaDistractorResourceTest {
         pd.setId(1);
         pd.setIdPregunta(pregunta);
         pd.setIdDistractor(distractor);
-        pd.setFechaAsignacion(OffsetDateTime.now());
-        pd.setOrden((short) 1);
+        pd.setEsCorrecto(true);
 
         entity = new PreguntaDistractor();
     }
@@ -325,11 +324,11 @@ class PreguntaDistractorResourceTest {
             existing.setId(1);
             existing.setIdPregunta(pregunta);
             existing.setIdDistractor(distractor);
-            existing.setOrden((short) 1);
+            existing.setEsCorrecto(false);
 
             // body con nuevo orden
             PreguntaDistractor body = new PreguntaDistractor();
-            body.setOrden((short) 5);
+            body.setEsCorrecto(true);
 
             when(preguntaDistractorDAO.findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE)).thenReturn(List.of(existing));
             when(preguntaDistractorDAO.update(existing)).thenAnswer(inv -> existing);
@@ -337,7 +336,7 @@ class PreguntaDistractorResourceTest {
             var resp = resource.update(idPregunta, idDistractor, body);
             assertEquals(200, resp.getStatus());
             PreguntaDistractor updated = (PreguntaDistractor) resp.getEntity();
-            assertEquals((short)5, updated.getOrden());
+            assertTrue(updated.getEsCorrecto());
             verify(preguntaDistractorDAO).findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE);
             verify(preguntaDistractorDAO).update(existing);
         }

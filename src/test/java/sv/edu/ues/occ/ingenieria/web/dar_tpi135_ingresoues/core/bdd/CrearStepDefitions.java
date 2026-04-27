@@ -37,7 +37,8 @@ public class CrearStepDefitions {
             .withUsername("postgres")
             .withExposedPorts(5432)
             .withNetwork(red)
-            .withNetworkAliases("db");
+            .withNetworkAliases("db")
+            .withInitScript("ingreso_ues_db.sql");
 
     static final GenericContainer<?> openliberty = new GenericContainer<>(
             new ImageFromDockerfile()

@@ -51,7 +51,8 @@ public class pregunta_crearYAsociarAreaYDistractorStepDefinitions {
             .withUsername("postgres")
             .withExposedPorts(5432)
             .withNetwork(red)
-            .withNetworkAliases("db");
+            .withNetworkAliases("db")
+            .withInitScript("ingreso_ues_db.sql");
 
     static final GenericContainer<?> openliberty = new GenericContainer<>(
             new ImageFromDockerfile()
@@ -76,7 +77,6 @@ public class pregunta_crearYAsociarAreaYDistractorStepDefinitions {
         Startables.deepStart(List.of(postgres, openliberty)).join();
         Assertions.assertTrue(postgres.isRunning());
         cliente = ClientBuilder.newClient();
-        //target = cliente.target(String.format("http://%s:%d/DAR_TPI135_IngresoUES-1.0-SNAPSHOT/v1/", openliberty.getHost(), openliberty.getMappedPort(9080)));
 
         String base = String.format("http://%s:%d/DAR_TPI135_IngresoUES-1.0-SNAPSHOT/v1",
                 openliberty.getHost(), openliberty.getMappedPort(9080));

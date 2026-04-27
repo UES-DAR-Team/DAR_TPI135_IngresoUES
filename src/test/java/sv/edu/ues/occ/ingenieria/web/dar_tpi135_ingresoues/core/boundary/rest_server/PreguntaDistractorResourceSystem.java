@@ -120,7 +120,6 @@ public class PreguntaDistractorResourceSystem extends BaseIntegrationAbstract {
             String bodyDistractor = """
                     {
                         "contenidoDistractor": "Distractor para asociar en sistema",
-                        "esCorrecto": false,
                         "fechaCreacion": "2025-01-01T00:00:00Z",
                         "activo": true
                     }
@@ -249,7 +248,7 @@ public class PreguntaDistractorResourceSystem extends BaseIntegrationAbstract {
         void responde200_cuandoIdExisteYEntidadValida() {
             String bodyActualizado = """
                     {
-                        "orden": 5
+                        "esCorrecto": true
                     }
                     """;
 
@@ -270,7 +269,7 @@ public class PreguntaDistractorResourceSystem extends BaseIntegrationAbstract {
         void responde404_cuandoIdNoExiste() {
             String body = """
                     {
-                        "orden": 1
+                        "esCorrecto": true
                     }
                     """;
 

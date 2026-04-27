@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @Entity
@@ -23,13 +24,9 @@ public class Distractor {
     @Column(name = "contenido_distractor", nullable = false)
     private String contenidoDistractor;
 
-    @NotNull
-    @Column(name = "es_correcto", nullable = false)
-    private Boolean esCorrecto = false;
-
-    @NotNull
-    @Column(name = "fecha_creacion", nullable = false)
-    private OffsetDateTime fechaCreacion;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "fecha_creacion", insertable = false, updatable = false)
+    private Date fechaCreacion;
 
     @NotNull
     @Column(name = "activo", nullable = false)
@@ -51,19 +48,11 @@ public class Distractor {
         this.contenidoDistractor = contenidoDistractor;
     }
 
-    public Boolean getEsCorrecto() {
-        return esCorrecto;
-    }
-
-    public void setEsCorrecto(Boolean esCorrecto) {
-        this.esCorrecto = esCorrecto;
-    }
-
-    public OffsetDateTime getFechaCreacion() {
+    public Date getFechaCreacion() {
         return fechaCreacion;
     }
 
-    public void setFechaCreacion(OffsetDateTime fechaCreacion) {
+    public void setFechaCreacion(Date fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
     }
 

@@ -81,7 +81,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
             String bodyJson = """
                     {
                         "contenidoDistractor": "Distractor de prueba de sistema",
-                        "esCorrecto": false,
                         "fechaCreacion": "2025-01-01T00:00:00Z",
                         "activo": true
                     }
@@ -131,7 +130,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
                     {
                         "id": "00000000-0000-0000-0000-000000000001",
                         "contenidoDistractor": "No debe crearse",
-                        "esCorrecto": false,
                         "fechaCreacion": "2025-01-01T00:00:00Z",
                         "activo": false
                     }
@@ -197,7 +195,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
             String bodyActualizado = """
                     {
                         "contenidoDistractor": "Distractor actualizado por prueba de sistema",
-                        "esCorrecto": true,
                         "fechaCreacion": "2025-06-01T00:00:00Z",
                         "activo": true
                     }
@@ -221,7 +218,6 @@ public class DistractorResourceSystem extends BaseIntegrationAbstract {
             String body = """
                     {
                         "contenidoDistractor": "No debe actualizarse",
-                        "esCorrecto": false,
                         "fechaCreacion": "2025-01-01T00:00:00Z",
                         "activo": false
                     }

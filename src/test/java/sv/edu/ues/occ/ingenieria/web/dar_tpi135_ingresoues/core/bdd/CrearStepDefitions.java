@@ -1,17 +1,11 @@
-package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.bdd.aspirante.crear.stepsefinitions;
+package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.bdd;
 
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import jakarta.mail.Header;
-import jakarta.validation.constraints.AssertTrue;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.GenericType;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Assertions;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -23,12 +17,9 @@ import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.MountableFile;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aspirante;
-import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.AspiranteOpcione;
 
 import java.nio.file.Paths;
-import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.UUID;
 
 public class CrearStepDefitions {
 
@@ -46,7 +37,8 @@ public class CrearStepDefitions {
             .withUsername("postgres")
             .withExposedPorts(5432)
             .withNetwork(red)
-            .withNetworkAliases("db");
+            .withNetworkAliases("db")
+            .withInitScript("ingreso_ues_db.sql");
 
     static final GenericContainer<?> openliberty = new GenericContainer<>(
             new ImageFromDockerfile()

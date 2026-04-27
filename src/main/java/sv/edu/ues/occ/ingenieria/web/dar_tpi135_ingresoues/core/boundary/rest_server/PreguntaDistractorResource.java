@@ -20,6 +20,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PreguntaD
 import java.io.Serializable;
 import java.net.URI;
 import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -146,7 +147,6 @@ public class PreguntaDistractorResource implements Serializable {
             // Setear referencias y campos necesarios
             entity.setIdPregunta(preg);
             entity.setIdDistractor(dist);
-            entity.setFechaAsignacion(OffsetDateTime.now());
 
             preguntaDistractorDAO.create(entity);
             URI created = uriInfo.getAbsolutePathBuilder().path(dist.getId().toString()).build();
@@ -159,7 +159,7 @@ public class PreguntaDistractorResource implements Serializable {
         }
     }
 
-    // Actualizar asociación (por ejemplo: orden)
+    // Actualizar asociación (por ejemplo: EsCorrecto)
     @PUT
     @Path("{idDistractor}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -189,8 +189,8 @@ public class PreguntaDistractorResource implements Serializable {
             }
 
             PreguntaDistractor existing = foundOpt.get();
-            // Solo actualizar campos permitidos (ejemplo: orden)
-            existing.setOrden(entity.getOrden());
+            // Solo actualizar campos permitidos (ejemplo: EsCorrecto)
+            existing.setEsCorrecto(entity.getEsCorrecto());
             PreguntaDistractor updated = preguntaDistractorDAO.update(existing);
             return Response.ok(updated).build();
 

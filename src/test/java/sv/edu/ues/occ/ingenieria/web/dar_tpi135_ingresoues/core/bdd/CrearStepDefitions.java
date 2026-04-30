@@ -33,7 +33,7 @@ public class CrearStepDefitions {
     }
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17.5-alpine")
             .withDatabaseName("ingreso_ues_db")
-            .withPassword("postgresmy")
+            .withPassword("abc123")
             .withUsername("postgres")
             .withExposedPorts(5432)
             .withNetwork(red)
@@ -52,7 +52,7 @@ public class CrearStepDefitions {
             .withEnv("PGPORT", "5432")
             .withEnv("PGDBNAME", "ingreso_ues_db")
             .withEnv("PGUSER", "postgres")
-            .withEnv("PGPASSWORD", "postgresmy")
+            .withEnv("PGPASSWORD", "abc123")
             .dependsOn(postgres)
             .waitingFor(Wait.forLogMessage(".*CWWKF0011I.*", 1)
                     .withStartupTimeout(java.time.Duration.ofSeconds(180))

@@ -42,11 +42,8 @@ CREATE TABLE jornada (
                          id_jornada uuid PRIMARY KEY DEFAULT gen_random_uuid(),
                          nombre_jornada varchar(150) NOT NULL,
                          fecha date NULL,
-                         hora_inicio time NULL,
-                         hora_fin time NULL,
                          fecha_creacion timestamp with time zone NOT NULL DEFAULT now(),
-                         activo boolean NOT NULL DEFAULT true,
-                         CONSTRAINT chk_jornada_horas CHECK (hora_fin > hora_inicio)
+                         activo boolean NOT NULL DEFAULT true
 );
 
 CREATE TABLE aula (
@@ -62,6 +59,22 @@ CREATE TABLE prueba (
                         nombre_prueba varchar(250) NOT NULL,
                         fecha_creacion timestamp with time zone NOT NULL DEFAULT now(),
                         activo boolean NOT NULL DEFAULT true
+);
+
+CREATE TABLE turno (
+                       id_turno         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                       nombre_turno     varchar(150) NULL,
+                       hora_inicio      time NULL,
+                       hora_fin         time NULL,
+                       fecha_creacion   timestamp with time zone NOT NULL DEFAULT now()
+);
+
+CREATE TABLE opcion (
+                        id_opcion       uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                        nombre_opcion   varchar(150) NULL,
+                        codigo_opcion   varchar(150) NULL,
+                        descripcion     text NULL,
+                        fecha_creacion  timestamp with time zone NOT NULL DEFAULT now()
 );
 
 CREATE TABLE aspirante_prueba (
@@ -159,13 +172,14 @@ CREATE TABLE jornada_aula_aspirante_resultado (
                                                   CONSTRAINT fk_jaar_jornada_aula_aspirante FOREIGN KEY (id_jornada_aula_aspirante) REFERENCES jornada_aula_aspirante (id_jornada_aula_aspirante) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE TABLE aspirante_opciones (
-                                    id_aspirante_opciones serial PRIMARY KEY,
-                                    id_aspirante uuid NOT NULL,
-                                    codigo_programa varchar(20) NULL,
-                                    nombre_programa varchar(250) NULL,
-                                    fecha_seleccion timestamp with time zone NOT NULL DEFAULT now(),
-                                    CONSTRAINT fk_ao_aspirante FOREIGN KEY (id_aspirante) REFERENCES aspirante (id_aspirante) ON UPDATE CASCADE ON DELETE CASCADE
+CREATE TABLE aspirante_opcion (
+                                  id_aspirante_opcion  serial PRIMARY KEY,
+                                  id_opcion            uuid NOT NULL,
+                                  id_aspirante         uuid NOT NULL,
+                                  fecha_seleccion      timestamp with time zone NOT NULL DEFAULT now(),
+                                  CONSTRAINT fk_ao_opcion    FOREIGN KEY (id_opcion)    REFERENCES opcion    (id_opcion)    ON UPDATE CASCADE ON DELETE CASCADE,
+                                  CONSTRAINT fk_ao_aspirante FOREIGN KEY (id_aspirante) REFERENCES aspirante (id_aspirante) ON UPDATE CASCADE ON DELETE CASCADE,
+                                  CONSTRAINT uq_ao UNIQUE (id_opcion, id_aspirante)
 );
 
 CREATE TABLE distractor_area_conocimiento (
@@ -186,6 +200,16 @@ CREATE TABLE prueba_jornada (
                                 CONSTRAINT fk_paj_prueba FOREIGN KEY (id_prueba) REFERENCES prueba (id_prueba) ON UPDATE CASCADE ON DELETE CASCADE,
                                 CONSTRAINT fk_pj_jornada FOREIGN KEY (id_jornada) REFERENCES jornada (id_jornada) ON UPDATE CASCADE ON DELETE CASCADE,
                                 CONSTRAINT uq_paj UNIQUE (id_prueba, id_jornada)
+);
+
+CREATE TABLE turno_jornada (
+                               id_turno_jornada  serial PRIMARY KEY,
+                               id_turno          uuid NOT NULL,
+                               id_jornada        uuid NOT NULL,
+                               fecha_asignacion  timestamp with time zone NOT NULL DEFAULT now(),
+                               CONSTRAINT fk_tj_turno   FOREIGN KEY (id_turno)   REFERENCES turno   (id_turno)   ON UPDATE CASCADE ON DELETE CASCADE,
+                               CONSTRAINT fk_tj_jornada FOREIGN KEY (id_jornada) REFERENCES jornada (id_jornada) ON UPDATE CASCADE ON DELETE CASCADE,
+                               CONSTRAINT uq_tj UNIQUE (id_turno, id_jornada)
 );
 
 
@@ -261,10 +285,10 @@ INSERT INTO distractor (id_distractor, contenido_distractor) VALUES
                                                                               ('d4000000-0000-0000-0000-000000000036', 'Enlace de hidrógeno');
 
 -- 5. JORNADAS
-INSERT INTO jornada (id_jornada, nombre_jornada, fecha, hora_inicio, hora_fin) VALUES
-                                                                                   ('e5000000-0000-0000-0000-000000000001', 'Jornada Matutina Abril 2025',   '2025-04-12', '07:00', '11:00'),
-                                                                                   ('e5000000-0000-0000-0000-000000000002', 'Jornada Vespertina Abril 2025', '2025-04-12', '13:00', '17:00'),
-                                                                                   ('e5000000-0000-0000-0000-000000000003', 'Jornada Matutina Mayo 2025',    '2025-05-10', '07:00', '11:00');
+INSERT INTO jornada (id_jornada, nombre_jornada, fecha) VALUES
+                                                                                   ('e5000000-0000-0000-0000-000000000001', 'Jornada Matutina Abril 2025',   '2025-04-12'),
+                                                                                   ('e5000000-0000-0000-0000-000000000002', 'Jornada Vespertina Abril 2025', '2025-04-12'),
+                                                                                   ('e5000000-0000-0000-0000-000000000003', 'Jornada Matutina Mayo 2025',    '2025-05-10');
 
 -- 6. AULAS
 INSERT INTO aula (id_aula, nombre_aula, capacidad) VALUES
@@ -278,6 +302,19 @@ INSERT INTO prueba (id_prueba, nombre_prueba) VALUES
                                                   ('07000000-0000-0000-0000-000000000002', 'Prueba de Ciencias Naturales 2025'),
                                                   ('07000000-0000-0000-0000-000000000003', 'Prueba de Humanidades 2025');
 
+
+INSERT INTO turno (id_turno, nombre_turno, hora_inicio, hora_fin) VALUES
+                                                                      ('17000000-0000-0000-0000-000000000001', 'Turno Matutino',   '07:00', '11:00'),
+                                                                      ('17000000-0000-0000-0000-000000000002', 'Turno Vespertino', '13:00', '17:00'),
+                                                                      ('17000000-0000-0000-0000-000000000003', 'Turno Nocturno',   '18:00', '22:00');
+
+INSERT INTO opcion (id_opcion, nombre_opcion, codigo_opcion, descripcion) VALUES
+                                                                              ('0b000000-0000-0000-0000-000000000001', 'Ingeniería en Sistemas Informáticos', 'ING-SIS', 'Carrera orientada al desarrollo de software y sistemas de información.'),
+                                                                              ('0b000000-0000-0000-0000-000000000002', 'Ingeniería Industrial',               'ING-IND', 'Carrera enfocada en la optimización de procesos productivos e industriales.'),
+                                                                              ('0b000000-0000-0000-0000-000000000003', 'Licenciatura en Medicina',            'MED',     'Carrera del área de ciencias de la salud orientada al diagnóstico y tratamiento.'),
+                                                                              ('0b000000-0000-0000-0000-000000000004', 'Licenciatura en Biología',            'BIO',     'Carrera enfocada en el estudio de los seres vivos y sus procesos.'),
+                                                                              ('0b000000-0000-0000-0000-000000000005', 'Licenciatura en Química y Farmacia',  'QUI-FAR', 'Carrera orientada a la química aplicada y ciencias farmacéuticas.'),
+                                                                              ('0b000000-0000-0000-0000-000000000006', 'Licenciatura en Ciencias Jurídicas',  'DER',     'Carrera enfocada en el estudio del derecho y las instituciones jurídicas.');
 -- 8. ASPIRANTE ↔ PRUEBA
 INSERT INTO aspirante_prueba (id_aspirante, id_prueba) VALUES
                                                            ('b2000000-0000-0000-0000-000000000001', '07000000-0000-0000-0000-000000000001'),
@@ -480,11 +517,15 @@ INSERT INTO distractor_area_conocimiento (id_distractor, id_area_conocimiento) V
                                                                                    ('d4000000-0000-0000-0000-000000000035', 'a1000000-0000-0000-0000-000000000005'),
                                                                                    ('d4000000-0000-0000-0000-000000000036', 'a1000000-0000-0000-0000-000000000005');
 
--- 19. OPCIONES DE CARRERA
-INSERT INTO aspirante_opciones (id_aspirante, codigo_programa, nombre_programa) VALUES
-                                                                                    ('b2000000-0000-0000-0000-000000000001', 'ING-SIS', 'Ingeniería en Sistemas Informáticos'),
-                                                                                    ('b2000000-0000-0000-0000-000000000001', 'ING-IND', 'Ingeniería Industrial'),
-                                                                                    ('b2000000-0000-0000-0000-000000000002', 'MED',     'Licenciatura en Medicina'),
-                                                                                    ('b2000000-0000-0000-0000-000000000003', 'BIO',     'Licenciatura en Biología'),
-                                                                                    ('b2000000-0000-0000-0000-000000000004', 'QUI-FAR', 'Licenciatura en Química y Farmacia'),
-                                                                                    ('b2000000-0000-0000-0000-000000000005', 'DER',     'Licenciatura en Ciencias Jurídicas');
+INSERT INTO aspirante_opcion (id_opcion, id_aspirante) VALUES
+                                                           ('0b000000-0000-0000-0000-000000000001', 'b2000000-0000-0000-0000-000000000001'),
+                                                           ('0b000000-0000-0000-0000-000000000002', 'b2000000-0000-0000-0000-000000000001'),
+                                                           ('0b000000-0000-0000-0000-000000000003', 'b2000000-0000-0000-0000-000000000002'),
+                                                           ('0b000000-0000-0000-0000-000000000004', 'b2000000-0000-0000-0000-000000000003'),
+                                                           ('0b000000-0000-0000-0000-000000000005', 'b2000000-0000-0000-0000-000000000004'),
+                                                           ('0b000000-0000-0000-0000-000000000006', 'b2000000-0000-0000-0000-000000000005');
+
+INSERT INTO turno_jornada (id_turno, id_jornada) VALUES
+                                                     ('17000000-0000-0000-0000-000000000001', 'e5000000-0000-0000-0000-000000000001'),
+                                                     ('17000000-0000-0000-0000-000000000002', 'e5000000-0000-0000-0000-000000000002'),
+                                                     ('17000000-0000-0000-0000-000000000001', 'e5000000-0000-0000-0000-000000000003');

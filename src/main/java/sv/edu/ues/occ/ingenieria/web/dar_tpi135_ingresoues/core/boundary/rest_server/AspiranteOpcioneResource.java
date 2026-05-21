@@ -24,6 +24,37 @@ public class AspiranteOpcioneResource implements Serializable {
     AspiranteDAO aspiranteDAO;
 
     @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response findRange(
+            @PathParam("idAspirante") UUID idAspirante,
+            @Min(0) @DefaultValue("0") @QueryParam("first") int first,
+            @Max(100) @Min(1) @DefaultValue("100") @QueryParam("max") int max) {
+
+        if (idAspirante == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "idAspirante")
+                    .build();
+        }
+
+        if (first >= 0 && max <= 100) {
+            try {
+                Long total = aspiranteOpcioneDAO.countByAspirante(idAspirante);
+                return Response.ok(aspiranteOpcioneDAO.findByAspirante(idAspirante, first, max))
+                        .header("Total-records", total)
+                        .build();
+            } catch (Exception e) {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .header("Server-exception", "Cannot access db")
+                        .build();
+            }
+        }
+
+        return Response.status(422)
+                .header("Missing-parameter", "first,max")
+                .build();
+    }
+
+    @GET
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(@PathParam("idAspirante") UUID idAspirante,
@@ -77,6 +108,20 @@ public class AspiranteOpcioneResource implements Serializable {
 
             entity.setIdAspirante(aspirante);
 
+            // validar que venga la preferencia
+            if (entity.getPreferencia() == null) {
+                return Response.status(422)
+                        .header("Missing-parameter", "preferencia")
+                        .build();
+            }
+
+            // validar que no exista ya esa preferencia para este aspirante
+            if (aspiranteOpcioneDAO.existePreferencia(idAspirante, entity.getPreferencia())) {
+                return Response.status(Response.Status.CONFLICT)
+                        .header("Conflict", "Ya existe una opción con esa preferencia para este aspirante")
+                        .build();
+            }
+
             aspiranteOpcioneDAO.create(entity);
 
             return Response.created(
@@ -84,6 +129,36 @@ public class AspiranteOpcioneResource implements Serializable {
                             .path(String.valueOf(entity.getId()))
                             .build()
             ).entity(entity).build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .header("Server-exception", "Cannot access db")
+                    .build();
+        }
+    }
+
+    @DELETE
+    @Path("{id}")
+    public Response delete(@PathParam("idAspirante") UUID idAspirante,
+                           @PathParam("id") Integer id) {
+
+        if (idAspirante == null || id == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "idAspirante,id")
+                    .build();
+        }
+
+        try {
+            AspiranteOpcione resp = aspiranteOpcioneDAO.findById(id);
+
+            if (resp != null && resp.getIdAspirante().getId().equals(idAspirante)) {
+                aspiranteOpcioneDAO.delete(resp);
+                return Response.noContent().build();
+            }
+
+            return Response.status(Response.Status.NOT_FOUND)
+                    .header("Not-found", "Registro no encontrado")
+                    .build();
 
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -125,6 +200,22 @@ public class AspiranteOpcioneResource implements Serializable {
 
             entity.setId(id);
             entity.setIdAspirante(aspirante);
+
+            // validar que venga la preferencia
+            if (entity.getPreferencia() == null) {
+                return Response.status(422)
+                        .header("Missing-parameter", "preferencia")
+                        .build();
+            }
+
+            // validar solo si la preferencia cambió respecto a la que ya tenía
+            // para no rechazar un update donde solo cambia otro campo
+            if (!entity.getPreferencia().equals(existing.getPreferencia()) &&
+                    aspiranteOpcioneDAO.existePreferencia(idAspirante, entity.getPreferencia())) {
+                return Response.status(Response.Status.CONFLICT)
+                        .header("Conflict", "Ya existe una opción con esa preferencia para este aspirante")
+                        .build();
+            }
 
             AspiranteOpcione updated = aspiranteOpcioneDAO.update(entity);
 

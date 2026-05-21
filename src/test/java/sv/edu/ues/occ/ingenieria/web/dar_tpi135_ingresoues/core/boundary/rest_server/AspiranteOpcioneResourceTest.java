@@ -105,13 +105,14 @@ class AspiranteOpcioneResourceTest {
         UUID idAspirante = UUID.randomUUID();
 
         AspiranteOpcione entity = new AspiranteOpcione();
+        entity.setPreferencia((short) 1);                                    // <-- agregar
 
         Aspirante aspirante = new Aspirante();
         aspirante.setId(idAspirante);
 
         when(aspiranteDAO.findById(idAspirante)).thenReturn(aspirante);
+        when(opcioneDAO.existePreferencia(idAspirante, (short) 1)).thenReturn(false);  // <-- agregar
 
-        // Simular generación de ID
         doAnswer(inv -> {
             entity.setId(1);
             return null;
@@ -119,7 +120,6 @@ class AspiranteOpcioneResourceTest {
 
         UriInfo uriInfo = mock(UriInfo.class);
         UriBuilder builder = UriBuilder.fromUri("http://localhost/opciones");
-
         when(uriInfo.getAbsolutePathBuilder()).thenReturn(builder);
 
         Response response = resource.create(idAspirante, entity, uriInfo);
@@ -172,16 +172,20 @@ class AspiranteOpcioneResourceTest {
         Integer id = 1;
 
         AspiranteOpcione existing = new AspiranteOpcione();
-        AspiranteOpcione updated = new AspiranteOpcione();
+        existing.setPreferencia((short) 1);                                            // <-- agregar
+
+        AspiranteOpcione entityUpdate = new AspiranteOpcione();
+        entityUpdate.setPreferencia((short) 2);                                        // <-- agregar (preferencia diferente)
 
         Aspirante aspirante = new Aspirante();
         aspirante.setId(idAspirante);
 
         when(opcioneDAO.findById(id)).thenReturn(existing);
         when(aspiranteDAO.findById(idAspirante)).thenReturn(aspirante);
-        when(opcioneDAO.update(any())).thenReturn(updated);
+        when(opcioneDAO.existePreferencia(idAspirante, (short) 2)).thenReturn(false);  // <-- agregar
+        when(opcioneDAO.update(any())).thenReturn(entityUpdate);
 
-        Response response = resource.update(idAspirante, id, new AspiranteOpcione());
+        Response response = resource.update(idAspirante, id, entityUpdate);
 
         assertEquals(200, response.getStatus());
     }

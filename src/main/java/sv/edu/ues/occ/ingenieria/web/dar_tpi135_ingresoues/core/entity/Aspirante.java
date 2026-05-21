@@ -59,6 +59,16 @@ public class Aspirante {
     @Column(name = "fecha_nacimiento")
     private LocalDate fechaNacimiento;
 
+    @PrePersist
+    public void prePersist() {
+        if (fechaRegistro == null) {
+            fechaRegistro = OffsetDateTime.now();
+        }
+        if (activo == null) {
+            activo = false;
+        }
+    }
+
     @NotNull
     @Column(name = "fecha_registro", nullable = false)
     private OffsetDateTime fechaRegistro;

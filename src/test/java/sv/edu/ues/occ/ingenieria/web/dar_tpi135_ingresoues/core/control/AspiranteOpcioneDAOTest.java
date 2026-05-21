@@ -135,4 +135,49 @@ class AspiranteOpcioneDAOTest {
     void getEntityClass_debeSerCorrecta() {
         assertEquals(AspiranteOpcione.class, dao.getEntityClass());
     }
+
+    // ── Tests para existePreferencia ──────────────────────────────────────────
+
+    @Test
+    void debeRetornarTrue_existePreferencia() {
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(anyString(), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(1L);
+
+        boolean result = dao.existePreferencia(UUID.randomUUID(), (short) 1);
+
+        assertTrue(result);
+    }
+
+    @Test
+    void debeRetornarFalse_existePreferencia() {
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(anyString(), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(0L);
+
+        boolean result = dao.existePreferencia(UUID.randomUUID(), (short) 1);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void lanzaException_idNull_existePreferencia() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.existePreferencia(null, (short) 1));
+    }
+
+    @Test
+    void lanzaException_preferenciaNull_existePreferencia() {
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.existePreferencia(UUID.randomUUID(), null));
+    }
+
+    @Test
+    void debeRetornarFalse_cuandoExcepcion_existePreferencia() {
+        when(em.createQuery(anyString(), eq(Long.class))).thenThrow(new RuntimeException("db error"));
+
+        boolean result = dao.existePreferencia(UUID.randomUUID(), (short) 1);
+
+        assertFalse(result);
+    }
 }

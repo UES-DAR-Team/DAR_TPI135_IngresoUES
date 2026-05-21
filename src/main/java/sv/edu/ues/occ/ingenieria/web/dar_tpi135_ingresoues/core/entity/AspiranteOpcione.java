@@ -7,11 +7,20 @@ import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "aspirante_opciones", schema = "public")
+@Table(
+        name = "aspirante_opciones",
+        schema = "public",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uq_ao_aspirante_preferencia",
+                        columnNames = {"id_aspirante", "preferencia"}
+                )
+        }
+)
 @NamedQueries({
         @NamedQuery(
                 name = "AspiranteOpcione.buscarPorAspirante",
-                query = "SELECT ao FROM AspiranteOpcione ao WHERE ao.idAspirante.id = :idAspirante"
+                query = "SELECT ao FROM AspiranteOpcione ao WHERE ao.idAspirante.id = :idAspirante ORDER BY ao.preferencia ASC"
         ),
         @NamedQuery(
                 name = "AspiranteOpcione.findByCodigoPrograma",
@@ -21,13 +30,13 @@ import java.time.OffsetDateTime;
                 name = "AspiranteOpcione.findByNombrePrograma",
                 query = "SELECT ao FROM AspiranteOpcione ao WHERE UPPER(ao.nombrePrograma) LIKE :nombrePrograma"
         ),
-
         @NamedQuery(
                 name = "AspiranteOpcione.countByAspirante",
                 query = "SELECT COUNT(ao) FROM AspiranteOpcione ao WHERE ao.idAspirante.id = :idAspirante"
         )
 })
 public class AspiranteOpcione {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_aspirante_opciones", nullable = false)
@@ -49,6 +58,20 @@ public class AspiranteOpcione {
     @NotNull
     @Column(name = "fecha_seleccion", nullable = false)
     private OffsetDateTime fechaSeleccion;
+
+    @PrePersist
+    public void prePersist() {
+        if (fechaSeleccion == null) {
+            fechaSeleccion = OffsetDateTime.now();
+        }
+        if (preferencia == null) {
+            preferencia = 1;
+        }
+    }
+
+    @NotNull
+    @Column(name = "preferencia", nullable = false)
+    private Short preferencia;
 
     public Integer getId() {
         return id;
@@ -90,4 +113,11 @@ public class AspiranteOpcione {
         this.fechaSeleccion = fechaSeleccion;
     }
 
+    public Short getPreferencia() {
+        return preferencia;
+    }
+
+    public void setPreferencia(Short preferencia) {
+        this.preferencia = preferencia;
+    }
 }

@@ -113,8 +113,16 @@ public class AspiranteResource implements Serializable {
                                     .build()
                     ).entity(entity).build();
                 } catch (Exception e) {
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
+                    String msg = cause.getMessage() != null ? cause.getMessage() : "";
+
+                    if (msg.contains("duplicate key")) {
+                        return Response.status(Response.Status.CONFLICT)
+                                .header("Conflict", "Ya existe un registro con esos datos")
+                                .build();
+                    }
                     return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                            .header("Server-exception", "Cannot access db")
+                            .header("Server-exception", msg)
                             .build();
                 }
             }

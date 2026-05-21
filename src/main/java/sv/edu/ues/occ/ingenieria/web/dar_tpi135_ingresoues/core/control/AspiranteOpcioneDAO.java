@@ -154,4 +154,25 @@ public class AspiranteOpcioneDAO extends IngresoDefaultDataAcces<AspiranteOpcion
 
         return 0L;
     }
+
+    public boolean existePreferencia(UUID idAspirante, Short preferencia) {
+        if (idAspirante == null || preferencia == null) {
+            throw new IllegalArgumentException("Parámetros inválidos");
+        }
+        try {
+            Long count = getEntityManager()
+                    .createQuery(
+                            "SELECT COUNT(ao) FROM AspiranteOpcione ao " +
+                                    "WHERE ao.idAspirante.id = :idAspirante " +
+                                    "AND ao.preferencia = :preferencia",
+                            Long.class)
+                    .setParameter("idAspirante", idAspirante)
+                    .setParameter("preferencia", preferencia)
+                    .getSingleResult();
+            return count > 0;
+        } catch (Exception ex) {
+            Logger.getLogger(AspiranteOpcioneDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        return false;
+    }
 }

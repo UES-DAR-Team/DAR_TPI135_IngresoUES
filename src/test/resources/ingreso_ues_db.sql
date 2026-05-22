@@ -4,13 +4,13 @@
 -- ==========================================
 
 CREATE TABLE area_conocimiento (
-                                   id_area_conocimiento uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    id_area_conocimiento uuid PRIMARY KEY DEFAULT gen_random_uuid(),
                                    id_auto_referencia_area uuid NULL,
                                    nombre varchar(250) NOT NULL,
                                    fecha_creacion timestamp with time zone NOT NULL DEFAULT now(),
                                    activo boolean NOT NULL DEFAULT true,
                                    CONSTRAINT fk_area_autoreferencia FOREIGN KEY (id_auto_referencia_area)
-                                       REFERENCES area_conocimiento (id_area_conocimiento) ON UPDATE CASCADE ON DELETE SET NULL
+                                   REFERENCES area_conocimiento (id_area_conocimiento) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 CREATE TABLE aspirante (
@@ -42,11 +42,8 @@ CREATE TABLE jornada (
                          id_jornada uuid PRIMARY KEY DEFAULT gen_random_uuid(),
                          nombre_jornada varchar(150) NOT NULL,
                          fecha date NULL,
-                         hora_inicio time NULL,
-                         hora_fin time NULL,
                          fecha_creacion timestamp with time zone NOT NULL DEFAULT now(),
-                         activo boolean NOT NULL DEFAULT true,
-                         CONSTRAINT chk_jornada_horas CHECK (hora_fin > hora_inicio)
+                         activo boolean NOT NULL DEFAULT true
 );
 
 CREATE TABLE aula (
@@ -64,16 +61,20 @@ CREATE TABLE prueba (
                         activo boolean NOT NULL DEFAULT true
 );
 
--- ==========================================
--- NUEVA TABLA: opcion (antes los datos estaban
--- como texto suelto en aspirante_opciones)
--- ==========================================
+CREATE TABLE turno (
+                       id_turno         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                       nombre_turno     varchar(150) NULL,
+                       hora_inicio      time NULL,
+                       hora_fin         time NULL,
+                       fecha_creacion   timestamp with time zone NOT NULL DEFAULT now()
+);
+
 CREATE TABLE opcion (
-                        id_opcion      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-                        codigo_opcion  varchar(20)  UNIQUE NOT NULL,
-                        nombre_opcion  varchar(250) NOT NULL,
-                        activo         boolean NOT NULL DEFAULT true,
-                        fecha_creacion timestamp with time zone NOT NULL DEFAULT now()
+                        id_opcion       uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                        nombre_opcion   varchar(150) NULL,
+                        codigo_opcion   varchar(150) NULL,
+                        descripcion     text NULL,
+                        fecha_creacion  timestamp with time zone NOT NULL DEFAULT now()
 );
 
 CREATE TABLE aspirante_prueba (
@@ -171,22 +172,14 @@ CREATE TABLE jornada_aula_aspirante_resultado (
                                                   CONSTRAINT fk_jaar_jornada_aula_aspirante FOREIGN KEY (id_jornada_aula_aspirante) REFERENCES jornada_aula_aspirante (id_jornada_aula_aspirante) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
--- ==========================================
--- aspirante_opciones MODIFICADA
--- ahora referencia la tabla opcion via FK
--- ==========================================
-CREATE TABLE aspirante_opciones (
-                                    id_aspirante_opciones serial PRIMARY KEY,
-                                    id_aspirante    uuid NOT NULL,
-                                    id_opcion       uuid NOT NULL,
-                                    preferencia     smallint NOT NULL DEFAULT 1,
-                                    fecha_seleccion timestamp with time zone NOT NULL DEFAULT now(),
-                                    CONSTRAINT fk_ao_aspirante FOREIGN KEY (id_aspirante)
-                                        REFERENCES aspirante (id_aspirante) ON UPDATE CASCADE ON DELETE CASCADE,
-                                    CONSTRAINT fk_ao_opcion FOREIGN KEY (id_opcion)
-                                        REFERENCES opcion (id_opcion) ON UPDATE CASCADE ON DELETE RESTRICT,
-                                    CONSTRAINT uq_ao_aspirante_preferencia UNIQUE (id_aspirante, preferencia),
-                                    CONSTRAINT uq_ao_aspirante_opcion      UNIQUE (id_aspirante, id_opcion)
+CREATE TABLE aspirante_opcion (
+                                  id_aspirante_opcion  serial PRIMARY KEY,
+                                  id_opcion            uuid NOT NULL,
+                                  id_aspirante         uuid NOT NULL,
+                                  fecha_seleccion      timestamp with time zone NOT NULL DEFAULT now(),
+                                  CONSTRAINT fk_ao_opcion    FOREIGN KEY (id_opcion)    REFERENCES opcion    (id_opcion)    ON UPDATE CASCADE ON DELETE CASCADE,
+                                  CONSTRAINT fk_ao_aspirante FOREIGN KEY (id_aspirante) REFERENCES aspirante (id_aspirante) ON UPDATE CASCADE ON DELETE CASCADE,
+                                  CONSTRAINT uq_ao UNIQUE (id_opcion, id_aspirante)
 );
 
 CREATE TABLE distractor_area_conocimiento (
@@ -207,6 +200,16 @@ CREATE TABLE prueba_jornada (
                                 CONSTRAINT fk_paj_prueba FOREIGN KEY (id_prueba) REFERENCES prueba (id_prueba) ON UPDATE CASCADE ON DELETE CASCADE,
                                 CONSTRAINT fk_pj_jornada FOREIGN KEY (id_jornada) REFERENCES jornada (id_jornada) ON UPDATE CASCADE ON DELETE CASCADE,
                                 CONSTRAINT uq_paj UNIQUE (id_prueba, id_jornada)
+);
+
+CREATE TABLE turno_jornada (
+                               id_turno_jornada  serial PRIMARY KEY,
+                               id_turno          uuid NOT NULL,
+                               id_jornada        uuid NOT NULL,
+                               fecha_asignacion  timestamp with time zone NOT NULL DEFAULT now(),
+                               CONSTRAINT fk_tj_turno   FOREIGN KEY (id_turno)   REFERENCES turno   (id_turno)   ON UPDATE CASCADE ON DELETE CASCADE,
+                               CONSTRAINT fk_tj_jornada FOREIGN KEY (id_jornada) REFERENCES jornada (id_jornada) ON UPDATE CASCADE ON DELETE CASCADE,
+                               CONSTRAINT uq_tj UNIQUE (id_turno, id_jornada)
 );
 
 
@@ -244,48 +247,48 @@ INSERT INTO pregunta (id_pregunta, contenido_pregunta) VALUES
 
 -- 4. DISTRACTORES
 INSERT INTO distractor (id_distractor, contenido_distractor) VALUES
-                                                                 ('d4000000-0000-0000-0000-000000000001', 'x = 4'),
-                                                                 ('d4000000-0000-0000-0000-000000000002', 'x = 3'),
-                                                                 ('d4000000-0000-0000-0000-000000000003', 'x = 9'),
-                                                                 ('d4000000-0000-0000-0000-000000000004', 'x = 6'),
-                                                                 ('d4000000-0000-0000-0000-000000000005', '20 cm²'),
-                                                                 ('d4000000-0000-0000-0000-000000000006', '40 cm²'),
-                                                                 ('d4000000-0000-0000-0000-000000000007', '13 cm²'),
-                                                                 ('d4000000-0000-0000-0000-000000000008', '16 cm²'),
-                                                                 ('d4000000-0000-0000-0000-000000000009', '25'),
-                                                                 ('d4000000-0000-0000-0000-000000000010', '14'),
-                                                                 ('d4000000-0000-0000-0000-000000000011', '49'),
-                                                                 ('d4000000-0000-0000-0000-000000000012', '7'),
-                                                                 ('d4000000-0000-0000-0000-000000000013', 'Personificación'),
-                                                                 ('d4000000-0000-0000-0000-000000000014', 'Metáfora'),
-                                                                 ('d4000000-0000-0000-0000-000000000015', 'Hipérbole'),
-                                                                 ('d4000000-0000-0000-0000-000000000016', 'Símil'),
-                                                                 ('d4000000-0000-0000-0000-000000000017', 'El árbol creció rápido.'),
-                                                                 ('d4000000-0000-0000-0000-000000000018', 'El arbol crecio rapido.'),
-                                                                 ('d4000000-0000-0000-0000-000000000019', 'El árbol crecio rápido.'),
-                                                                 ('d4000000-0000-0000-0000-000000000020', 'El arbol creció rapido.'),
-                                                                 ('d4000000-0000-0000-0000-000000000021', 'Producir energía en forma de ATP'),
-                                                                 ('d4000000-0000-0000-0000-000000000022', 'Sintetizar proteínas'),
-                                                                 ('d4000000-0000-0000-0000-000000000023', 'Almacenar el material genético'),
-                                                                 ('d4000000-0000-0000-0000-000000000024', 'Regular el transporte celular'),
-                                                                 ('d4000000-0000-0000-0000-000000000025', 'Reproducción asexual'),
-                                                                 ('d4000000-0000-0000-0000-000000000026', 'Reproducción sexual'),
-                                                                 ('d4000000-0000-0000-0000-000000000027', 'Fecundación interna'),
-                                                                 ('d4000000-0000-0000-0000-000000000028', 'Meiosis'),
-                                                                 ('d4000000-0000-0000-0000-000000000029', '8'),
-                                                                 ('d4000000-0000-0000-0000-000000000030', '6'),
-                                                                 ('d4000000-0000-0000-0000-000000000031', '16'),
-                                                                 ('d4000000-0000-0000-0000-000000000032', '10'),
-                                                                 ('d4000000-0000-0000-0000-000000000033', 'Enlace covalente'),
-                                                                 ('d4000000-0000-0000-0000-000000000034', 'Enlace iónico'),
-                                                                 ('d4000000-0000-0000-0000-000000000035', 'Enlace metálico'),
-                                                                 ('d4000000-0000-0000-0000-000000000036', 'Enlace de hidrógeno');
+                                                                              ('d4000000-0000-0000-0000-000000000001', 'x = 4'),
+                                                                              ('d4000000-0000-0000-0000-000000000002', 'x = 3'),
+                                                                              ('d4000000-0000-0000-0000-000000000003', 'x = 9'),
+                                                                              ('d4000000-0000-0000-0000-000000000004', 'x = 6'),
+                                                                              ('d4000000-0000-0000-0000-000000000005', '20 cm²'),
+                                                                              ('d4000000-0000-0000-0000-000000000006', '40 cm²'),
+                                                                              ('d4000000-0000-0000-0000-000000000007', '13 cm²'),
+                                                                              ('d4000000-0000-0000-0000-000000000008', '16 cm²'),
+                                                                              ('d4000000-0000-0000-0000-000000000009', '25'),
+                                                                              ('d4000000-0000-0000-0000-000000000010', '14'),
+                                                                              ('d4000000-0000-0000-0000-000000000011', '49'),
+                                                                              ('d4000000-0000-0000-0000-000000000012', '7'),
+                                                                              ('d4000000-0000-0000-0000-000000000013', 'Personificación'),
+                                                                              ('d4000000-0000-0000-0000-000000000014', 'Metáfora'),
+                                                                              ('d4000000-0000-0000-0000-000000000015', 'Hipérbole'),
+                                                                              ('d4000000-0000-0000-0000-000000000016', 'Símil'),
+                                                                              ('d4000000-0000-0000-0000-000000000017', 'El árbol creció rápido.'),
+                                                                              ('d4000000-0000-0000-0000-000000000018', 'El arbol crecio rapido.'),
+                                                                              ('d4000000-0000-0000-0000-000000000019', 'El árbol crecio rápido.'),
+                                                                              ('d4000000-0000-0000-0000-000000000020', 'El arbol creció rapido.'),
+                                                                              ('d4000000-0000-0000-0000-000000000021', 'Producir energía en forma de ATP'),
+                                                                              ('d4000000-0000-0000-0000-000000000022', 'Sintetizar proteínas'),
+                                                                              ('d4000000-0000-0000-0000-000000000023', 'Almacenar el material genético'),
+                                                                              ('d4000000-0000-0000-0000-000000000024', 'Regular el transporte celular'),
+                                                                              ('d4000000-0000-0000-0000-000000000025', 'Reproducción asexual'),
+                                                                              ('d4000000-0000-0000-0000-000000000026', 'Reproducción sexual'),
+                                                                              ('d4000000-0000-0000-0000-000000000027', 'Fecundación interna'),
+                                                                              ('d4000000-0000-0000-0000-000000000028', 'Meiosis'),
+                                                                              ('d4000000-0000-0000-0000-000000000029', '8'),
+                                                                              ('d4000000-0000-0000-0000-000000000030', '6'),
+                                                                              ('d4000000-0000-0000-0000-000000000031', '16'),
+                                                                              ('d4000000-0000-0000-0000-000000000032', '10'),
+                                                                              ('d4000000-0000-0000-0000-000000000033', 'Enlace covalente'),
+                                                                              ('d4000000-0000-0000-0000-000000000034', 'Enlace iónico'),
+                                                                              ('d4000000-0000-0000-0000-000000000035', 'Enlace metálico'),
+                                                                              ('d4000000-0000-0000-0000-000000000036', 'Enlace de hidrógeno');
 
 -- 5. JORNADAS
-INSERT INTO jornada (id_jornada, nombre_jornada, fecha, hora_inicio, hora_fin) VALUES
-                                                                                   ('e5000000-0000-0000-0000-000000000001', 'Jornada Matutina Abril 2025',   '2025-04-12', '07:00', '11:00'),
-                                                                                   ('e5000000-0000-0000-0000-000000000002', 'Jornada Vespertina Abril 2025', '2025-04-12', '13:00', '17:00'),
-                                                                                   ('e5000000-0000-0000-0000-000000000003', 'Jornada Matutina Mayo 2025',    '2025-05-10', '07:00', '11:00');
+INSERT INTO jornada (id_jornada, nombre_jornada, fecha) VALUES
+                                                                                   ('e5000000-0000-0000-0000-000000000001', 'Jornada Matutina Abril 2025',   '2025-04-12'),
+                                                                                   ('e5000000-0000-0000-0000-000000000002', 'Jornada Vespertina Abril 2025', '2025-04-12'),
+                                                                                   ('e5000000-0000-0000-0000-000000000003', 'Jornada Matutina Mayo 2025',    '2025-05-10');
 
 -- 6. AULAS
 INSERT INTO aula (id_aula, nombre_aula, capacidad) VALUES
@@ -299,16 +302,20 @@ INSERT INTO prueba (id_prueba, nombre_prueba) VALUES
                                                   ('07000000-0000-0000-0000-000000000002', 'Prueba de Ciencias Naturales 2025'),
                                                   ('07000000-0000-0000-0000-000000000003', 'Prueba de Humanidades 2025');
 
--- 8. OPCIONES DE CARRERA (nuevo catálogo)
-INSERT INTO opcion (id_opcion, codigo_opcion, nombre_opcion) VALUES
-                                                                 ('90000000-0000-0000-0000-000000000001', 'ING-SIS', 'Ingeniería en Sistemas Informáticos'),
-                                                                 ('90000000-0000-0000-0000-000000000002', 'ING-IND', 'Ingeniería Industrial'),
-                                                                 ('90000000-0000-0000-0000-000000000003', 'MED',     'Licenciatura en Medicina'),
-                                                                 ('90000000-0000-0000-0000-000000000004', 'BIO',     'Licenciatura en Biología'),
-                                                                 ('90000000-0000-0000-0000-000000000005', 'QUI-FAR', 'Licenciatura en Química y Farmacia'),
-                                                                 ('90000000-0000-0000-0000-000000000006', 'DER',     'Licenciatura en Ciencias Jurídicas');
 
--- 9. ASPIRANTE ↔ PRUEBA
+INSERT INTO turno (id_turno, nombre_turno, hora_inicio, hora_fin) VALUES
+                                                                      ('17000000-0000-0000-0000-000000000001', 'Turno Matutino',   '07:00', '11:00'),
+                                                                      ('17000000-0000-0000-0000-000000000002', 'Turno Vespertino', '13:00', '17:00'),
+                                                                      ('17000000-0000-0000-0000-000000000003', 'Turno Nocturno',   '18:00', '22:00');
+
+INSERT INTO opcion (id_opcion, nombre_opcion, codigo_opcion, descripcion) VALUES
+                                                                              ('0b000000-0000-0000-0000-000000000001', 'Ingeniería en Sistemas Informáticos', 'ING-SIS', 'Carrera orientada al desarrollo de software y sistemas de información.'),
+                                                                              ('0b000000-0000-0000-0000-000000000002', 'Ingeniería Industrial',               'ING-IND', 'Carrera enfocada en la optimización de procesos productivos e industriales.'),
+                                                                              ('0b000000-0000-0000-0000-000000000003', 'Licenciatura en Medicina',            'MED',     'Carrera del área de ciencias de la salud orientada al diagnóstico y tratamiento.'),
+                                                                              ('0b000000-0000-0000-0000-000000000004', 'Licenciatura en Biología',            'BIO',     'Carrera enfocada en el estudio de los seres vivos y sus procesos.'),
+                                                                              ('0b000000-0000-0000-0000-000000000005', 'Licenciatura en Química y Farmacia',  'QUI-FAR', 'Carrera orientada a la química aplicada y ciencias farmacéuticas.'),
+                                                                              ('0b000000-0000-0000-0000-000000000006', 'Licenciatura en Ciencias Jurídicas',  'DER',     'Carrera enfocada en el estudio del derecho y las instituciones jurídicas.');
+-- 8. ASPIRANTE ↔ PRUEBA
 INSERT INTO aspirante_prueba (id_aspirante, id_prueba) VALUES
                                                            ('b2000000-0000-0000-0000-000000000001', '07000000-0000-0000-0000-000000000001'),
                                                            ('b2000000-0000-0000-0000-000000000002', '07000000-0000-0000-0000-000000000001'),
@@ -316,7 +323,7 @@ INSERT INTO aspirante_prueba (id_aspirante, id_prueba) VALUES
                                                            ('b2000000-0000-0000-0000-000000000004', '07000000-0000-0000-0000-000000000002'),
                                                            ('b2000000-0000-0000-0000-000000000005', '07000000-0000-0000-0000-000000000003');
 
--- 10. PREGUNTA ↔ ÁREA
+-- 9. PREGUNTA ↔ ÁREA
 INSERT INTO pregunta_area_conocimiento (id_pregunta, id_area_conocimiento) VALUES
                                                                                ('c3000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001'),
                                                                                ('c3000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000001'),
@@ -328,46 +335,46 @@ INSERT INTO pregunta_area_conocimiento (id_pregunta, id_area_conocimiento) VALUE
                                                                                ('c3000000-0000-0000-0000-000000000008', 'a1000000-0000-0000-0000-000000000005'),
                                                                                ('c3000000-0000-0000-0000-000000000009', 'a1000000-0000-0000-0000-000000000005');
 
--- 11. PREGUNTA ↔ DISTRACTOR
+-- 10. PREGUNTA ↔ DISTRACTOR
 INSERT INTO pregunta_distractor (id_pregunta, id_distractor, es_correcto) VALUES
-                                                                              ('c3000000-0000-0000-0000-000000000001', 'd4000000-0000-0000-0000-000000000001', true),
-                                                                              ('c3000000-0000-0000-0000-000000000001', 'd4000000-0000-0000-0000-000000000002', false),
-                                                                              ('c3000000-0000-0000-0000-000000000001', 'd4000000-0000-0000-0000-000000000003', false),
-                                                                              ('c3000000-0000-0000-0000-000000000001', 'd4000000-0000-0000-0000-000000000004', false),
-                                                                              ('c3000000-0000-0000-0000-000000000002', 'd4000000-0000-0000-0000-000000000005', true),
-                                                                              ('c3000000-0000-0000-0000-000000000002', 'd4000000-0000-0000-0000-000000000006', false),
-                                                                              ('c3000000-0000-0000-0000-000000000002', 'd4000000-0000-0000-0000-000000000007', false),
-                                                                              ('c3000000-0000-0000-0000-000000000002', 'd4000000-0000-0000-0000-000000000008', false),
-                                                                              ('c3000000-0000-0000-0000-000000000003', 'd4000000-0000-0000-0000-000000000009', true),
-                                                                              ('c3000000-0000-0000-0000-000000000003', 'd4000000-0000-0000-0000-000000000010', false),
-                                                                              ('c3000000-0000-0000-0000-000000000003', 'd4000000-0000-0000-0000-000000000011', false),
-                                                                              ('c3000000-0000-0000-0000-000000000003', 'd4000000-0000-0000-0000-000000000012', false),
-                                                                              ('c3000000-0000-0000-0000-000000000004', 'd4000000-0000-0000-0000-000000000013', true),
-                                                                              ('c3000000-0000-0000-0000-000000000004', 'd4000000-0000-0000-0000-000000000014', false),
-                                                                              ('c3000000-0000-0000-0000-000000000004', 'd4000000-0000-0000-0000-000000000015', false),
-                                                                              ('c3000000-0000-0000-0000-000000000004', 'd4000000-0000-0000-0000-000000000016', false),
-                                                                              ('c3000000-0000-0000-0000-000000000005', 'd4000000-0000-0000-0000-000000000017', true),
-                                                                              ('c3000000-0000-0000-0000-000000000005', 'd4000000-0000-0000-0000-000000000018', false),
-                                                                              ('c3000000-0000-0000-0000-000000000005', 'd4000000-0000-0000-0000-000000000019', false),
-                                                                              ('c3000000-0000-0000-0000-000000000005', 'd4000000-0000-0000-0000-000000000020', false),
-                                                                              ('c3000000-0000-0000-0000-000000000006', 'd4000000-0000-0000-0000-000000000021', true),
-                                                                              ('c3000000-0000-0000-0000-000000000006', 'd4000000-0000-0000-0000-000000000022', false),
-                                                                              ('c3000000-0000-0000-0000-000000000006', 'd4000000-0000-0000-0000-000000000023', false),
-                                                                              ('c3000000-0000-0000-0000-000000000006', 'd4000000-0000-0000-0000-000000000024', false),
-                                                                              ('c3000000-0000-0000-0000-000000000007', 'd4000000-0000-0000-0000-000000000025', true),
-                                                                              ('c3000000-0000-0000-0000-000000000007', 'd4000000-0000-0000-0000-000000000026', false),
-                                                                              ('c3000000-0000-0000-0000-000000000007', 'd4000000-0000-0000-0000-000000000027', false),
-                                                                              ('c3000000-0000-0000-0000-000000000007', 'd4000000-0000-0000-0000-000000000028', false),
-                                                                              ('c3000000-0000-0000-0000-000000000008', 'd4000000-0000-0000-0000-000000000029', true),
-                                                                              ('c3000000-0000-0000-0000-000000000008', 'd4000000-0000-0000-0000-000000000030', false),
-                                                                              ('c3000000-0000-0000-0000-000000000008', 'd4000000-0000-0000-0000-000000000031', false),
-                                                                              ('c3000000-0000-0000-0000-000000000008', 'd4000000-0000-0000-0000-000000000032', false),
-                                                                              ('c3000000-0000-0000-0000-000000000009', 'd4000000-0000-0000-0000-000000000033', true),
-                                                                              ('c3000000-0000-0000-0000-000000000009', 'd4000000-0000-0000-0000-000000000034', false),
-                                                                              ('c3000000-0000-0000-0000-000000000009', 'd4000000-0000-0000-0000-000000000035', false),
-                                                                              ('c3000000-0000-0000-0000-000000000009', 'd4000000-0000-0000-0000-000000000036', false);
+                                                                        ('c3000000-0000-0000-0000-000000000001', 'd4000000-0000-0000-0000-000000000001', true),
+                                                                        ('c3000000-0000-0000-0000-000000000001', 'd4000000-0000-0000-0000-000000000002', false),
+                                                                        ('c3000000-0000-0000-0000-000000000001', 'd4000000-0000-0000-0000-000000000003', false),
+                                                                        ('c3000000-0000-0000-0000-000000000001', 'd4000000-0000-0000-0000-000000000004', false),
+                                                                        ('c3000000-0000-0000-0000-000000000002', 'd4000000-0000-0000-0000-000000000005', true),
+                                                                        ('c3000000-0000-0000-0000-000000000002', 'd4000000-0000-0000-0000-000000000006', false),
+                                                                        ('c3000000-0000-0000-0000-000000000002', 'd4000000-0000-0000-0000-000000000007', false),
+                                                                        ('c3000000-0000-0000-0000-000000000002', 'd4000000-0000-0000-0000-000000000008', false),
+                                                                        ('c3000000-0000-0000-0000-000000000003', 'd4000000-0000-0000-0000-000000000009', true),
+                                                                        ('c3000000-0000-0000-0000-000000000003', 'd4000000-0000-0000-0000-000000000010', false),
+                                                                        ('c3000000-0000-0000-0000-000000000003', 'd4000000-0000-0000-0000-000000000011', false),
+                                                                        ('c3000000-0000-0000-0000-000000000003', 'd4000000-0000-0000-0000-000000000012', false),
+                                                                        ('c3000000-0000-0000-0000-000000000004', 'd4000000-0000-0000-0000-000000000013', true),
+                                                                        ('c3000000-0000-0000-0000-000000000004', 'd4000000-0000-0000-0000-000000000014', false),
+                                                                        ('c3000000-0000-0000-0000-000000000004', 'd4000000-0000-0000-0000-000000000015', false),
+                                                                        ('c3000000-0000-0000-0000-000000000004', 'd4000000-0000-0000-0000-000000000016', false),
+                                                                        ('c3000000-0000-0000-0000-000000000005', 'd4000000-0000-0000-0000-000000000017', true),
+                                                                        ('c3000000-0000-0000-0000-000000000005', 'd4000000-0000-0000-0000-000000000018', false),
+                                                                        ('c3000000-0000-0000-0000-000000000005', 'd4000000-0000-0000-0000-000000000019', false),
+                                                                        ('c3000000-0000-0000-0000-000000000005', 'd4000000-0000-0000-0000-000000000020', false),
+                                                                        ('c3000000-0000-0000-0000-000000000006', 'd4000000-0000-0000-0000-000000000021', true),
+                                                                        ('c3000000-0000-0000-0000-000000000006', 'd4000000-0000-0000-0000-000000000022', false),
+                                                                        ('c3000000-0000-0000-0000-000000000006', 'd4000000-0000-0000-0000-000000000023', false),
+                                                                        ('c3000000-0000-0000-0000-000000000006', 'd4000000-0000-0000-0000-000000000024', false),
+                                                                        ('c3000000-0000-0000-0000-000000000007', 'd4000000-0000-0000-0000-000000000025', true),
+                                                                        ('c3000000-0000-0000-0000-000000000007', 'd4000000-0000-0000-0000-000000000026', false),
+                                                                        ('c3000000-0000-0000-0000-000000000007', 'd4000000-0000-0000-0000-000000000027', false),
+                                                                        ('c3000000-0000-0000-0000-000000000007', 'd4000000-0000-0000-0000-000000000028', false),
+                                                                        ('c3000000-0000-0000-0000-000000000008', 'd4000000-0000-0000-0000-000000000029', true),
+                                                                        ('c3000000-0000-0000-0000-000000000008', 'd4000000-0000-0000-0000-000000000030', false),
+                                                                        ('c3000000-0000-0000-0000-000000000008', 'd4000000-0000-0000-0000-000000000031', false),
+                                                                        ('c3000000-0000-0000-0000-000000000008', 'd4000000-0000-0000-0000-000000000032', false),
+                                                                        ('c3000000-0000-0000-0000-000000000009', 'd4000000-0000-0000-0000-000000000033', true),
+                                                                        ('c3000000-0000-0000-0000-000000000009', 'd4000000-0000-0000-0000-000000000034', false),
+                                                                        ('c3000000-0000-0000-0000-000000000009', 'd4000000-0000-0000-0000-000000000035', false),
+                                                                        ('c3000000-0000-0000-0000-000000000009', 'd4000000-0000-0000-0000-000000000036', false);
 
--- 12. PRUEBA ↔ ÁREA
+-- 11. PRUEBA  ÁREA
 INSERT INTO prueba_area (id_prueba, id_area_conocimiento, num_preguntas) VALUES
                                                                              ('07000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 3),
                                                                              ('07000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000002', 2),
@@ -376,35 +383,35 @@ INSERT INTO prueba_area (id_prueba, id_area_conocimiento, num_preguntas) VALUES
                                                                              ('07000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000002', 2),
                                                                              ('07000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000001', 1);
 
--- 13. JORNADA ↔ AULA
+-- 12. JORNADA  AULA
 INSERT INTO jornada_aula (id_jornada, id_aula) VALUES
                                                    ('e5000000-0000-0000-0000-000000000001', 'f6000000-0000-0000-0000-000000000001'),
                                                    ('e5000000-0000-0000-0000-000000000001', 'f6000000-0000-0000-0000-000000000002'),
                                                    ('e5000000-0000-0000-0000-000000000002', 'f6000000-0000-0000-0000-000000000003'),
                                                    ('e5000000-0000-0000-0000-000000000003', 'f6000000-0000-0000-0000-000000000001');
 
--- 14. PRUEBA ↔ JORNADA
+-- 13. PRUEBA JORNADA
 INSERT INTO prueba_jornada (id_prueba, id_jornada) VALUES
                                                        ('07000000-0000-0000-0000-000000000001', 'e5000000-0000-0000-0000-000000000001'),
                                                        ('07000000-0000-0000-0000-000000000002', 'e5000000-0000-0000-0000-000000000002'),
                                                        ('07000000-0000-0000-0000-000000000003', 'e5000000-0000-0000-0000-000000000003');
 
--- 15. PRUEBA_ÁREA ↔ PREGUNTA
+-- 14. PRUEBA_ÁREA PREGUNTA
 INSERT INTO prueba_area_pregunta (id_prueba_area, id_pregunta, orden) VALUES
-                                                                          (1,  'c3000000-0000-0000-0000-000000000001', 1),
-                                                                          (1,  'c3000000-0000-0000-0000-000000000002', 2),
-                                                                          (1,  'c3000000-0000-0000-0000-000000000003', 3),
-                                                                          (2,  'c3000000-0000-0000-0000-000000000004', 1),
-                                                                          (2,  'c3000000-0000-0000-0000-000000000005', 2),
-                                                                          (3,  'c3000000-0000-0000-0000-000000000006', 1),
-                                                                          (3,  'c3000000-0000-0000-0000-000000000007', 2),
-                                                                          (4,  'c3000000-0000-0000-0000-000000000008', 1),
-                                                                          (4,  'c3000000-0000-0000-0000-000000000009', 2),
-                                                                          (5,  'c3000000-0000-0000-0000-000000000004', 1),
-                                                                          (5,  'c3000000-0000-0000-0000-000000000005', 2),
-                                                                          (6,  'c3000000-0000-0000-0000-000000000001', 1);
+                                                                          (1, 'c3000000-0000-0000-0000-000000000001', 1),
+                                                                          (1, 'c3000000-0000-0000-0000-000000000002', 2),
+                                                                          (1, 'c3000000-0000-0000-0000-000000000003', 3),
+                                                                          (2, 'c3000000-0000-0000-0000-000000000004', 1),
+                                                                          (2, 'c3000000-0000-0000-0000-000000000005', 2),
+                                                                          (3, 'c3000000-0000-0000-0000-000000000006', 1),
+                                                                          (3, 'c3000000-0000-0000-0000-000000000007', 2),
+                                                                          (4, 'c3000000-0000-0000-0000-000000000008', 1),
+                                                                          (4, 'c3000000-0000-0000-0000-000000000009', 2),
+                                                                          (5, 'c3000000-0000-0000-0000-000000000004', 1),
+                                                                          (5, 'c3000000-0000-0000-0000-000000000005', 2),
+                                                                          (6, 'c3000000-0000-0000-0000-000000000001', 1);
 
--- 16. PRUEBA_ÁREA_PREGUNTA ↔ DISTRACTOR
+-- 15. PRUEBA_ÁREA_PREGUNTA DISTRACTOR
 INSERT INTO prueba_area_pregunta_distractor (id_prueba_area_pregunta, id_distractor, es_respuesta_correcta) VALUES
                                                                                                                 (1,  'd4000000-0000-0000-0000-000000000001', true),
                                                                                                                 (1,  'd4000000-0000-0000-0000-000000000002', false),
@@ -455,7 +462,7 @@ INSERT INTO prueba_area_pregunta_distractor (id_prueba_area_pregunta, id_distrac
                                                                                                                 (12, 'd4000000-0000-0000-0000-000000000003', false),
                                                                                                                 (12, 'd4000000-0000-0000-0000-000000000004', false);
 
--- 17. JORNADA_AULA ↔ ASPIRANTE_PRUEBA
+-- 16. JORNADA_AULA  ASPIRANTE_PRUEBA
 INSERT INTO jornada_aula_aspirante (id_jornada_aula, id_aspirante_prueba, hora_llegada, asistio) VALUES
                                                                                                      (1, 1, '06:50', true),
                                                                                                      (1, 2, '07:05', true),
@@ -463,7 +470,7 @@ INSERT INTO jornada_aula_aspirante (id_jornada_aula, id_aspirante_prueba, hora_l
                                                                                                      (3, 4, '13:10', true),
                                                                                                      (4, 5, '06:45', true);
 
--- 18. RESULTADOS
+-- 17. RESULTADOS
 INSERT INTO jornada_aula_aspirante_resultado (id_jornada_aula_aspirante, puntaje_obtenido, aprobado, fecha_calificacion) VALUES
                                                                                                                              (1, 8.50, true,  '2025-04-12 12:00:00-06'),
                                                                                                                              (2, 6.00, true,  '2025-04-12 12:00:00-06'),
@@ -471,7 +478,7 @@ INSERT INTO jornada_aula_aspirante_resultado (id_jornada_aula_aspirante, puntaje
                                                                                                                              (4, 4.50, false, '2025-04-12 18:00:00-06'),
                                                                                                                              (5, 7.75, true,  '2025-05-10 12:00:00-06');
 
--- 19. DISTRACTOR ↔ ÁREA CONOCIMIENTO
+-- 18. DISTRACTOR ↔ ÁREA CONOCIMIENTO
 INSERT INTO distractor_area_conocimiento (id_distractor, id_area_conocimiento) VALUES
                                                                                    ('d4000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001'),
                                                                                    ('d4000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000001'),
@@ -510,11 +517,15 @@ INSERT INTO distractor_area_conocimiento (id_distractor, id_area_conocimiento) V
                                                                                    ('d4000000-0000-0000-0000-000000000035', 'a1000000-0000-0000-0000-000000000005'),
                                                                                    ('d4000000-0000-0000-0000-000000000036', 'a1000000-0000-0000-0000-000000000005');
 
--- 20. ASPIRANTE ↔ OPCIONES (ahora usando id_opcion)
-INSERT INTO aspirante_opciones (id_aspirante, id_opcion, preferencia) VALUES
-                                                                          ('b2000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001', 1),
-                                                                          ('b2000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000002', 2),
-                                                                          ('b2000000-0000-0000-0000-000000000002', '90000000-0000-0000-0000-000000000003', 1),
-                                                                          ('b2000000-0000-0000-0000-000000000003', '90000000-0000-0000-0000-000000000004', 1),
-                                                                          ('b2000000-0000-0000-0000-000000000004', '90000000-0000-0000-0000-000000000005', 1),
-                                                                          ('b2000000-0000-0000-0000-000000000005', '90000000-0000-0000-0000-000000000006', 1);
+INSERT INTO aspirante_opcion (id_opcion, id_aspirante) VALUES
+                                                           ('0b000000-0000-0000-0000-000000000001', 'b2000000-0000-0000-0000-000000000001'),
+                                                           ('0b000000-0000-0000-0000-000000000002', 'b2000000-0000-0000-0000-000000000001'),
+                                                           ('0b000000-0000-0000-0000-000000000003', 'b2000000-0000-0000-0000-000000000002'),
+                                                           ('0b000000-0000-0000-0000-000000000004', 'b2000000-0000-0000-0000-000000000003'),
+                                                           ('0b000000-0000-0000-0000-000000000005', 'b2000000-0000-0000-0000-000000000004'),
+                                                           ('0b000000-0000-0000-0000-000000000006', 'b2000000-0000-0000-0000-000000000005');
+
+INSERT INTO turno_jornada (id_turno, id_jornada) VALUES
+                                                     ('17000000-0000-0000-0000-000000000001', 'e5000000-0000-0000-0000-000000000001'),
+                                                     ('17000000-0000-0000-0000-000000000002', 'e5000000-0000-0000-0000-000000000002'),
+                                                     ('17000000-0000-0000-0000-000000000001', 'e5000000-0000-0000-0000-000000000003');

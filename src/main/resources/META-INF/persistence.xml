@@ -8,7 +8,7 @@
 
         <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.AreaConocimiento</class>
         <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aspirante</class>
-        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.AspiranteOpcione</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.AspiranteOpcion</class>
         <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.AspirantePrueba</class>
         <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aula</class>
         <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.DistractorAreaConocimiento</class>
@@ -17,6 +17,7 @@
         <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAula</class>
         <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAulaAspirante</class>
         <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAulaAspiranteResultado</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Opcion</class>
         <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Pregunta</class>
         <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PreguntaAreaConocimiento</class>
         <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PreguntaDistractor</class>
@@ -25,6 +26,8 @@
         <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAreaPregunta</class>
         <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAreaPreguntaDistractor</class>
         <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaJornada</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Turno</class>
+        <class>sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.TurnoJornada</class>
 
         <properties>
             <property name="jakarta.persistence.schema-generation.database.action" value="none"/>

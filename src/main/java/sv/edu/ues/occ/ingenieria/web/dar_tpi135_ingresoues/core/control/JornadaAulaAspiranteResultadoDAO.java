@@ -38,7 +38,6 @@ public class JornadaAulaAspiranteResultadoDAO extends IngresoDefaultDataAcces<Jo
     @Override
     public void create(JornadaAulaAspiranteResultado entity) {
         em.persist(entity);
-        em.flush();
     }
 
     public List<JornadaAulaAspiranteResultado> findByJornadaAulaAspirante(Integer idJornadaAulaAspirante, int first, int max)

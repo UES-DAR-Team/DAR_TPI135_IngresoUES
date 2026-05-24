@@ -37,7 +37,6 @@ public class JornadaDAO extends IngresoDefaultDataAcces<Jornada, Object> impleme
     @Override
     public void create(Jornada entity) {
         em.persist(entity);
-        em.flush();
     }
 
     public List<Jornada> findByNombre(String nombre, int first, int max)

@@ -31,6 +31,7 @@ import java.time.OffsetDateTime;
         )
 })
 public class JornadaAulaAspirante {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_jornada_aula_aspirante", nullable = false)
@@ -56,6 +57,16 @@ public class JornadaAulaAspirante {
     @NotNull
     @Column(name = "fecha_asignacion", nullable = false)
     private OffsetDateTime fechaAsignacion;
+
+    @PrePersist
+    public void prePersist() {
+        if (fechaAsignacion == null) {
+            fechaAsignacion = OffsetDateTime.now();
+        }
+        if (asistio == null) {
+            asistio = false;
+        }
+    }
 
     public Integer getId() {
         return id;
@@ -104,5 +115,4 @@ public class JornadaAulaAspirante {
     public void setFechaAsignacion(OffsetDateTime fechaAsignacion) {
         this.fechaAsignacion = fechaAsignacion;
     }
-
 }

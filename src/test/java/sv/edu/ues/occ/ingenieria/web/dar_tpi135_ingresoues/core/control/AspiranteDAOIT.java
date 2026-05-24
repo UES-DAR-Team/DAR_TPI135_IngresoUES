@@ -32,6 +32,19 @@ public class AspiranteDAOIT extends BaseIntegrationAbstract {
         }
     }
 
+    @Test
+    public void testCreate() {
+        Aspirante nuevo = new Aspirante();
+        nuevo.setNombreAspirante("AspiranteIT");
+        nuevo.setApellidoAspirante("TestIT");
+
+        em.getTransaction().begin();
+        cut.create(nuevo);
+        em.getTransaction().rollback();
+
+        assertNotNull(nuevo.getId());
+    }
+
     /**
      * Prueba: conteo general de registros.
      * Resultado esperado: total > 0.

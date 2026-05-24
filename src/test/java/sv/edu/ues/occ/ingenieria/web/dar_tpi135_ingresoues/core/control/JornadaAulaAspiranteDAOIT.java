@@ -17,7 +17,6 @@ public class JornadaAulaAspiranteDAOIT extends BaseIntegrationAbstract {
 
     private EntityManager em;
     private JornadaAulaAspiranteDAO cut;
-    private JornadaAulaAspiranteDAO daoNoEm;
 
     private Integer idJornadaAula;
     private Integer idAspirantePrueba;
@@ -26,17 +25,13 @@ public class JornadaAulaAspiranteDAOIT extends BaseIntegrationAbstract {
     @BeforeEach
     public void setUp() {
         em = emf.createEntityManager();
-
         cut = new JornadaAulaAspiranteDAO();
         cut.em = em;
-
-        daoNoEm = new JornadaAulaAspiranteDAO();
 
         List<JornadaAulaAspirante> data = cut.findRange(0, 1);
         assertFalse(data.isEmpty(), "Debe existir data en la BD");
 
         JornadaAulaAspirante sample = data.get(0);
-
         idJornadaAula = sample.getIdJornadaAula().getId();
         idAspirantePrueba = sample.getIdAspirantePrueba().getId();
         asistencia = sample.getAsistio();
@@ -49,9 +44,33 @@ public class JornadaAulaAspiranteDAOIT extends BaseIntegrationAbstract {
         }
     }
 
+    private JornadaAulaAspirante getSample() {
+        List<JornadaAulaAspirante> data = cut.findRange(0, 1);
+        assertFalse(data.isEmpty(), "Debe existir data en la BD");
+        return data.get(0);
+    }
 
+
+    /**
+     * JornadaAulaAspirante usa GenerationType.IDENTITY.
+     * Sin flush(), EclipseLink difiere el INSERT — rollback no llega a la BD.
+     */
     @Test
     @Order(1)
+    public void testCreate() {
+        JornadaAulaAspirante ref = getSample();
+
+        JornadaAulaAspirante nueva = new JornadaAulaAspirante();
+        nueva.setIdJornadaAula(ref.getIdJornadaAula());
+        nueva.setIdAspirantePrueba(ref.getIdAspirantePrueba());
+
+        em.getTransaction().begin();
+        assertDoesNotThrow(() -> cut.create(nueva));
+        em.getTransaction().rollback();
+    }
+
+    @Test
+    @Order(2)
     public void findByJornadaAula_ok() {
         List<JornadaAulaAspirante> result =
                 cut.findByJornadaAula(idJornadaAula, 0, 10);
@@ -61,33 +80,7 @@ public class JornadaAulaAspiranteDAOIT extends BaseIntegrationAbstract {
     }
 
     @Test
-    @Order(2)
-    public void findByJornadaAula_paramInvalid() {
-        assertThrows(IllegalArgumentException.class,
-                () -> cut.findByJornadaAula(null, 0, 10));
-
-        assertThrows(IllegalArgumentException.class,
-                () -> cut.findByJornadaAula(idJornadaAula, -1, 10));
-
-        assertThrows(IllegalArgumentException.class,
-                () -> cut.findByJornadaAula(idJornadaAula, 0, 0));
-    }
-
-    @Test
     @Order(3)
-    public void findByJornadaAula_dbError() {
-        em.close();
-
-        List<JornadaAulaAspirante> result =
-                cut.findByJornadaAula(idJornadaAula, 0, 10);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-    }
-
-
-    @Test
-    @Order(4)
     public void findByAspirantePrueba_ok() {
         List<JornadaAulaAspirante> result =
                 cut.findByAspirantePrueba(idAspirantePrueba, 0, 10);
@@ -97,14 +90,7 @@ public class JornadaAulaAspiranteDAOIT extends BaseIntegrationAbstract {
     }
 
     @Test
-    @Order(5)
-    public void findByAspirantePrueba_paramInvalid() {
-        assertThrows(IllegalArgumentException.class,
-                () -> cut.findByAspirantePrueba(null, 0, 10));
-    }
-
-    @Test
-    @Order(6)
+    @Order(4)
     public void findByAspirantePrueba_empty() {
         List<JornadaAulaAspirante> result =
                 cut.findByAspirantePrueba(-999, 0, 10);
@@ -113,9 +99,8 @@ public class JornadaAulaAspiranteDAOIT extends BaseIntegrationAbstract {
         assertTrue(result.isEmpty());
     }
 
-
     @Test
-    @Order(7)
+    @Order(5)
     public void findByAsistencia_ok() {
         List<JornadaAulaAspirante> result =
                 cut.findByAsistencia(asistencia, 0, 10);
@@ -125,128 +110,106 @@ public class JornadaAulaAspiranteDAOIT extends BaseIntegrationAbstract {
     }
 
     @Test
-    @Order(8)
-    public void findByAsistencia_paramInvalid() {
-        assertThrows(IllegalArgumentException.class,
-                () -> cut.findByAsistencia(null, 0, 10));
-    }
-
-
-    @Test
-    @Order(9)
+    @Order(6)
     public void countByJornadaAula_ok() {
         Long count = cut.countByJornadaAula(idJornadaAula);
-
         assertNotNull(count);
         assertTrue(count > 0);
     }
 
     @Test
+    @Order(7)
+    public void countByAsistencia_ok() {
+        Long count = cut.countByAsistencia(asistencia);
+        assertNotNull(count);
+        assertTrue(count > 0);
+    }
+
+
+    @Test
+    @Order(8)
+    public void findByJornadaAula_paramInvalid() {
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByJornadaAula(null, 0, 10));
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByJornadaAula(idJornadaAula, -1, 10));
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByJornadaAula(idJornadaAula, 0, 0));
+    }
+
+    @Test
+    @Order(9)
+    public void findByAspirantePrueba_paramInvalid() {
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAspirantePrueba(null, 0, 10));
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAspirantePrueba(idAspirantePrueba, -1, 10));
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAspirantePrueba(idAspirantePrueba, 0, 0));
+    }
+
+    @Test
     @Order(10)
+    public void findByAsistencia_paramInvalid() {
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAsistencia(null, 0, 10));
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAsistencia(asistencia, -1, 10));
+        assertThrows(IllegalArgumentException.class,
+                () -> cut.findByAsistencia(asistencia, 0, 0));
+    }
+
+    @Test
+    @Order(11)
     public void countByJornadaAula_paramInvalid() {
         assertThrows(IllegalArgumentException.class,
                 () -> cut.countByJornadaAula(null));
     }
 
     @Test
-    @Order(11)
-    public void countByJornadaAula_dbError() {
-        em.close();
-
-        Long count = cut.countByJornadaAula(idJornadaAula);
-
-        assertEquals(0L, count);
-    }
-
-    @Test
     @Order(12)
-    public void countByAsistencia_ok() {
-        Long count = cut.countByAsistencia(asistencia);
-
-        assertNotNull(count);
-        assertTrue(count > 0);
-    }
-
-    @Test
-    @Order(13)
     public void countByAsistencia_paramInvalid() {
         assertThrows(IllegalArgumentException.class,
                 () -> cut.countByAsistencia(null));
     }
 
     @Test
-    @Order(14)
-    public void countByAsistencia_dbError() {
+    @Order(13)
+    public void findByJornadaAula_dbError() {
         em.close();
+        assertThrows(IllegalStateException.class,
+                () -> cut.findByJornadaAula(idJornadaAula, 0, 10));
+    }
 
-        Long count = cut.countByAsistencia(asistencia);
-
-        assertEquals(0L, count);
+    @Test
+    @Order(14)
+    public void findByAspirantePrueba_dbError() {
+        em.close();
+        assertThrows(IllegalStateException.class,
+                () -> cut.findByAspirantePrueba(idAspirantePrueba, 0, 10));
     }
 
     @Test
     @Order(15)
-    public void findByAspirantePrueba_dbError_noEm() {
-
-        List<JornadaAulaAspirante> result =
-                daoNoEm.findByAspirantePrueba(idAspirantePrueba, 0, 10);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
+    public void findByAsistencia_dbError() {
+        em.close();
+        assertThrows(IllegalStateException.class,
+                () -> cut.findByAsistencia(asistencia, 0, 10));
     }
 
     @Test
     @Order(16)
-    public void findByAsistencia_dbError_noEm() {
-
-        List<JornadaAulaAspirante> result =
-                daoNoEm.findByAsistencia(asistencia, 0, 10);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
+    public void countByJornadaAula_dbError() {
+        em.close();
+        assertThrows(IllegalStateException.class,
+                () -> cut.countByJornadaAula(idJornadaAula));
     }
 
     @Test
-    public void findByAspirantePrueba_invalidPagination() {
-
-        assertThrows(IllegalArgumentException.class,
-                () -> cut.findByAspirantePrueba(idAspirantePrueba, -1, 10));
-
-        assertThrows(IllegalArgumentException.class,
-                () -> cut.findByAspirantePrueba(idAspirantePrueba, 0, 0));
-    }
-
-    @Test
-    public void findByAsistencia_invalidPagination() {
-
-        assertThrows(IllegalArgumentException.class,
-                () -> cut.findByAsistencia(asistencia, -1, 10));
-
-        assertThrows(IllegalArgumentException.class,
-                () -> cut.findByAsistencia(asistencia, 0, 0));
-    }
-
-    @Test
-    public void findByAspirantePrueba_dbError_real() {
-
-        cut.em = null;
-
-        List<JornadaAulaAspirante> result =
-                cut.findByAspirantePrueba(idAspirantePrueba, 0, 10);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    public void findByAsistencia_dbError_real() {
-
-        cut.em = null;
-
-        List<JornadaAulaAspirante> result =
-                cut.findByAsistencia(asistencia, 0, 10);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
+    @Order(17)
+    public void countByAsistencia_dbError() {
+        em.close();
+        assertThrows(IllegalStateException.class,
+                () -> cut.countByAsistencia(asistencia));
     }
 }

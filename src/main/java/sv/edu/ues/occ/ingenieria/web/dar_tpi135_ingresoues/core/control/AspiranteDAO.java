@@ -36,7 +36,6 @@ public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> imp
     @Override
     public void create(Aspirante entity) {
         em.persist(entity);
-        em.flush();
     }
 
     public List<Aspirante> findByNombre(String nombre, int first, int max)

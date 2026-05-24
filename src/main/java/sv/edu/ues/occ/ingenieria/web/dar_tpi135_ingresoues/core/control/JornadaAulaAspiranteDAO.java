@@ -10,8 +10,6 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAu
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
@@ -37,7 +35,6 @@ public class JornadaAulaAspiranteDAO extends IngresoDefaultDataAcces<JornadaAula
     @Override
     public void create(JornadaAulaAspirante entity) {
         em.persist(entity);
-        em.flush();
     }
 
     public List<JornadaAulaAspirante> findByJornadaAula(Integer idJornadaAula, int first, int max)
@@ -64,10 +61,8 @@ public class JornadaAulaAspiranteDAO extends IngresoDefaultDataAcces<JornadaAula
             return q.getResultList();
 
         } catch (Exception ex) {
-            Logger.getLogger(JornadaAulaAspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar por jornada aula", ex);
         }
-
-        return List.of();
     }
 
     public List<JornadaAulaAspirante> findByAspirantePrueba(Integer idAspirantePrueba, int first, int max)
@@ -94,10 +89,8 @@ public class JornadaAulaAspiranteDAO extends IngresoDefaultDataAcces<JornadaAula
             return q.getResultList();
 
         } catch (Exception ex) {
-            Logger.getLogger(JornadaAulaAspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar por aspirante prueba", ex);
         }
-
-        return List.of();
     }
 
     public List<JornadaAulaAspirante> findByAsistencia(Boolean asistio, int first, int max)
@@ -124,10 +117,8 @@ public class JornadaAulaAspiranteDAO extends IngresoDefaultDataAcces<JornadaAula
             return q.getResultList();
 
         } catch (Exception ex) {
-            Logger.getLogger(JornadaAulaAspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al buscar por asistencia", ex);
         }
-
-        return List.of();
     }
 
     public Long countByJornadaAula(Integer idJornadaAula)
@@ -148,10 +139,8 @@ public class JornadaAulaAspiranteDAO extends IngresoDefaultDataAcces<JornadaAula
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            Logger.getLogger(JornadaAulaAspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al contar por jornada aula", ex);
         }
-
-        return 0L;
     }
 
     public Long countByAsistencia(Boolean asistio)
@@ -172,9 +161,7 @@ public class JornadaAulaAspiranteDAO extends IngresoDefaultDataAcces<JornadaAula
             return q.getSingleResult();
 
         } catch (Exception ex) {
-            Logger.getLogger(JornadaAulaAspiranteDAO.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            throw new IllegalStateException("Error al contar por asistencia", ex);
         }
-
-        return 0L;
     }
 }

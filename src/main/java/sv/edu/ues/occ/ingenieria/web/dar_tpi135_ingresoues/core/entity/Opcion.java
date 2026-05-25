@@ -11,6 +11,10 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "opcion", schema = "public")
+@NamedQueries({
+        @NamedQuery(name = "Opcion.findByNameLike", query = "SELECT o FROM Opcion o WHERE upper(o.nombreOpcion) like :name"),
+        @NamedQuery(name = "Opcion.findByCodigoLike", query = "SELECT o FROM Opcion o WHERE upper(o.codigoOpcion) like :codigo")
+})
 public class Opcion {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

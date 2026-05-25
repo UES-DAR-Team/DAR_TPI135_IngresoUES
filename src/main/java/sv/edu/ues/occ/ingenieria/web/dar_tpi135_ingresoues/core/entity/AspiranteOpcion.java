@@ -7,6 +7,12 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "aspirante_opcion", schema = "public")
+@NamedQueries({
+        @NamedQuery(name = "AspiranteOpcion.findByIdAspirante",
+                query = "SELECT ao FROM AspiranteOpcion ao WHERE ao.idAspirante.id = :idAspirante"),
+        @NamedQuery(name = "AspiranteOpcion.findByIdOpcion",
+                query = "SELECT ao FROM AspiranteOpcion ao WHERE ao.idOpcion.id = :idOpcion")
+})
 public class AspiranteOpcion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

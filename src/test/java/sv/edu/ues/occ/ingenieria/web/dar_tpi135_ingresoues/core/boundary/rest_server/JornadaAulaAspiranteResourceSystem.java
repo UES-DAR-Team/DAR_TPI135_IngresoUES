@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *   <li>Un {@code @Nested} por endpoint, ordenado con {@code @TestClassOrder}.</li>
  *   <li>Nombre de método: {@code respondeXXX_cuandoCondicion}.</li>
  *   <li>Patrón AAA (Arrange / Act / Assert) en cada test.</li>
+ *   <li>Cada Assert verifica: status → headers → body.</li>
  *   <li>{@code IDCREADO} se puebla en {@code Create} y se reutiliza en
  *       {@code FindById} y {@code Update}.</li>
  * </ul>
@@ -33,7 +34,6 @@ import static org.junit.jupiter.api.Assertions.*;
  *       ({@code @GeneratedValue(IDENTITY)}) — se extrae del body del {@code 201}.</li>
  *   <li>{@code fechaAsignacion} es {@code @NotNull} — debe incluirse en el body JSON.</li>
  *   <li>{@code asistio} tiene default {@code false} en Java — puede omitirse.</li>
- *   <li>Todos los 404 y 422 NO incluyen headers — es el comportamiento real del resource.</li>
  *   <li>No tiene endpoints {@code FindRange} ni {@code DeleteById}.</li>
  * </ul>
  *
@@ -51,10 +51,10 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
 
     /**
      * IDs de JornadaAula y AspirantePrueba existentes en BD.
-     * La combinación jornadaAula=4 + aspirantePrueba=5 NO existe en el script
-     * de datos iniciales, por lo que no viola la restricción UNIQUE.
+     * La combinación jornadaAula=3 + aspirantePrueba=1 NO viola la restricción UNIQUE
+     * si no existe ya en los datos iniciales del script.
      */
-    private static final Integer ID_JORNADA_AULA_EXISTENTE    = 3;
+    private static final Integer ID_JORNADA_AULA_EXISTENTE     = 3;
     private static final Integer ID_ASPIRANTE_PRUEBA_EXISTENTE = 1;
 
     /** IDs inexistentes para verificar respuestas {@code 404}. */
@@ -80,8 +80,9 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
      * {@code POST /jornadaAula/{idJornadaAula}/aspirantePrueba/{idAspirantePrueba}}.
      *
      * <p>Requiere JornadaAula y AspirantePrueba existentes en BD.
-     * El resource rechaza con {@code 422} sin header si {@code entity.getId() != null}.
-     * Devuelve {@code 404} sin header si JornadaAula o AspirantePrueba no existen.
+     * El resource rechaza con {@code 422} y header {@code Missing-parameter}
+     * si {@code entity.getId() != null}.
+     * Devuelve {@code 404} con header {@code Not-found} si JornadaAula no existe.
      */
     @Nested
     @Order(1)
@@ -91,9 +92,13 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
         /**
          * Verifica {@code 201 Created} con JornadaAula y AspirantePrueba válidos.
          *
-         * <p>El id generado se extrae del campo {@code id} del body JSON
-         * y se almacena en {@code IDCREADO} para los {@code @Nested} posteriores.
-         * {@code fechaAsignacion} es {@code @NotNull} y debe ir en el body.
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 201}.</li>
+         *   <li>El header {@code Location} esté presente.</li>
+         *   <li>El body contenga el campo {@code id} generado por el servidor.</li>
+         *   <li>El body contenga el valor {@code asistio} enviado.</li>
+         * </ul>
          */
         @Order(1)
         @Test
@@ -107,7 +112,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
@@ -116,16 +120,18 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(bodyJson));
 
-            // Assert
             assertEquals(201, response.getStatus(),
                     "Debe retornar 201 Created al crear un JornadaAulaAspirante válido");
-            assertNotNull(response.getHeaderString("Location"),
-                    "El header Location debe contener la URI del nuevo recurso");
 
-            // Extraer el id Integer del body JSON
+            assertNotNull(response.getHeaderString("Location"),
+                    "El header Location debe estar presente");
+
             String body = response.readEntity(String.class);
             assertNotNull(body, "El body no debe ser nulo");
-            assertTrue(body.contains("\"id\""), "El body debe contener el campo id");
+            assertTrue(body.contains("\"id\""),
+                    "El body debe contener el campo id generado por el servidor");
+            assertTrue(body.contains("true"),
+                    "El body debe contener el valor asistio enviado");
 
             int idStart = body.indexOf("\"id\":") + 5;
             int idEnd   = body.indexOf(",", idStart);
@@ -143,7 +149,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
         @Order(2)
         @Test
         void respondeFallo_cuandoBodyJsonMalformado() {
-            // Act
             Response response = target
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
@@ -152,7 +157,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.entity("", MediaType.APPLICATION_JSON));
 
-            // Assert
             assertTrue(
                     response.getStatus() == 400 || response.getStatus() == 500,
                     "Debe retornar 400 o 500 cuando el body JSON está vacío, " +
@@ -163,12 +167,15 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
         /**
          * Verifica {@code 422} cuando la entidad trae un {@code id} pre-asignado.
          *
-         * <p>Nota: el resource devuelve {@code 422} sin header en este caso.
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 422}.</li>
+         *   <li>El header {@code Missing-parameter} esté presente.</li>
+         * </ul>
          */
         @Order(3)
         @Test
         void responde422_cuandoEntidadTieneIdPreasignado() {
-            // Arrange
             String bodyConId = """
                     {
                         "id": 99999,
@@ -177,7 +184,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
@@ -186,20 +192,20 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(bodyConId));
 
-            // Assert
             assertEquals(422, response.getStatus(),
                     "Debe retornar 422 cuando la entidad trae un id pre-asignado");
+
+            assertNotNull(response.getHeaderString("Missing-parameter"),
+                    "El header Missing-parameter debe estar presente");
         }
 
         /**
-         * Verifica {@code 404} cuando JornadaAula o AspirantePrueba no existen.
-         *
-         * <p>Nota: el resource devuelve {@code 404} sin header en este caso.
+         * Verifica {@code 404} con header {@code Not-found} cuando la JornadaAula
+         * del path no existe en BD.
          */
         @Order(4)
         @Test
         void responde404_cuandoJornadaAulaNoExiste() {
-            // Arrange
             String body = """
                     {
                         "asistio": false,
@@ -207,7 +213,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_INEXISTENTE.toString())
@@ -216,9 +221,11 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(body));
 
-            // Assert
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 cuando la JornadaAula no existe");
+
+            assertNotNull(response.getHeaderString("Not-found"),
+                    "El header Not-found debe estar presente");
         }
     }
 
@@ -228,7 +235,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
      *
      * <p>Depende de que {@code Create.responde201_cuandoEntidadValida} haya
      * poblado {@code IDCREADO}.
-     * Nota: el resource devuelve {@code 404} sin header cuando el id no existe.
      */
     @Nested
     @Order(2)
@@ -236,16 +242,20 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
     class FindById {
 
         /**
-         * Verifica {@code 200 OK} y cuerpo JSON cuando el {@code id} existe.
+         * Verifica {@code 200 OK} cuando el {@code id} existe.
+         *
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 200}.</li>
+         *   <li>El body contenga el {@code id} consultado.</li>
+         * </ul>
          */
         @Order(1)
         @Test
         void responde200_cuandoIdExiste() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "IDCREADO debe estar poblado por Create.responde201_cuandoEntidadValida");
 
-            // Act
             Response response = target
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
@@ -255,22 +265,22 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
             assertEquals(200, response.getStatus(),
                     "Debe retornar 200 cuando el id existe");
-            assertTrue(response.hasEntity(),
-                    "La respuesta debe contener el JornadaAulaAspirante encontrado");
+
+            String body = response.readEntity(String.class);
+            assertNotNull(body, "El body no debe ser nulo");
+            assertTrue(body.contains(String.valueOf(IDCREADO)),
+                    "El body debe contener el id consultado");
         }
 
         /**
-         * Verifica {@code 404} cuando el {@code id} no corresponde a ningún registro.
-         *
-         * <p>Nota: el resource devuelve {@code 404} sin header en este caso.
+         * Verifica {@code 404} con header {@code Not-found} cuando el {@code id}
+         * no corresponde a ningún registro.
          */
         @Order(2)
         @Test
         void responde404_cuandoIdNoExiste() {
-            // Act
             Response response = target
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
@@ -280,17 +290,17 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 cuando el id no existe");
+
+            assertNotNull(response.getHeaderString("Not-found"),
+                    "El header Not-found debe estar presente");
         }
     }
 
     /**
      * Pruebas del endpoint
      * {@code PUT /jornadaAula/{idJornadaAula}/aspirantePrueba/{idAspirantePrueba}/{id}}.
-     *
-     * <p>Todos los casos de error devuelven status sin headers.
      */
     @Nested
     @Order(3)
@@ -298,13 +308,18 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
     class Update {
 
         /**
-         * Verifica {@code 200 OK} y cuerpo actualizado cuando el {@code id} existe
-         * y la entidad es válida.
+         * Verifica {@code 200 OK} cuando el {@code id} existe y la entidad es válida.
+         *
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 200}.</li>
+         *   <li>El body contenga el {@code id} del registro actualizado.</li>
+         *   <li>El body refleje el campo {@code asistio} actualizado.</li>
+         * </ul>
          */
         @Order(1)
         @Test
         void responde200_cuandoIdExisteYEntidadValida() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "IDCREADO debe estar poblado por Create.responde201_cuandoEntidadValida");
 
@@ -316,7 +331,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
@@ -326,22 +340,24 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(bodyActualizado));
 
-            // Assert
             assertEquals(200, response.getStatus(),
                     "Debe retornar 200 cuando el id existe y la entidad es válida");
-            assertTrue(response.hasEntity(),
-                    "La respuesta debe contener el JornadaAulaAspirante actualizado");
+
+            String body = response.readEntity(String.class);
+            assertNotNull(body, "El body no debe ser nulo");
+            assertTrue(body.contains(String.valueOf(IDCREADO)),
+                    "El body debe contener el id del registro actualizado");
+            assertTrue(body.contains("true"),
+                    "El body debe reflejar el campo asistio actualizado");
         }
 
         /**
-         * Verifica {@code 404} cuando el {@code id} del path no existe.
-         *
-         * <p>Nota: el resource devuelve {@code 404} sin header en este caso.
+         * Verifica {@code 404} con header {@code Not-found} cuando el {@code id}
+         * del path no corresponde a ningún registro.
          */
         @Order(2)
         @Test
         void responde404_cuandoIdNoExiste() {
-            // Arrange
             String body = """
                     {
                         "asistio": false,
@@ -349,7 +365,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
@@ -359,9 +374,11 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(body));
 
-            // Assert
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 cuando el id no existe");
+
+            assertNotNull(response.getHeaderString("Not-found"),
+                    "El header Not-found debe estar presente");
         }
 
         /**
@@ -373,11 +390,9 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
         @Order(3)
         @Test
         void respondeFallo_cuandoBodyJsonMalformado() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "IDCREADO debe estar poblado por Create.responde201_cuandoEntidadValida");
 
-            // Act
             Response response = target
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
@@ -387,7 +402,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.entity("", MediaType.APPLICATION_JSON));
 
-            // Assert
             assertTrue(
                     response.getStatus() == 400 || response.getStatus() == 500,
                     "Debe retornar 400 o 500 cuando el body JSON está vacío, " +

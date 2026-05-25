@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.boundary.rest_server.AspirantePruebaResource.AspirantePruebaInput;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.*;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.*;
 
@@ -38,6 +39,13 @@ class AspirantePruebaResourceTest {
         resource.aspirantePruebaDAO = apDAO;
         resource.aspiranteDAO = aspiranteDAO;
         resource.pruebaDAO = pruebaDAO;
+    }
+
+    // helper para construir un input válido
+    private AspirantePruebaInput input(UUID idPrueba) {
+        AspirantePruebaInput i = new AspirantePruebaInput();
+        i.setIdPrueba(idPrueba);
+        return i;
     }
 
     @Nested
@@ -109,9 +117,7 @@ class AspirantePruebaResourceTest {
             UUID idAspirante = UUID.randomUUID();
             Aspirante aspirante = new Aspirante();
             aspirante.setId(idAspirante);
-
             AspirantePrueba ap = new AspirantePrueba();
-            ap.setId(1);
             ap.setIdAspirante(aspirante);
 
             when(apDAO.findById(1)).thenReturn(ap);
@@ -135,7 +141,6 @@ class AspirantePruebaResourceTest {
             UUID idAspirante = UUID.randomUUID();
             Aspirante otro = new Aspirante();
             otro.setId(UUID.randomUUID());
-
             AspirantePrueba ap = new AspirantePrueba();
             ap.setIdAspirante(otro);
 
@@ -184,12 +189,8 @@ class AspirantePruebaResourceTest {
 
             Aspirante aspirante = new Aspirante();
             aspirante.setId(idAspirante);
-
             Prueba prueba = new Prueba();
             prueba.setId(idPrueba);
-
-            AspirantePrueba entity = new AspirantePrueba();
-            entity.setIdPrueba(prueba);
 
             when(aspiranteDAO.findById(idAspirante)).thenReturn(aspirante);
             when(pruebaDAO.findById(idPrueba)).thenReturn(prueba);
@@ -198,32 +199,28 @@ class AspirantePruebaResourceTest {
             when(uriInfo.getAbsolutePathBuilder())
                     .thenReturn(UriBuilder.fromUri("http://localhost"));
 
-            doAnswer(inv -> { entity.setId(1); return null; }).when(apDAO).create(entity);
-
-            Response r = resource.create(idAspirante, entity, uriInfo);
+            Response r = resource.create(idAspirante, input(idPrueba), uriInfo);
 
             assertEquals(201, r.getStatus());
         }
 
         @Test
         void retorna422_cuandoIdAspiranteEsNulo() {
-            Response r = resource.create(null, new AspirantePrueba(), mock(UriInfo.class));
+            Response r = resource.create(null, input(UUID.randomUUID()), mock(UriInfo.class));
             assertEquals(422, r.getStatus());
         }
 
         @Test
-        void retorna422_cuandoEntityEsNula() {
+        void retorna422_cuandoInputEsNulo() {
+            // idAspirante != null pero input == null
             Response r = resource.create(UUID.randomUUID(), null, mock(UriInfo.class));
             assertEquals(422, r.getStatus());
         }
 
         @Test
-        void retorna422_cuandoEntityTieneId() {
-            AspirantePrueba e = new AspirantePrueba();
-            e.setId(1);
-
-            Response r = resource.create(UUID.randomUUID(), e, mock(UriInfo.class));
-
+        void retorna422_cuandoIdPruebaEsNulo() {
+            // input != null pero idPrueba == null
+            Response r = resource.create(UUID.randomUUID(), input(null), mock(UriInfo.class));
             assertEquals(422, r.getStatus());
         }
 
@@ -231,30 +228,9 @@ class AspirantePruebaResourceTest {
         void retorna404_cuandoAspiranteNoExiste() {
             when(aspiranteDAO.findById(any())).thenReturn(null);
 
-            Response r = resource.create(UUID.randomUUID(), new AspirantePrueba(), mock(UriInfo.class));
+            Response r = resource.create(UUID.randomUUID(), input(UUID.randomUUID()), mock(UriInfo.class));
 
             assertEquals(404, r.getStatus());
-        }
-
-        @Test
-        void retorna422_cuandoIdPruebaEsNulo() {
-            when(aspiranteDAO.findById(any())).thenReturn(new Aspirante());
-
-            Response r = resource.create(UUID.randomUUID(), new AspirantePrueba(), mock(UriInfo.class));
-
-            assertEquals(422, r.getStatus());
-        }
-
-        @Test
-        void retorna422_cuandoIdDePruebaEsNulo() {
-            AspirantePrueba e = new AspirantePrueba();
-            e.setIdPrueba(new Prueba()); // Prueba sin id
-
-            when(aspiranteDAO.findById(any())).thenReturn(new Aspirante());
-
-            Response r = resource.create(UUID.randomUUID(), e, mock(UriInfo.class));
-
-            assertEquals(422, r.getStatus());
         }
 
         @Test
@@ -262,16 +238,10 @@ class AspirantePruebaResourceTest {
             UUID idAspirante = UUID.randomUUID();
             UUID idPrueba = UUID.randomUUID();
 
-            Prueba p = new Prueba();
-            p.setId(idPrueba);
-
-            AspirantePrueba e = new AspirantePrueba();
-            e.setIdPrueba(p);
-
             when(aspiranteDAO.findById(idAspirante)).thenReturn(new Aspirante());
             when(pruebaDAO.findById(idPrueba)).thenReturn(null);
 
-            Response r = resource.create(idAspirante, e, mock(UriInfo.class));
+            Response r = resource.create(idAspirante, input(idPrueba), mock(UriInfo.class));
 
             assertEquals(404, r.getStatus());
         }
@@ -281,23 +251,17 @@ class AspirantePruebaResourceTest {
             UUID idAspirante = UUID.randomUUID();
             UUID idPrueba = UUID.randomUUID();
 
-            Prueba p = new Prueba();
-            p.setId(idPrueba);
-
-            AspirantePrueba e = new AspirantePrueba();
-            e.setIdPrueba(p);
-
             when(aspiranteDAO.findById(idAspirante)).thenReturn(new Aspirante());
-            when(pruebaDAO.findById(idPrueba)).thenReturn(p);
+            when(pruebaDAO.findById(idPrueba)).thenReturn(new Prueba());
 
             UriInfo uriInfo = mock(UriInfo.class);
             when(uriInfo.getAbsolutePathBuilder())
                     .thenReturn(UriBuilder.fromUri("http://localhost"));
 
             RuntimeException cause = new RuntimeException("duplicate key value violates unique constraint");
-            doThrow(new RuntimeException(cause)).when(apDAO).create(e);
+            doThrow(new RuntimeException(cause)).when(apDAO).create(any());
 
-            Response r = resource.create(idAspirante, e, uriInfo);
+            Response r = resource.create(idAspirante, input(idPrueba), uriInfo);
 
             assertEquals(409, r.getStatus());
         }
@@ -307,18 +271,11 @@ class AspirantePruebaResourceTest {
             UUID idAspirante = UUID.randomUUID();
             UUID idPrueba = UUID.randomUUID();
 
-            Prueba p = new Prueba();
-            p.setId(idPrueba);
-
-            AspirantePrueba e = new AspirantePrueba();
-            e.setIdPrueba(p);
-
             when(aspiranteDAO.findById(idAspirante)).thenReturn(new Aspirante());
-            when(pruebaDAO.findById(idPrueba)).thenReturn(p);
+            when(pruebaDAO.findById(idPrueba)).thenReturn(new Prueba());
+            doThrow(new RuntimeException("error")).when(apDAO).create(any());
 
-            doThrow(new RuntimeException("error generico")).when(apDAO).create(e);
-
-            Response r = resource.create(idAspirante, e, mock(UriInfo.class));
+            Response r = resource.create(idAspirante, input(idPrueba), mock(UriInfo.class));
 
             assertEquals(500, r.getStatus());
         }
@@ -328,18 +285,11 @@ class AspirantePruebaResourceTest {
             UUID idAspirante = UUID.randomUUID();
             UUID idPrueba = UUID.randomUUID();
 
-            Prueba p = new Prueba();
-            p.setId(idPrueba);
-
-            AspirantePrueba e = new AspirantePrueba();
-            e.setIdPrueba(p);
-
             when(aspiranteDAO.findById(idAspirante)).thenReturn(new Aspirante());
-            when(pruebaDAO.findById(idPrueba)).thenReturn(p);
+            when(pruebaDAO.findById(idPrueba)).thenReturn(new Prueba());
+            doThrow(new RuntimeException(new RuntimeException((String) null))).when(apDAO).create(any());
 
-            doThrow(new RuntimeException(new RuntimeException((String) null))).when(apDAO).create(e);
-
-            Response r = resource.create(idAspirante, e, mock(UriInfo.class));
+            Response r = resource.create(idAspirante, input(idPrueba), mock(UriInfo.class));
 
             assertEquals(500, r.getStatus());
         }
@@ -348,7 +298,7 @@ class AspirantePruebaResourceTest {
         void retorna500_cuandoDAOLanzaExcepcion() {
             when(aspiranteDAO.findById(any())).thenThrow(new RuntimeException());
 
-            Response r = resource.create(UUID.randomUUID(), new AspirantePrueba(), mock(UriInfo.class));
+            Response r = resource.create(UUID.randomUUID(), input(UUID.randomUUID()), mock(UriInfo.class));
 
             assertEquals(500, r.getStatus());
         }
@@ -357,95 +307,61 @@ class AspirantePruebaResourceTest {
     @Nested
     class Update {
 
-        @Test
-        void retorna200_conPruebaEnBody() {
-            UUID idAspirante = UUID.randomUUID();
-            UUID idPrueba = UUID.randomUUID();
-
+        private AspirantePrueba buildExisting(UUID idAspirante) {
             Aspirante aspirante = new Aspirante();
             aspirante.setId(idAspirante);
-
-            Prueba prueba = new Prueba();
-            prueba.setId(idPrueba);
-
-            AspirantePrueba existing = new AspirantePrueba();
-            existing.setIdAspirante(aspirante);
-
-            AspirantePrueba entity = new AspirantePrueba();
-            entity.setIdPrueba(prueba);
-
-            when(apDAO.findById(1)).thenReturn(existing);
-            when(aspiranteDAO.findById(idAspirante)).thenReturn(aspirante);
-            when(pruebaDAO.findById(idPrueba)).thenReturn(prueba);
-            when(apDAO.update(any())).thenReturn(new AspirantePrueba());
-
-            Response r = resource.update(idAspirante, 1, entity);
-
-            assertEquals(200, r.getStatus());
-        }
-
-        @Test
-        void retorna200_sinPruebaEnBody() {
-            UUID idAspirante = UUID.randomUUID();
-
-            Aspirante aspirante = new Aspirante();
-            aspirante.setId(idAspirante);
-
             AspirantePrueba existing = new AspirantePrueba();
             existing.setIdAspirante(aspirante);
             existing.setIdPrueba(new Prueba());
+            return existing;
+        }
+
+        @Test
+        void retorna200_cuandoActualizaConNuevaPrueba() {
+            UUID idAspirante = UUID.randomUUID();
+            UUID idPrueba = UUID.randomUUID();
+            AspirantePrueba existing = buildExisting(idAspirante);
 
             when(apDAO.findById(1)).thenReturn(existing);
-            when(aspiranteDAO.findById(idAspirante)).thenReturn(aspirante);
+            when(aspiranteDAO.findById(idAspirante)).thenReturn(new Aspirante());
+            when(pruebaDAO.findById(idPrueba)).thenReturn(new Prueba());
             when(apDAO.update(any())).thenReturn(new AspirantePrueba());
 
-            Response r = resource.update(idAspirante, 1, new AspirantePrueba());
+            Response r = resource.update(idAspirante, 1, input(idPrueba));
 
             assertEquals(200, r.getStatus());
         }
 
         @Test
-        void retorna404_cuandoPruebaNoExisteEnUpdate() {
+        void retorna200_cuandoInputSinPruebaConservaExistente() {
+            // input.getIdPrueba() == null → usa existing.getIdPrueba()
             UUID idAspirante = UUID.randomUUID();
-            UUID idPrueba = UUID.randomUUID();
-
-            Aspirante aspirante = new Aspirante();
-            aspirante.setId(idAspirante);
-
-            Prueba prueba = new Prueba();
-            prueba.setId(idPrueba);
-
-            AspirantePrueba existing = new AspirantePrueba();
-            existing.setIdAspirante(aspirante);
-
-            AspirantePrueba entity = new AspirantePrueba();
-            entity.setIdPrueba(prueba);
+            AspirantePrueba existing = buildExisting(idAspirante);
 
             when(apDAO.findById(1)).thenReturn(existing);
-            when(aspiranteDAO.findById(idAspirante)).thenReturn(aspirante);
-            when(pruebaDAO.findById(idPrueba)).thenReturn(null);
+            when(aspiranteDAO.findById(idAspirante)).thenReturn(new Aspirante());
+            when(apDAO.update(any())).thenReturn(new AspirantePrueba());
 
-            Response r = resource.update(idAspirante, 1, entity);
+            Response r = resource.update(idAspirante, 1, input(null));
 
-            assertEquals(404, r.getStatus());
+            assertEquals(200, r.getStatus());
         }
 
         @Test
-        void retorna422_cuandoTodosNulos() {
-            Response r = resource.update(null, null, null);
+        void retorna422_cuandoIdAspiranteEsNulo() {
+            Response r = resource.update(null, 1, input(UUID.randomUUID()));
             assertEquals(422, r.getStatus());
         }
 
         @Test
         void retorna422_cuandoIdPruebaEsNulo() {
-            // idAspirante != null, idPrueba == null
-            Response r = resource.update(UUID.randomUUID(), null, new AspirantePrueba());
+            // idPrueba del path == null
+            Response r = resource.update(UUID.randomUUID(), null, input(UUID.randomUUID()));
             assertEquals(422, r.getStatus());
         }
 
         @Test
-        void retorna422_cuandoEntityEsNula() {
-            // idAspirante != null, idPrueba != null, entity == null
+        void retorna422_cuandoInputEsNulo() {
             Response r = resource.update(UUID.randomUUID(), 1, null);
             assertEquals(422, r.getStatus());
         }
@@ -454,7 +370,7 @@ class AspirantePruebaResourceTest {
         void retorna404_cuandoExistingEsNulo() {
             when(apDAO.findById(1)).thenReturn(null);
 
-            Response r = resource.update(UUID.randomUUID(), 1, new AspirantePrueba());
+            Response r = resource.update(UUID.randomUUID(), 1, input(UUID.randomUUID()));
 
             assertEquals(404, r.getStatus());
         }
@@ -462,34 +378,39 @@ class AspirantePruebaResourceTest {
         @Test
         void retorna404_cuandoAspiranteMismatch() {
             UUID idAspirante = UUID.randomUUID();
-
-            Aspirante otro = new Aspirante();
-            otro.setId(UUID.randomUUID());
-
-            AspirantePrueba existing = new AspirantePrueba();
-            existing.setIdAspirante(otro);
+            AspirantePrueba existing = buildExisting(UUID.randomUUID()); // diferente
 
             when(apDAO.findById(1)).thenReturn(existing);
 
-            Response r = resource.update(idAspirante, 1, new AspirantePrueba());
+            Response r = resource.update(idAspirante, 1, input(UUID.randomUUID()));
 
             assertEquals(404, r.getStatus());
         }
 
         @Test
-        void retorna404_cuandoAspiranteNoExiste() {
+        void retorna404_cuandoAspiranteNoExisteEnBD() {
             UUID idAspirante = UUID.randomUUID();
-
-            Aspirante aspirante = new Aspirante();
-            aspirante.setId(idAspirante);
-
-            AspirantePrueba existing = new AspirantePrueba();
-            existing.setIdAspirante(aspirante);
+            AspirantePrueba existing = buildExisting(idAspirante);
 
             when(apDAO.findById(1)).thenReturn(existing);
             when(aspiranteDAO.findById(idAspirante)).thenReturn(null);
 
-            Response r = resource.update(idAspirante, 1, new AspirantePrueba());
+            Response r = resource.update(idAspirante, 1, input(UUID.randomUUID()));
+
+            assertEquals(404, r.getStatus());
+        }
+
+        @Test
+        void retorna404_cuandoPruebaNoExisteEnBD() {
+            UUID idAspirante = UUID.randomUUID();
+            UUID idPrueba = UUID.randomUUID();
+            AspirantePrueba existing = buildExisting(idAspirante);
+
+            when(apDAO.findById(1)).thenReturn(existing);
+            when(aspiranteDAO.findById(idAspirante)).thenReturn(new Aspirante());
+            when(pruebaDAO.findById(idPrueba)).thenReturn(null);
+
+            Response r = resource.update(idAspirante, 1, input(idPrueba));
 
             assertEquals(404, r.getStatus());
         }
@@ -498,33 +419,9 @@ class AspirantePruebaResourceTest {
         void retorna500_cuandoDAOLanzaExcepcion() {
             when(apDAO.findById(1)).thenThrow(new RuntimeException());
 
-            Response r = resource.update(UUID.randomUUID(), 1, new AspirantePrueba());
+            Response r = resource.update(UUID.randomUUID(), 1, input(UUID.randomUUID()));
 
             assertEquals(500, r.getStatus());
-        }
-
-        @Test
-        void retorna200_cuandoPruebaEnBodySinId() {
-            // entity.getIdPrueba() != null pero getId() == null → va al else
-            UUID idAspirante = UUID.randomUUID();
-
-            Aspirante aspirante = new Aspirante();
-            aspirante.setId(idAspirante);
-
-            AspirantePrueba existing = new AspirantePrueba();
-            existing.setIdAspirante(aspirante);
-            existing.setIdPrueba(new Prueba());
-
-            AspirantePrueba entity = new AspirantePrueba();
-            entity.setIdPrueba(new Prueba());
-
-            when(apDAO.findById(1)).thenReturn(existing);
-            when(aspiranteDAO.findById(idAspirante)).thenReturn(aspirante);
-            when(apDAO.update(any())).thenReturn(new AspirantePrueba());
-
-            Response r = resource.update(idAspirante, 1, entity);
-
-            assertEquals(200, r.getStatus());
         }
     }
 
@@ -534,10 +431,8 @@ class AspirantePruebaResourceTest {
         @Test
         void retorna204_cuandoEliminacionExitosa() {
             UUID idAspirante = UUID.randomUUID();
-
             Aspirante aspirante = new Aspirante();
             aspirante.setId(idAspirante);
-
             AspirantePrueba existing = new AspirantePrueba();
             existing.setIdAspirante(aspirante);
 
@@ -561,10 +456,8 @@ class AspirantePruebaResourceTest {
         @Test
         void retorna404_cuandoAspiranteMismatch() {
             UUID idAspirante = UUID.randomUUID();
-
             Aspirante otro = new Aspirante();
             otro.setId(UUID.randomUUID());
-
             AspirantePrueba existing = new AspirantePrueba();
             existing.setIdAspirante(otro);
 

@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *   <li>Un {@code @Nested} por endpoint, ordenado con {@code @TestClassOrder}.</li>
  *   <li>Nombre de método: {@code respondeXXX_cuandoCondicion}.</li>
  *   <li>Patrón AAA (Arrange / Act / Assert) en cada test.</li>
+ *   <li>Cada Assert verifica: status → headers → body.</li>
  *   <li>{@code IDCREADO} se puebla en {@code Create} y se reutiliza en
  *       {@code FindById}, {@code Update} y {@code DeleteById}.</li>
  * </ul>
@@ -33,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *   <li>Bean Validation ({@code @Min}/{@code @Max}) interceptada por Liberty → {@code 400}.</li>
  *   <li>Body JSON vacío o malformado → fallo de deserialización en Liberty → {@code 400} o {@code 500}
  *       (no llega al método del resource).</li>
- *   <li>UUID asignado por el DAO tras {@code em.persist()} + {@code em.flush()} → disponible
+ *   <li>UUID asignado por el DAO tras {@code em.persist()} → disponible
  *       en el body JSON del {@code 201}.</li>
  * </ul>
  *
@@ -47,33 +48,35 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(ContainerExtension.class)
 public class AspiranteResourceSystem extends BaseIntegrationAbstract {
 
-    // --- Arrange General ---
-
     /** Segmento de ruta que mapea a {@code @Path("aspirante")} en el resource. */
     private static final String PATH = "aspirante";
 
     /**
-     * <li>UUID del registro creado en {@code Create.responde201_cuandoEntidadValida}.
-     * Se comparte con {@code FindById}, {@code Update} y {@code DeleteById}.</li>
-     * <li>UUID del id inexistente utilizado en {@code DeleteById}, {@code Update} y {@code FindById},
-     * para la comprobación del registro inexistente para la devolución del {@code 404}.</li>
-     * <li>int del First, parámetro de paginación válido para la búsqueda en {@code FindRange}.</li>
-     * <li>int del Max, parámetro de paginación válido para la búsqueda en {@code FindRange}.</li>
-     * <li>int del INVALIDFIRST, parámetro de paginación inválido para la búsqueda en {@code FindRange}.</li>
-     * <li>int del INVALIDMAX, parámetro de paginación inválido para la búsqueda en {@code FindRange}.</li>
-     * <li>int del EXCEEDMAX, parámetro de paginación excedido para la búsqueda en {@code FindRange}.</li>
+     * UUID del registro creado en {@code Create.responde201_cuandoEntidadValida}.
+     * Se comparte con {@code FindById}, {@code Update} y {@code DeleteById}.
      */
     private static UUID IDCREADO;
-    private static final UUID IDINEXISTENTE = UUID.randomUUID();
-    private static final int FIRST      = 0;
-    private static final int MAX        = 10;
-    private static final int INVALIDFIRST = -1;
-    private static final int INVALIDMAX   = 0;
-    private static final int EXCEEDMAX    = 101;
 
-    // =========================================================================
-    // GET /aspirante?first=&max=
-    // =========================================================================
+    /**
+     * UUID inexistente utilizado en {@code DeleteById}, {@code Update} y {@code FindById}
+     * para verificar la devolución del {@code 404}.
+     */
+    private static final UUID IDINEXISTENTE = UUID.randomUUID();
+
+    /** Parámetro de paginación válido — primera página. */
+    private static final int FIRST        = 0;
+
+    /** Parámetro de paginación válido — tamaño de página. */
+    private static final int MAX          = 10;
+
+    /** Parámetro inválido — {@code first} negativo, viola {@code @Min(0)}. */
+    private static final int INVALIDFIRST = -1;
+
+    /** Parámetro inválido — {@code max} cero, viola {@code @Min(1)}. */
+    private static final int INVALIDMAX   = 0;
+
+    /** Parámetro inválido — {@code max} excede el límite, viola {@code @Max(100)}. */
+    private static final int EXCEEDMAX    = 101;
 
     /**
      * Pruebas del endpoint {@code GET /aspirante}.
@@ -88,43 +91,18 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
     class FindRange {
 
         /**
-         * Verifica {@code 200 OK} con parámetros válidos, cuerpo JSON presente
-         * y header {@code Total-records} incluido.
+         * Verifica {@code 200 OK} con parámetros válidos.
+         *
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 200}.</li>
+         *   <li>El header {@code Total-records} esté presente y sea un número {@code >= 0}.</li>
+         *   <li>El body sea un array JSON (empieza con {@code [}).</li>
+         * </ul>
          */
-
-       /** @Order(1)
-        @Test
-        void responde201_cuandoEntidadValida() {
-            String bodyJson = """
-            {
-                "nombreAspirante": "Aspirante de prueba de sistema",
-                "apellidoAspirante": "Apellido prueba",
-                "identificacion": "12345678-9",
-                "email": "prueba@sistema.test",
-                "fechaNacimiento": "2000-05-15",
-                "fechaRegistro": "2025-01-01T00:00:00Z",
-                "activo": true
-            }
-            """;
-
-            Response response = target
-                    .path(PATH)
-                    .request(MediaType.APPLICATION_JSON)
-                    .post(Entity.json(bodyJson));
-
-            // ← AGREGAR ESTO TEMPORALMENTE
-            System.out.println("STATUS: " + response.getStatus());
-            System.out.println("BODY: " + response.readEntity(String.class));
-            System.out.println("=== LIBERTY LOGS ===");
-            System.out.println(ContainerExtension.getOpenLiberty().getLogs());
-
-            assertEquals(201, response.getStatus());
-            // ... resto del test
-        }*/
         @Order(1)
         @Test
         void responde200_cuandoParametrosValidos() {
-            // Act
             Response response = target
                     .path(PATH)
                     .queryParam("first", FIRST)
@@ -132,12 +110,19 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
-            assertEquals(200, response.getStatus());
-            assertNotNull(response.getHeaderString("Total-records"),
+            assertEquals(200, response.getStatus(),
+                    "Debe retornar 200 con parámetros válidos");
+
+            String totalRecords = response.getHeaderString("Total-records");
+            assertNotNull(totalRecords,
                     "El header Total-records debe estar presente");
-            assertTrue(response.hasEntity(),
-                    "La respuesta debe contener un cuerpo JSON");
+            assertTrue(Integer.parseInt(totalRecords) >= 0,
+                    "Total-records debe ser un número mayor o igual a 0");
+
+            String body = response.readEntity(String.class);
+            assertNotNull(body, "El body no debe ser nulo");
+            assertTrue(body.startsWith("["),
+                    "El body debe ser un array JSON");
         }
 
         /**
@@ -149,7 +134,6 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
         @Order(2)
         @Test
         void responde400_cuandoFirstNegativo() {
-            // Act
             Response response = target
                     .path(PATH)
                     .queryParam("first", INVALIDFIRST)
@@ -157,8 +141,8 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
-            assertEquals(400, response.getStatus());
+            assertEquals(400, response.getStatus(),
+                    "Liberty debe interceptar @Min(0) y retornar 400");
         }
 
         /**
@@ -169,7 +153,6 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
         @Order(3)
         @Test
         void responde400_cuandoMaxCero() {
-            // Act
             Response response = target
                     .path(PATH)
                     .queryParam("first", FIRST)
@@ -177,8 +160,8 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
-            assertEquals(400, response.getStatus());
+            assertEquals(400, response.getStatus(),
+                    "Liberty debe interceptar @Min(1) y retornar 400");
         }
 
         /**
@@ -189,7 +172,6 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
         @Order(4)
         @Test
         void responde400_cuandoMaxExcedeLimite() {
-            // Act
             Response response = target
                     .path(PATH)
                     .queryParam("first", FIRST)
@@ -197,20 +179,15 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
-            assertEquals(400, response.getStatus());
+            assertEquals(400, response.getStatus(),
+                    "Liberty debe interceptar @Max(100) y retornar 400");
         }
     }
-
-    // =========================================================================
-    // POST /aspirante
-    // =========================================================================
 
     /**
      * Pruebas del endpoint {@code POST /aspirante}.
      *
-     * <p>El UUID es asignado por el DAO tras {@code em.persist()} + {@code em.flush()}.
-     * El resource verifica que {@code entity.getId() == null} antes de persistir;
+     * <p>El resource verifica que {@code entity.getId() == null} antes de persistir;
      * si el cliente manda un {@code id}, el resource devuelve {@code 422}.
      *
      * <p>Un body JSON vacío o malformado falla en la capa de deserialización de Liberty
@@ -224,13 +201,18 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
         /**
          * Verifica {@code 201 Created} con entidad válida sin {@code id}.
          *
-         * <p>El UUID generado se extrae del campo {@code id} del body JSON
-         * y se almacena en {@code IDCREADO} para los {@code @Nested} posteriores.
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 201}.</li>
+         *   <li>El header {@code Location} esté presente.</li>
+         *   <li>El body contenga el {@code id} generado por el servidor.</li>
+         *   <li>El body contenga el {@code nombreAspirante} y {@code apellidoAspirante} enviados.</li>
+         *   <li>El UUID extraído del body sea válido y se almacene en {@code IDCREADO}.</li>
+         * </ul>
          */
         @Order(1)
         @Test
         void responde201_cuandoEntidadValida() {
-            // Arrange — sin id, el servidor lo asigna via @GeneratedValue + flush()
             String bodyJson = """
                     {
                         "nombreAspirante": "Aspirante de prueba de sistema",
@@ -243,22 +225,25 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH)
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(bodyJson));
 
-            // Assert
             assertEquals(201, response.getStatus(),
                     "Debe retornar 201 Created al crear un Aspirante válido");
-            assertNotNull(response.getHeaderString("Location"),
-                    "El header Location debe contener la URI del nuevo recurso");
 
-            // Extraer el UUID del body JSON y almacenarlo para tests posteriores
+            assertNotNull(response.getHeaderString("Location"),
+                    "El header Location debe estar presente");
+
             String body = response.readEntity(String.class);
             assertNotNull(body, "El body no debe ser nulo");
-            assertTrue(body.contains("\"id\""), "El body debe contener el campo id");
+            assertTrue(body.contains("\"id\""),
+                    "El body debe contener el campo id generado por el servidor");
+            assertTrue(body.contains("Aspirante de prueba de sistema"),
+                    "El body debe contener el nombreAspirante enviado");
+            assertTrue(body.contains("Apellido prueba"),
+                    "El body debe contener el apellidoAspirante enviado");
 
             int idStart = body.indexOf("\"id\":\"") + 6;
             int idEnd   = body.indexOf("\"", idStart);
@@ -276,17 +261,15 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
         @Order(2)
         @Test
         void respondeFallo_cuandoBodyJsonMalformado() {
-            // Act
             Response response = target
                     .path(PATH)
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.entity("", MediaType.APPLICATION_JSON));
 
-            // Assert — Liberty falla en deserialización antes del resource
             assertTrue(
                     response.getStatus() == 400 || response.getStatus() == 500,
-                    "Debe retornar 400 o 500 cuando el body JSON está vacío o malformado, " +
-                            "fue: " + response.getStatus()
+                    "Debe retornar 400 o 500 con body vacío, fue: "
+                            + response.getStatus()
             );
         }
 
@@ -295,38 +278,38 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
          *
          * <p>El contrato del endpoint exige {@code entity.id == null} para que el servidor
          * asigne el UUID. Si el cliente manda un {@code id}, el resource lo rechaza con {@code 422}.
+         *
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 422}.</li>
+         *   <li>El header {@code Missing-parameter} esté presente.</li>
+         * </ul>
          */
         @Order(3)
         @Test
         void responde422_cuandoEntidadTieneIdPreasignado() {
-            // Arrange
             String bodyConId = """
                     {
                         "id": "00000000-0000-0000-0000-000000000001",
                         "nombreAspirante": "No debe crearse",
-                        "apellidoAspirante": "Con id preassignado",
+                        "apellidoAspirante": "Con id preasignado",
                         "fechaRegistro": "2025-01-01T00:00:00Z",
                         "activo": false
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH)
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(bodyConId));
 
-            // Assert
             assertEquals(422, response.getStatus(),
                     "Debe retornar 422 cuando la entidad trae un id pre-asignado");
+
             assertNotNull(response.getHeaderString("Missing-parameter"),
                     "El header Missing-parameter debe estar presente");
         }
     }
-
-    // =========================================================================
-    // GET /aspirante/{id}
-    // =========================================================================
 
     /**
      * Pruebas del endpoint {@code GET /aspirante/{id}}.
@@ -340,27 +323,36 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
     class FindById {
 
         /**
-         * Verifica {@code 200 OK} y cuerpo JSON cuando el {@code id} existe.
+         * Verifica {@code 200 OK} cuando el {@code id} existe.
+         *
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 200}.</li>
+         *   <li>El body contenga el {@code id} consultado.</li>
+         *   <li>El body contenga el nombre del aspirante creado.</li>
+         * </ul>
          */
         @Order(1)
         @Test
         void responde200_cuandoIdExiste() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "IDCREADO debe estar poblado por Create.responde201_cuandoEntidadValida");
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
             assertEquals(200, response.getStatus(),
                     "Debe retornar 200 cuando el id existe");
-            assertTrue(response.hasEntity(),
-                    "La respuesta debe contener el Aspirante encontrado");
+
+            String body = response.readEntity(String.class);
+            assertNotNull(body, "El body no debe ser nulo");
+            assertTrue(body.contains(IDCREADO.toString()),
+                    "El body debe contener el id consultado");
+            assertTrue(body.contains("Aspirante de prueba de sistema"),
+                    "El body debe contener el nombre del aspirante creado");
         }
 
         /**
@@ -370,24 +362,19 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
         @Order(2)
         @Test
         void responde404_cuandoIdNoExiste() {
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDINEXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 cuando el id no existe");
+
             assertNotNull(response.getHeaderString("Not-found"),
                     "El header Not-found debe estar presente");
         }
     }
-
-    // =========================================================================
-    // PUT /aspirante/{id}
-    // =========================================================================
 
     /**
      * Pruebas del endpoint {@code PUT /aspirante/{id}}.
@@ -402,13 +389,18 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
     class Update {
 
         /**
-         * Verifica {@code 200 OK} y cuerpo actualizado cuando el {@code id} existe
-         * y la entidad es válida.
+         * Verifica {@code 200 OK} cuando el {@code id} existe y la entidad es válida.
+         *
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 200}.</li>
+         *   <li>El body contenga el nombre y apellido actualizados.</li>
+         *   <li>El body conserve el mismo {@code id} del aspirante.</li>
+         * </ul>
          */
         @Order(1)
         @Test
         void responde200_cuandoIdExisteYEntidadValida() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "IDCREADO debe estar poblado por Create.responde201_cuandoEntidadValida");
 
@@ -424,18 +416,23 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(bodyActualizado));
 
-            // Assert
             assertEquals(200, response.getStatus(),
                     "Debe retornar 200 cuando el id existe y la entidad es válida");
-            assertTrue(response.hasEntity(),
-                    "La respuesta debe contener el Aspirante actualizado");
+
+            String body = response.readEntity(String.class);
+            assertNotNull(body, "El body no debe ser nulo");
+            assertTrue(body.contains("Aspirante actualizado por prueba de sistema"),
+                    "El body debe contener el nombre actualizado");
+            assertTrue(body.contains("Apellido actualizado"),
+                    "El body debe contener el apellido actualizado");
+            assertTrue(body.contains(IDCREADO.toString()),
+                    "El body debe conservar el mismo id del aspirante");
         }
 
         /**
@@ -445,7 +442,6 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
         @Order(2)
         @Test
         void responde404_cuandoIdNoExiste() {
-            // Arrange
             String body = """
                     {
                         "nombreAspirante": "No debe actualizarse",
@@ -455,16 +451,15 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDINEXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(body));
 
-            // Assert
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 cuando el id no existe");
+
             assertNotNull(response.getHeaderString("Not-found"),
                     "El header Not-found debe estar presente");
         }
@@ -479,29 +474,22 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
         @Order(3)
         @Test
         void respondeFallo_cuandoBodyJsonMalformado() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "IDCREADO debe estar poblado por Create.responde201_cuandoEntidadValida");
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.entity("", MediaType.APPLICATION_JSON));
 
-            // Assert — Liberty falla en deserialización antes del resource
             assertTrue(
                     response.getStatus() == 400 || response.getStatus() == 500,
-                    "Debe retornar 400 o 500 cuando el body JSON está vacío o malformado, " +
-                            "fue: " + response.getStatus()
+                    "Debe retornar 400 o 500 con body vacío, fue: "
+                            + response.getStatus()
             );
         }
     }
-
-    // =========================================================================
-    // DELETE /aspirante/{id}
-    // =========================================================================
 
     /**
      * Pruebas del endpoint {@code DELETE /aspirante/{id}}.
@@ -515,24 +503,23 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
     class DeleteById {
 
         /**
-         * Verifica {@code 404} y header {@code Not-Found} cuando el {@code id}
+         * Verifica {@code 404} y header {@code Not-found} cuando el {@code id}
          * no corresponde a ningún registro.
          */
         @Order(1)
         @Test
         void responde404_cuandoIdNoExiste() {
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDINEXISTENTE.toString())
                     .request()
                     .delete();
 
-            // Assert
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 cuando el id no existe");
-            assertNotNull(response.getHeaderString("Not-Found"),
-                    "El header Not-Found debe estar presente");
+
+            assertNotNull(response.getHeaderString("Not-found"),
+                    "El header Not-found debe estar presente");
         }
 
         /**
@@ -541,24 +528,28 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
          *
          * <p>Se ejecuta después del {@code 404} para no destruir el registro
          * que usan {@code FindById} y {@code Update}.
+         *
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 204}.</li>
+         *   <li>La respuesta no tenga cuerpo.</li>
+         * </ul>
          */
         @Order(2)
         @Test
         void responde204_cuandoIdExiste() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "IDCREADO debe estar poblado por Create.responde201_cuandoEntidadValida");
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
                     .request()
                     .delete();
 
-            // Assert
             assertEquals(204, response.getStatus(),
                     "Debe retornar 204 No Content al eliminar un registro existente");
+
             assertFalse(response.hasEntity(),
                     "La respuesta no debe contener cuerpo tras eliminar");
         }
@@ -566,24 +557,30 @@ public class AspiranteResourceSystem extends BaseIntegrationAbstract {
         /**
          * Verifica {@code 404} al intentar acceder al registro ya eliminado,
          * confirmando que la eliminación fue persistida correctamente en BD.
+         *
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 404}.</li>
+         *   <li>El header {@code Not-found} esté presente.</li>
+         * </ul>
          */
         @Order(3)
         @Test
         void responde404_cuandoSeIntentaAccederAlRegistroEliminado() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "IDCREADO debe estar poblado por Create.responde201_cuandoEntidadValida");
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 al intentar acceder a un registro ya eliminado");
+
+            assertNotNull(response.getHeaderString("Not-found"),
+                    "El header Not-found debe estar presente tras eliminar");
         }
     }
 }

@@ -14,6 +14,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aspirante
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Prueba;
 
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,6 +30,22 @@ public class AspirantePruebaResource implements Serializable {
     @Inject
     PruebaDAO pruebaDAO;
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // DTO — el cliente solo manda el UUID de la prueba, no el objeto completo
+    //
+    // POST/PUT body esperado:
+    //   { "idPrueba": "07000000-0000-0000-0000-000000000001" }
+    // ─────────────────────────────────────────────────────────────────────────
+    public static class AspirantePruebaInput {
+        private UUID idPrueba;
+
+        public UUID getIdPrueba() { return idPrueba; }
+        public void setIdPrueba(UUID idPrueba) { this.idPrueba = idPrueba; }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /aspirante/{idAspirante}/pruebas
+    // ─────────────────────────────────────────────────────────────────────────
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response findRange(
@@ -70,6 +87,9 @@ public class AspirantePruebaResource implements Serializable {
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /aspirante/{idAspirante}/pruebas/{idPrueba}
+    // ─────────────────────────────────────────────────────────────────────────
     @GET
     @Path("{idPrueba}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -101,23 +121,27 @@ public class AspirantePruebaResource implements Serializable {
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // POST /aspirante/{idAspirante}/pruebas
+    // Body: { "idPrueba": "uuid-de-la-prueba" }
+    // ─────────────────────────────────────────────────────────────────────────
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response create(
             @PathParam("idAspirante") UUID idAspirante,
-            AspirantePrueba entity,
+            AspirantePruebaInput input,
             @Context UriInfo uriInfo) {
 
-        if (idAspirante == null || entity == null) {
+        if (idAspirante == null || input == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idAspirante y entity no pueden ser nulos")
+                    .header("Missing-parameter", "idAspirante e input no pueden ser nulos")
                     .build();
         }
 
-        if (entity.getId() != null) {
+        if (input.getIdPrueba() == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "entity.id debe ser nulo para creacion")
+                    .header("Missing-parameter", "idPrueba es requerido")
                     .build();
         }
 
@@ -129,27 +153,22 @@ public class AspirantePruebaResource implements Serializable {
                         .build();
             }
 
-            if (entity.getIdPrueba() == null || entity.getIdPrueba().getId() == null) {
-                return Response.status(422)
-                        .header("Missing-parameter", "idPrueba.id es requerido")
-                        .build();
-            }
-
-            Prueba prueba = pruebaDAO.findById(entity.getIdPrueba().getId());
+            Prueba prueba = pruebaDAO.findById(input.getIdPrueba());
             if (prueba == null) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Prueba con id " + entity.getIdPrueba().getId() + " no encontrada")
+                        .header("Not-found", "Prueba con id " + input.getIdPrueba() + " no encontrada")
                         .build();
             }
 
+            AspirantePrueba entity = new AspirantePrueba();
             entity.setIdAspirante(aspirante);
             entity.setIdPrueba(prueba);
+            entity.setFechaAsignacion(OffsetDateTime.now());
 
             aspirantePruebaDAO.create(entity);
 
             return Response.created(
-                    uriInfo.getAbsolutePathBuilder()
-                            .build()
+                    uriInfo.getAbsolutePathBuilder().build()
             ).entity(entity).build();
 
         } catch (Exception e) {
@@ -168,6 +187,10 @@ public class AspirantePruebaResource implements Serializable {
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // PUT /aspirante/{idAspirante}/pruebas/{idPrueba}
+    // Body: { "idPrueba": "uuid-de-la-nueva-prueba" }  ← idPrueba es opcional
+    // ─────────────────────────────────────────────────────────────────────────
     @PUT
     @Path("{idPrueba}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -175,11 +198,11 @@ public class AspirantePruebaResource implements Serializable {
     public Response update(
             @PathParam("idAspirante") UUID idAspirante,
             @PathParam("idPrueba") Integer idPrueba,
-            AspirantePrueba entity) {
+            AspirantePruebaInput input) {
 
-        if (idAspirante == null || idPrueba == null || entity == null) {
+        if (idAspirante == null || idPrueba == null || input == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idAspirante, idPrueba y entity son requeridos")
+                    .header("Missing-parameter", "idAspirante, idPrueba y input son requeridos")
                     .build();
         }
 
@@ -199,22 +222,20 @@ public class AspirantePruebaResource implements Serializable {
                         .build();
             }
 
-            if (entity.getIdPrueba() != null && entity.getIdPrueba().getId() != null) {
-                Prueba prueba = pruebaDAO.findById(entity.getIdPrueba().getId());
+            // Si el cliente manda idPrueba lo actualiza, sino conserva el existente
+            if (input.getIdPrueba() != null) {
+                Prueba prueba = pruebaDAO.findById(input.getIdPrueba());
                 if (prueba == null) {
                     return Response.status(Response.Status.NOT_FOUND)
-                            .header("Not-found", "Prueba con id " + entity.getIdPrueba().getId() + " no encontrada")
+                            .header("Not-found", "Prueba con id " + input.getIdPrueba() + " no encontrada")
                             .build();
                 }
-                entity.setIdPrueba(prueba);
-            } else {
-                entity.setIdPrueba(existing.getIdPrueba());
+                existing.setIdPrueba(prueba);
             }
 
-            entity.setId(idPrueba);
-            entity.setIdAspirante(aspirante);
+            existing.setIdAspirante(aspirante);
 
-            AspirantePrueba updated = aspirantePruebaDAO.update(entity);
+            AspirantePrueba updated = aspirantePruebaDAO.update(existing);
 
             return Response.ok(updated).build();
 
@@ -225,6 +246,9 @@ public class AspirantePruebaResource implements Serializable {
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // DELETE /aspirante/{idAspirante}/pruebas/{idPrueba}
+    // ─────────────────────────────────────────────────────────────────────────
     @DELETE
     @Path("{idPrueba}")
     public Response delete(

@@ -43,12 +43,6 @@ public class Jornada {
     @Column(name = "fecha")
     private LocalDate fecha;
 
-    @Column(name = "hora_inicio")
-    private LocalTime horaInicio;
-
-    @Column(name = "hora_fin")
-    private LocalTime horaFin;
-
     @NotNull
     @Column(name = "fecha_creacion", nullable = false)
     private OffsetDateTime fechaCreacion;
@@ -79,22 +73,6 @@ public class Jornada {
 
     public void setFecha(LocalDate fecha) {
         this.fecha = fecha;
-    }
-
-    public LocalTime getHoraInicio() {
-        return horaInicio;
-    }
-
-    public void setHoraInicio(LocalTime horaInicio) {
-        this.horaInicio = horaInicio;
-    }
-
-    public LocalTime getHoraFin() {
-        return horaFin;
-    }
-
-    public void setHoraFin(LocalTime horaFin) {
-        this.horaFin = horaFin;
     }
 
     public OffsetDateTime getFechaCreacion() {

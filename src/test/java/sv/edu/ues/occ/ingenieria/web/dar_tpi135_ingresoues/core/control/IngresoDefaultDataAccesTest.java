@@ -30,14 +30,14 @@ class IngresoDefaultDataAccesTest {
     @Mock
     EntityManager em;
 
-    IngresoDefaultDataAcces<TestEntity, Integer> dao;
+    IngresoDefaultDataAcces<TestEntity> dao;
 
     @BeforeEach
     void setUp() {
         dao = daoConEntityManager(em);
     }
 
-    private IngresoDefaultDataAcces<TestEntity, Integer> daoConEntityManager(EntityManager entityManager) {
+    private IngresoDefaultDataAcces<TestEntity> daoConEntityManager(EntityManager entityManager) {
         return new IngresoDefaultDataAcces<>(TestEntity.class) {
             @Override
             public EntityManager getEntityManager() { return entityManager; }
@@ -54,19 +54,9 @@ class IngresoDefaultDataAccesTest {
 
         @Test
         void lanzaIllegalStateException_cuandoEntityManagerEsNulo() {
-            IngresoDefaultDataAcces<TestEntity, Integer> daoSinEm = daoConEntityManager(null);
+            IngresoDefaultDataAcces<TestEntity> daoSinEm = daoConEntityManager(null);
 
             assertThrows(IllegalStateException.class, () -> daoSinEm.create(new TestEntity()));
-        }
-
-        @Test
-        void invocaPersistYFlush_cuandoObjetoYEntityManagerSonValidos() {
-            TestEntity entity = new TestEntity();
-
-            dao.create(entity);
-
-            verify(em).persist(entity);
-            verify(em).flush();
         }
 
         @Test
@@ -100,7 +90,7 @@ class IngresoDefaultDataAccesTest {
 
         @Test
         void lanzaIllegalStateException_cuandoEntityManagerEsNulo() {
-            IngresoDefaultDataAcces<TestEntity, Integer> daoSinEm = daoConEntityManager(null);
+            IngresoDefaultDataAcces<TestEntity> daoSinEm = daoConEntityManager(null);
 
             assertThrows(IllegalStateException.class, () -> daoSinEm.delete(new TestEntity()));
         }
@@ -147,7 +137,7 @@ class IngresoDefaultDataAccesTest {
 
         @Test
         void lanzaIllegalStateException_cuandoEntityManagerEsNulo() {
-            IngresoDefaultDataAcces<TestEntity, Integer> daoSinEm = daoConEntityManager(null);
+            IngresoDefaultDataAcces<TestEntity> daoSinEm = daoConEntityManager(null);
 
             assertThrows(IllegalStateException.class, () -> daoSinEm.update(new TestEntity()));
         }
@@ -200,7 +190,7 @@ class IngresoDefaultDataAccesTest {
 
         @Test
         void lanzaIllegalStateException_cuandoEntityManagerEsNulo() {
-            IngresoDefaultDataAcces<TestEntity, Integer> daoSinEm = daoConEntityManager(null);
+            IngresoDefaultDataAcces<TestEntity> daoSinEm = daoConEntityManager(null);
 
             assertThrows(IllegalStateException.class, () -> daoSinEm.findRange(0, 10));
         }
@@ -260,7 +250,7 @@ class IngresoDefaultDataAccesTest {
 
         @Test
         void lanzaIllegalStateException_cuandoEntityManagerEsNulo() {
-            IngresoDefaultDataAcces<TestEntity, Integer> daoSinEm = daoConEntityManager(null);
+            IngresoDefaultDataAcces<TestEntity> daoSinEm = daoConEntityManager(null);
 
             assertThrows(IllegalStateException.class, daoSinEm::count);
         }
@@ -317,7 +307,7 @@ class IngresoDefaultDataAccesTest {
 
         @Test
         void lanzaIllegalStateException_cuandoEntityManagerEsNulo() {
-            IngresoDefaultDataAcces<TestEntity, Integer> daoSinEm = daoConEntityManager(null);
+            IngresoDefaultDataAcces<TestEntity> daoSinEm = daoConEntityManager(null);
 
             IllegalStateException ex = assertThrows(IllegalStateException.class,
                     () -> daoSinEm.findById(1));

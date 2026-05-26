@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
-public class DistractorAreaConocimientoDAO extends IngresoDefaultDataAcces<DistractorAreaConocimiento, Object> implements Serializable {
+public class DistractorAreaConocimientoDAO extends IngresoDefaultDataAcces<DistractorAreaConocimiento> implements Serializable {
     @PersistenceContext(unitName = "IngresoPU")
     EntityManager em;
 

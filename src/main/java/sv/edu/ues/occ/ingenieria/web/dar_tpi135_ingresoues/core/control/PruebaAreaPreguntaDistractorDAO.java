@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Stateless
 @LocalBean
-public class PruebaAreaPreguntaDistractorDAO extends IngresoDefaultDataAcces<PruebaAreaPreguntaDistractor,Object> implements Serializable {
+public class PruebaAreaPreguntaDistractorDAO extends IngresoDefaultDataAcces<PruebaAreaPreguntaDistractor> implements Serializable {
 
     @PersistenceContext(unitName = "IngresoPU")
     EntityManager em;

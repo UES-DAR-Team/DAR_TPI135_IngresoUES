@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Stateless
 @LocalBean
-public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Integer> implements Serializable {
+public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula> implements Serializable {
 
     @PersistenceContext(unitName = "IngresoPU")
     EntityManager em;

@@ -14,7 +14,7 @@ import java.util.List;
 
 @Stateless
 @LocalBean
-public class PreguntaDAO extends IngresoDefaultDataAcces<Pregunta, Object> implements Serializable {
+public class PreguntaDAO extends IngresoDefaultDataAcces<Pregunta> implements Serializable {
     @PersistenceContext(unitName = "IngresoPU")
     EntityManager em;
 

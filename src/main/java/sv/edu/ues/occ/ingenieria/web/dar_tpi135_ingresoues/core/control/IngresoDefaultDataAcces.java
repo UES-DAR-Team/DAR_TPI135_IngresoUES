@@ -8,6 +8,7 @@ import jakarta.persistence.criteria.Root;
 
 import java.util.List;
 
+//debemos eliminar ID
 public abstract class IngresoDefaultDataAcces<T, ID> implements IngresoDAOInterface<T, ID> {
 
     private final Class<T> tipoDato;

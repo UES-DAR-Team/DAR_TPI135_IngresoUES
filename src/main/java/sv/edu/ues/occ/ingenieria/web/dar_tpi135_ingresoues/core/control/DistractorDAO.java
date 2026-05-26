@@ -13,7 +13,7 @@ import java.util.List;
 
 @Stateless
 @LocalBean
-public class DistractorDAO extends IngresoDefaultDataAcces<Distractor, Object> implements Serializable {
+public class DistractorDAO extends IngresoDefaultDataAcces<Distractor> implements Serializable {
     @PersistenceContext(unitName = "IngresoPU")
     EntityManager em;
 

@@ -2,7 +2,7 @@ package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control;
 
 import java.util.List;
 
-public interface IngresoDAOInterface <T, ID>{
+public interface IngresoDAOInterface <T>{
     void create(T obj)throws IllegalStateException, IllegalArgumentException;
     void delete(T obj)throws IllegalStateException, IllegalArgumentException;
     T update(T obj)throws IllegalStateException, IllegalArgumentException;

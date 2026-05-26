@@ -12,7 +12,7 @@ import java.util.List;
 
 @Stateless
 @LocalBean
-public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante, Object> implements Serializable {
+public class AspiranteDAO extends IngresoDefaultDataAcces<Aspirante> implements Serializable {
 
     @PersistenceContext(unitName = "IngresoPU")
     EntityManager em;

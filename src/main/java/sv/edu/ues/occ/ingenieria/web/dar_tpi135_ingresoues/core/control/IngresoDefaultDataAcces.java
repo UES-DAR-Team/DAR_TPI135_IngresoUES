@@ -8,8 +8,7 @@ import jakarta.persistence.criteria.Root;
 
 import java.util.List;
 
-//debemos eliminar ID
-public abstract class IngresoDefaultDataAcces<T, ID> implements IngresoDAOInterface<T, ID> {
+public abstract class IngresoDefaultDataAcces<T> implements IngresoDAOInterface<T> {
 
     private final Class<T> tipoDato;
 
@@ -36,7 +35,6 @@ public abstract class IngresoDefaultDataAcces<T, ID> implements IngresoDAOInterf
 
         try {
             em.persist(obj);
-            em.flush();
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {

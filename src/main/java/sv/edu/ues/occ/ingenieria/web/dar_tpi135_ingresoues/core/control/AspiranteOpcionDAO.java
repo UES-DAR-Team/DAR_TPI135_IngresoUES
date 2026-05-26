@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @Stateless
 @LocalBean
-public class AspiranteOpcionDAO extends IngresoDefaultDataAcces<AspiranteOpcion, Object> implements Serializable {
+public class AspiranteOpcionDAO extends IngresoDefaultDataAcces<AspiranteOpcion> implements Serializable {
     @PersistenceContext(unitName="IngresoPU")
     EntityManager em;
     

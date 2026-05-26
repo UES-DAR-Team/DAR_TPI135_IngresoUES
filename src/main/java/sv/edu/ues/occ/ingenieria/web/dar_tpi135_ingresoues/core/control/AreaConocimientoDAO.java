@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @Stateless
 @LocalBean
-public class AreaConocimientoDAO extends IngresoDefaultDataAcces<AreaConocimiento, Object> implements Serializable {
+public class AreaConocimientoDAO extends IngresoDefaultDataAcces<AreaConocimiento> implements Serializable {
     @PersistenceContext(unitName = "IngresoPU")
     EntityManager em;
 

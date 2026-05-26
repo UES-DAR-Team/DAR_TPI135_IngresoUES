@@ -13,7 +13,7 @@ import java.util.List;
 
 @Stateless
 @LocalBean
-public class TurnoDAO extends IngresoDefaultDataAcces<Turno, Object> implements Serializable {
+public class TurnoDAO extends IngresoDefaultDataAcces<Turno> implements Serializable {
     @PersistenceContext(unitName = "IngresoPU")
     EntityManager em;
 

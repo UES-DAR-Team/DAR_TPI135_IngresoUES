@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 @Stateless
 @LocalBean
-public class JornadaAulaAspiranteResultadoDAO extends IngresoDefaultDataAcces<JornadaAulaAspiranteResultado, Object> implements Serializable {
+public class JornadaAulaAspiranteResultadoDAO extends IngresoDefaultDataAcces<JornadaAulaAspiranteResultado> implements Serializable {
 
     @PersistenceContext(unitName = "IngresoPU")
     EntityManager em;

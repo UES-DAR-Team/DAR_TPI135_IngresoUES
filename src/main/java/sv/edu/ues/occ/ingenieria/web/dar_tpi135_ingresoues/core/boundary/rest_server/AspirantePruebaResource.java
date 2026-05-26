@@ -18,7 +18,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-@Path("aspirante/{idAspirante}/pruebas")
+@Path("aspirante/{idAspirante}/prueba")
 public class AspirantePruebaResource implements Serializable {
 
     @Inject
@@ -30,12 +30,6 @@ public class AspirantePruebaResource implements Serializable {
     @Inject
     PruebaDAO pruebaDAO;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // DTO — el cliente solo manda el UUID de la prueba, no el objeto completo
-    //
-    // POST/PUT body esperado:
-    //   { "idPrueba": "07000000-0000-0000-0000-000000000001" }
-    // ─────────────────────────────────────────────────────────────────────────
     public static class AspirantePruebaInput {
         private UUID idPrueba;
 
@@ -43,9 +37,6 @@ public class AspirantePruebaResource implements Serializable {
         public void setIdPrueba(UUID idPrueba) { this.idPrueba = idPrueba; }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // GET /aspirante/{idAspirante}/pruebas
-    // ─────────────────────────────────────────────────────────────────────────
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response findRange(
@@ -87,9 +78,6 @@ public class AspirantePruebaResource implements Serializable {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // GET /aspirante/{idAspirante}/pruebas/{idPrueba}
-    // ─────────────────────────────────────────────────────────────────────────
     @GET
     @Path("{idPrueba}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -97,9 +85,15 @@ public class AspirantePruebaResource implements Serializable {
             @PathParam("idAspirante") UUID idAspirante,
             @PathParam("idPrueba") Integer idPrueba) {
 
-        if (idAspirante == null || idPrueba == null) {
+        if (idAspirante == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idAspirante, idPrueba")
+                    .header("Missing-parameter", "idAspirante")
+                    .build();
+        }
+
+        if (idPrueba == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "idPrueba")
                     .build();
         }
 
@@ -121,10 +115,6 @@ public class AspirantePruebaResource implements Serializable {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // POST /aspirante/{idAspirante}/pruebas
-    // Body: { "idPrueba": "uuid-de-la-prueba" }
-    // ─────────────────────────────────────────────────────────────────────────
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -133,9 +123,15 @@ public class AspirantePruebaResource implements Serializable {
             AspirantePruebaInput input,
             @Context UriInfo uriInfo) {
 
-        if (idAspirante == null || input == null) {
+        if (idAspirante == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idAspirante e input no pueden ser nulos")
+                    .header("Missing-parameter", "idAspirante")
+                    .build();
+        }
+
+        if (input == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "input")
                     .build();
         }
 
@@ -187,10 +183,6 @@ public class AspirantePruebaResource implements Serializable {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // PUT /aspirante/{idAspirante}/pruebas/{idPrueba}
-    // Body: { "idPrueba": "uuid-de-la-nueva-prueba" }  ← idPrueba es opcional
-    // ─────────────────────────────────────────────────────────────────────────
     @PUT
     @Path("{idPrueba}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -200,9 +192,21 @@ public class AspirantePruebaResource implements Serializable {
             @PathParam("idPrueba") Integer idPrueba,
             AspirantePruebaInput input) {
 
-        if (idAspirante == null || idPrueba == null || input == null) {
+        if (idAspirante == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idAspirante, idPrueba y input son requeridos")
+                    .header("Missing-parameter", "idAspirante")
+                    .build();
+        }
+
+        if (idPrueba == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "idPrueba")
+                    .build();
+        }
+
+        if (input == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "input")
                     .build();
         }
 
@@ -222,7 +226,6 @@ public class AspirantePruebaResource implements Serializable {
                         .build();
             }
 
-            // Si el cliente manda idPrueba lo actualiza, sino conserva el existente
             if (input.getIdPrueba() != null) {
                 Prueba prueba = pruebaDAO.findById(input.getIdPrueba());
                 if (prueba == null) {
@@ -246,18 +249,21 @@ public class AspirantePruebaResource implements Serializable {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // DELETE /aspirante/{idAspirante}/pruebas/{idPrueba}
-    // ─────────────────────────────────────────────────────────────────────────
     @DELETE
     @Path("{idPrueba}")
     public Response delete(
             @PathParam("idAspirante") UUID idAspirante,
             @PathParam("idPrueba") Integer idPrueba) {
 
-        if (idAspirante == null || idPrueba == null) {
+        if (idAspirante == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idAspirante e idPrueba son requeridos")
+                    .header("Missing-parameter", "idAspirante")
+                    .build();
+        }
+
+        if (idPrueba == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "idPrueba")
                     .build();
         }
 

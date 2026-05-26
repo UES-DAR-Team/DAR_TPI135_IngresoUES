@@ -8,8 +8,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.*;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.*;
 
@@ -19,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 class JornadaAulaAspiranteResourceTest {
 
     private JornadaAulaAspiranteResource resource;
@@ -39,15 +36,22 @@ class JornadaAulaAspiranteResourceTest {
         resource.aspirantePruebaDAO = aspirantePruebaDAO;
     }
 
-    private JornadaAulaAspirante buildExisting(Integer idJornadaAula, Integer idAspirantePrueba) {
+    /** Construye un JornadaAulaAspirante con idJornadaAula dado para verificar match. */
+    private JornadaAulaAspirante buildExisting(Integer idJornadaAula) {
         JornadaAula ja = new JornadaAula();
         ja.setId(idJornadaAula);
-        AspirantePrueba ap = new AspirantePrueba();
-        ap.setId(idAspirantePrueba);
         JornadaAulaAspirante jaa = new JornadaAulaAspirante();
         jaa.setIdJornadaAula(ja);
-        jaa.setIdAspirantePrueba(ap);
         return jaa;
+    }
+
+    /** Construye un AspirantePrueba con id dado para usar en create. */
+    private JornadaAulaAspirante buildEntityWithAspirantePrueba(Integer idAspirantePrueba) {
+        AspirantePrueba ap = new AspirantePrueba();
+        ap.setId(idAspirantePrueba);
+        JornadaAulaAspirante entity = new JornadaAulaAspirante();
+        entity.setIdAspirantePrueba(ap);
+        return entity;
     }
 
     @Nested
@@ -56,42 +60,35 @@ class JornadaAulaAspiranteResourceTest {
         @Test
         void retorna200_cuandoParametrosSonValidos() {
             when(jornadaAulaDAO.findById(1)).thenReturn(new JornadaAula());
-            when(aspirantePruebaDAO.findById(1)).thenReturn(new AspirantePrueba());
             when(jaaDAO.countByJornadaAula(1)).thenReturn(1L);
             when(jaaDAO.findByJornadaAula(1, 0, 10)).thenReturn(Collections.emptyList());
 
-            Response r = resource.findRange(1, 1, 0, 10);
+            Response r = resource.findRange(1, 0, 10);
 
             assertEquals(200, r.getStatus());
         }
 
         @Test
         void retorna422_cuandoIdJornadaAulaEsNulo() {
-            Response r = resource.findRange(null, 1, 0, 10);
-            assertEquals(422, r.getStatus());
-        }
-
-        @Test
-        void retorna422_cuandoIdAspirantePruebaEsNulo() {
-            Response r = resource.findRange(1, null, 0, 10);
+            Response r = resource.findRange(null, 0, 10);
             assertEquals(422, r.getStatus());
         }
 
         @Test
         void retorna422_cuandoFirstEsNegativo() {
-            Response r = resource.findRange(1, 1, -1, 10);
+            Response r = resource.findRange(1, -1, 10);
             assertEquals(422, r.getStatus());
         }
 
         @Test
         void retorna422_cuandoMaxEsCero() {
-            Response r = resource.findRange(1, 1, 0, 0);
+            Response r = resource.findRange(1, 0, 0);
             assertEquals(422, r.getStatus());
         }
 
         @Test
         void retorna422_cuandoMaxExcedeLimite() {
-            Response r = resource.findRange(1, 1, 0, 101);
+            Response r = resource.findRange(1, 0, 101);
             assertEquals(422, r.getStatus());
         }
 
@@ -99,17 +96,7 @@ class JornadaAulaAspiranteResourceTest {
         void retorna404_cuandoJornadaAulaNoExiste() {
             when(jornadaAulaDAO.findById(1)).thenReturn(null);
 
-            Response r = resource.findRange(1, 1, 0, 10);
-
-            assertEquals(404, r.getStatus());
-        }
-
-        @Test
-        void retorna404_cuandoAspirantePruebaNoExiste() {
-            when(jornadaAulaDAO.findById(1)).thenReturn(new JornadaAula());
-            when(aspirantePruebaDAO.findById(1)).thenReturn(null);
-
-            Response r = resource.findRange(1, 1, 0, 10);
+            Response r = resource.findRange(1, 0, 10);
 
             assertEquals(404, r.getStatus());
         }
@@ -118,7 +105,7 @@ class JornadaAulaAspiranteResourceTest {
         void retorna500_cuandoDAOLanzaExcepcion() {
             when(jornadaAulaDAO.findById(1)).thenThrow(new RuntimeException());
 
-            Response r = resource.findRange(1, 1, 0, 10);
+            Response r = resource.findRange(1, 0, 10);
 
             assertEquals(500, r.getStatus());
         }
@@ -129,10 +116,10 @@ class JornadaAulaAspiranteResourceTest {
 
         @Test
         void retorna200_cuandoExiste() {
-            JornadaAulaAspirante existing = buildExisting(1, 1);
+            JornadaAulaAspirante existing = buildExisting(1);
             when(jaaDAO.findById(1)).thenReturn(existing);
 
-            Response r = resource.findById(1, 1, 1);
+            Response r = resource.findById(1, 1);
 
             assertEquals(200, r.getStatus());
         }
@@ -141,46 +128,30 @@ class JornadaAulaAspiranteResourceTest {
         void retorna404_cuandoNoExiste() {
             when(jaaDAO.findById(1)).thenReturn(null);
 
-            Response r = resource.findById(1, 1, 1);
+            Response r = resource.findById(1, 1);
 
             assertEquals(404, r.getStatus());
         }
 
         @Test
         void retorna404_cuandoJornadaAulaMismatch() {
-            JornadaAulaAspirante existing = buildExisting(99, 1);
+            JornadaAulaAspirante existing = buildExisting(99);
             when(jaaDAO.findById(1)).thenReturn(existing);
 
-            Response r = resource.findById(1, 1, 1);
-
-            assertEquals(404, r.getStatus());
-        }
-
-        @Test
-        void retorna404_cuandoAspirantePruebaMismatch() {
-            JornadaAulaAspirante existing = buildExisting(1, 99);
-            when(jaaDAO.findById(1)).thenReturn(existing);
-
-            Response r = resource.findById(1, 1, 1);
+            Response r = resource.findById(1, 1);
 
             assertEquals(404, r.getStatus());
         }
 
         @Test
         void retorna422_cuandoIdJornadaAulaEsNulo() {
-            Response r = resource.findById(null, 1, 1);
+            Response r = resource.findById(null, 1);
             assertEquals(422, r.getStatus());
         }
 
         @Test
         void retorna422_cuandoIdAspirantePruebaEsNulo() {
-            Response r = resource.findById(1, null, 1);
-            assertEquals(422, r.getStatus());
-        }
-
-        @Test
-        void retorna422_cuandoIdEsNulo() {
-            Response r = resource.findById(1, 1, null);
+            Response r = resource.findById(1, null);
             assertEquals(422, r.getStatus());
         }
 
@@ -188,7 +159,7 @@ class JornadaAulaAspiranteResourceTest {
         void retorna500_cuandoDAOLanzaExcepcion() {
             when(jaaDAO.findById(1)).thenThrow(new RuntimeException());
 
-            Response r = resource.findById(1, 1, 1);
+            Response r = resource.findById(1, 1);
 
             assertEquals(500, r.getStatus());
         }
@@ -199,34 +170,27 @@ class JornadaAulaAspiranteResourceTest {
 
         @Test
         void retorna201_cuandoCreacionExitosa() {
-            JornadaAulaAspirante entity = new JornadaAulaAspirante();
+            JornadaAulaAspirante entity = buildEntityWithAspirantePrueba(1);
             UriInfo uriInfo = mock(UriInfo.class);
             when(uriInfo.getAbsolutePathBuilder())
                     .thenReturn(UriBuilder.fromUri("http://localhost"));
-
             when(jornadaAulaDAO.findById(1)).thenReturn(new JornadaAula());
             when(aspirantePruebaDAO.findById(1)).thenReturn(new AspirantePrueba());
 
-            Response r = resource.create(1, 1, entity, uriInfo);
+            Response r = resource.create(1, entity, uriInfo);
 
             assertEquals(201, r.getStatus());
         }
 
         @Test
         void retorna422_cuandoIdJornadaAulaEsNulo() {
-            Response r = resource.create(null, 1, new JornadaAulaAspirante(), mock(UriInfo.class));
-            assertEquals(422, r.getStatus());
-        }
-
-        @Test
-        void retorna422_cuandoIdAspirantePruebaEsNulo() {
-            Response r = resource.create(1, null, new JornadaAulaAspirante(), mock(UriInfo.class));
+            Response r = resource.create(null, new JornadaAulaAspirante(), mock(UriInfo.class));
             assertEquals(422, r.getStatus());
         }
 
         @Test
         void retorna422_cuandoEntityEsNula() {
-            Response r = resource.create(1, 1, null, mock(UriInfo.class));
+            Response r = resource.create(1, null, mock(UriInfo.class));
             assertEquals(422, r.getStatus());
         }
 
@@ -235,68 +199,78 @@ class JornadaAulaAspiranteResourceTest {
             JornadaAulaAspirante entity = new JornadaAulaAspirante();
             entity.setId(1);
 
-            Response r = resource.create(1, 1, entity, mock(UriInfo.class));
+            Response r = resource.create(1, entity, mock(UriInfo.class));
 
             assertEquals(422, r.getStatus());
         }
 
         @Test
+        void retorna422_cuandoIdAspirantePruebaEsNulo() {
+            Response r = resource.create(1, new JornadaAulaAspirante(), mock(UriInfo.class));
+            assertEquals(422, r.getStatus());
+        }
+
+        @Test
         void retorna404_cuandoJornadaAulaNoExiste() {
+            JornadaAulaAspirante entity = buildEntityWithAspirantePrueba(1);
             when(jornadaAulaDAO.findById(1)).thenReturn(null);
 
-            Response r = resource.create(1, 1, new JornadaAulaAspirante(), mock(UriInfo.class));
+            Response r = resource.create(1, entity, mock(UriInfo.class));
 
             assertEquals(404, r.getStatus());
         }
 
         @Test
         void retorna404_cuandoAspirantePruebaNoExiste() {
+            JornadaAulaAspirante entity = buildEntityWithAspirantePrueba(1);
             when(jornadaAulaDAO.findById(1)).thenReturn(new JornadaAula());
             when(aspirantePruebaDAO.findById(1)).thenReturn(null);
 
-            Response r = resource.create(1, 1, new JornadaAulaAspirante(), mock(UriInfo.class));
+            Response r = resource.create(1, entity, mock(UriInfo.class));
 
             assertEquals(404, r.getStatus());
         }
 
         @Test
         void retorna409_cuandoHayDuplicateKey() {
-            JornadaAulaAspirante entity = new JornadaAulaAspirante();
+            JornadaAulaAspirante entity = buildEntityWithAspirantePrueba(1);
+
             UriInfo uriInfo = mock(UriInfo.class);
-            when(uriInfo.getAbsolutePathBuilder())
-                    .thenReturn(UriBuilder.fromUri("http://localhost"));
 
             when(jornadaAulaDAO.findById(1)).thenReturn(new JornadaAula());
             when(aspirantePruebaDAO.findById(1)).thenReturn(new AspirantePrueba());
 
-            RuntimeException cause = new RuntimeException("duplicate key value violates unique constraint");
-            doThrow(new RuntimeException(cause)).when(jaaDAO).create(entity);
+            RuntimeException cause =
+                    new RuntimeException("duplicate key value violates unique constraint");
 
-            Response r = resource.create(1, 1, entity, uriInfo);
+            doThrow(new RuntimeException(cause))
+                    .when(jaaDAO).create(any(JornadaAulaAspirante.class));
+
+            Response r = resource.create(1, entity, uriInfo);
 
             assertEquals(409, r.getStatus());
         }
 
         @Test
         void retorna500_cuandoExcepcionSinCause() {
-            JornadaAulaAspirante entity = new JornadaAulaAspirante();
+            JornadaAulaAspirante entity = buildEntityWithAspirantePrueba(1);
             when(jornadaAulaDAO.findById(1)).thenReturn(new JornadaAula());
             when(aspirantePruebaDAO.findById(1)).thenReturn(new AspirantePrueba());
             doThrow(new RuntimeException("error")).when(jaaDAO).create(entity);
 
-            Response r = resource.create(1, 1, entity, mock(UriInfo.class));
+            Response r = resource.create(1, entity, mock(UriInfo.class));
 
             assertEquals(500, r.getStatus());
         }
 
         @Test
         void retorna500_cuandoExcepcionSinMensaje() {
-            JornadaAulaAspirante entity = new JornadaAulaAspirante();
+            JornadaAulaAspirante entity = buildEntityWithAspirantePrueba(1);
             when(jornadaAulaDAO.findById(1)).thenReturn(new JornadaAula());
             when(aspirantePruebaDAO.findById(1)).thenReturn(new AspirantePrueba());
             doThrow(new RuntimeException(new RuntimeException((String) null))).when(jaaDAO).create(entity);
 
-            Response r = resource.create(1, 1, entity, mock(UriInfo.class));
+            Response r = resource.create(1, entity, mock(UriInfo.class));
 
             assertEquals(500, r.getStatus());
         }
@@ -307,40 +281,31 @@ class JornadaAulaAspiranteResourceTest {
 
         @Test
         void retorna200_cuandoActualizacionExitosa() {
-            JornadaAulaAspirante existing = buildExisting(1, 1);
+            JornadaAulaAspirante existing = buildExisting(1);
             JornadaAulaAspirante entity = new JornadaAulaAspirante();
-
             when(jaaDAO.findById(1)).thenReturn(existing);
-            when(jornadaAulaDAO.findById(1)).thenReturn(new JornadaAula());
-            when(aspirantePruebaDAO.findById(1)).thenReturn(new AspirantePrueba());
-            when(jaaDAO.update(entity)).thenReturn(entity);
+            when(jaaDAO.update(existing)).thenReturn(existing);
 
-            Response r = resource.update(1, 1, 1, entity);
+            Response r = resource.update(1, 1, entity);
 
             assertEquals(200, r.getStatus());
         }
 
         @Test
         void retorna422_cuandoIdJornadaAulaEsNulo() {
-            Response r = resource.update(null, 1, 1, new JornadaAulaAspirante());
+            Response r = resource.update(null, 1, new JornadaAulaAspirante());
             assertEquals(422, r.getStatus());
         }
 
         @Test
         void retorna422_cuandoIdAspirantePruebaEsNulo() {
-            Response r = resource.update(1, null, 1, new JornadaAulaAspirante());
-            assertEquals(422, r.getStatus());
-        }
-
-        @Test
-        void retorna422_cuandoIdEsNulo() {
-            Response r = resource.update(1, 1, null, new JornadaAulaAspirante());
+            Response r = resource.update(1, null, new JornadaAulaAspirante());
             assertEquals(422, r.getStatus());
         }
 
         @Test
         void retorna422_cuandoEntityEsNula() {
-            Response r = resource.update(1, 1, 1, null);
+            Response r = resource.update(1, 1, null);
             assertEquals(422, r.getStatus());
         }
 
@@ -348,50 +313,17 @@ class JornadaAulaAspiranteResourceTest {
         void retorna404_cuandoExistingEsNulo() {
             when(jaaDAO.findById(1)).thenReturn(null);
 
-            Response r = resource.update(1, 1, 1, new JornadaAulaAspirante());
+            Response r = resource.update(1, 1, new JornadaAulaAspirante());
 
             assertEquals(404, r.getStatus());
         }
 
         @Test
         void retorna404_cuandoJornadaAulaMismatch() {
-            JornadaAulaAspirante existing = buildExisting(99, 1);
+            JornadaAulaAspirante existing = buildExisting(99);
             when(jaaDAO.findById(1)).thenReturn(existing);
 
-            Response r = resource.update(1, 1, 1, new JornadaAulaAspirante());
-
-            assertEquals(404, r.getStatus());
-        }
-
-        @Test
-        void retorna404_cuandoAspirantePruebaMismatch() {
-            JornadaAulaAspirante existing = buildExisting(1, 99);
-            when(jaaDAO.findById(1)).thenReturn(existing);
-
-            Response r = resource.update(1, 1, 1, new JornadaAulaAspirante());
-
-            assertEquals(404, r.getStatus());
-        }
-
-        @Test
-        void retorna404_cuandoJornadaAulaNoExisteEnBD() {
-            JornadaAulaAspirante existing = buildExisting(1, 1);
-            when(jaaDAO.findById(1)).thenReturn(existing);
-            when(jornadaAulaDAO.findById(1)).thenReturn(null);
-
-            Response r = resource.update(1, 1, 1, new JornadaAulaAspirante());
-
-            assertEquals(404, r.getStatus());
-        }
-
-        @Test
-        void retorna404_cuandoAspirantePruebaNoExisteEnBD() {
-            JornadaAulaAspirante existing = buildExisting(1, 1);
-            when(jaaDAO.findById(1)).thenReturn(existing);
-            when(jornadaAulaDAO.findById(1)).thenReturn(new JornadaAula());
-            when(aspirantePruebaDAO.findById(1)).thenReturn(null);
-
-            Response r = resource.update(1, 1, 1, new JornadaAulaAspirante());
+            Response r = resource.update(1, 1, new JornadaAulaAspirante());
 
             assertEquals(404, r.getStatus());
         }
@@ -400,7 +332,7 @@ class JornadaAulaAspiranteResourceTest {
         void retorna500_cuandoDAOLanzaExcepcion() {
             when(jaaDAO.findById(1)).thenThrow(new RuntimeException());
 
-            Response r = resource.update(1, 1, 1, new JornadaAulaAspirante());
+            Response r = resource.update(1, 1, new JornadaAulaAspirante());
 
             assertEquals(500, r.getStatus());
         }
@@ -411,10 +343,10 @@ class JornadaAulaAspiranteResourceTest {
 
         @Test
         void retorna204_cuandoEliminacionExitosa() {
-            JornadaAulaAspirante existing = buildExisting(1, 1);
+            JornadaAulaAspirante existing = buildExisting(1);
             when(jaaDAO.findById(1)).thenReturn(existing);
 
-            Response r = resource.delete(1, 1, 1);
+            Response r = resource.delete(1, 1);
 
             assertEquals(204, r.getStatus());
             verify(jaaDAO).delete(existing);
@@ -424,46 +356,30 @@ class JornadaAulaAspiranteResourceTest {
         void retorna404_cuandoNoExiste() {
             when(jaaDAO.findById(1)).thenReturn(null);
 
-            Response r = resource.delete(1, 1, 1);
+            Response r = resource.delete(1, 1);
 
             assertEquals(404, r.getStatus());
         }
 
         @Test
         void retorna404_cuandoJornadaAulaMismatch() {
-            JornadaAulaAspirante existing = buildExisting(99, 1);
+            JornadaAulaAspirante existing = buildExisting(99);
             when(jaaDAO.findById(1)).thenReturn(existing);
 
-            Response r = resource.delete(1, 1, 1);
-
-            assertEquals(404, r.getStatus());
-        }
-
-        @Test
-        void retorna404_cuandoAspirantePruebaMismatch() {
-            JornadaAulaAspirante existing = buildExisting(1, 99);
-            when(jaaDAO.findById(1)).thenReturn(existing);
-
-            Response r = resource.delete(1, 1, 1);
+            Response r = resource.delete(1, 1);
 
             assertEquals(404, r.getStatus());
         }
 
         @Test
         void retorna422_cuandoIdJornadaAulaEsNulo() {
-            Response r = resource.delete(null, 1, 1);
+            Response r = resource.delete(null, 1);
             assertEquals(422, r.getStatus());
         }
 
         @Test
         void retorna422_cuandoIdAspirantePruebaEsNulo() {
-            Response r = resource.delete(1, null, 1);
-            assertEquals(422, r.getStatus());
-        }
-
-        @Test
-        void retorna422_cuandoIdEsNulo() {
-            Response r = resource.delete(1, 1, null);
+            Response r = resource.delete(1, null);
             assertEquals(422, r.getStatus());
         }
 
@@ -471,7 +387,7 @@ class JornadaAulaAspiranteResourceTest {
         void retorna500_cuandoDAOLanzaExcepcion() {
             when(jaaDAO.findById(1)).thenThrow(new RuntimeException());
 
-            Response r = resource.delete(1, 1, 1);
+            Response r = resource.delete(1, 1);
 
             assertEquals(500, r.getStatus());
         }

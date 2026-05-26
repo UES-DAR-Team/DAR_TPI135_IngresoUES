@@ -119,9 +119,15 @@ public class AspiranteResource implements Serializable {
     @Produces(MediaType.APPLICATION_JSON)
     public Response update(@PathParam("id") UUID id, Aspirante entity) {
 
-        if (id == null || entity == null) {
+        if (id == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "id, entity")
+                    .header("Missing-parameter", "id")
+                    .build();
+        }
+
+        if (entity == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "entity")
                     .build();
         }
 

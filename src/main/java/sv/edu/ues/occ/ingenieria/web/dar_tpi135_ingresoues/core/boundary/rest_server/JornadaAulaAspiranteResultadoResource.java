@@ -23,10 +23,6 @@ public class JornadaAulaAspiranteResultadoResource implements Serializable {
     @Inject
     JornadaAulaAspiranteDAO jornadaAulaAspiranteDAO;
 
-    /**
-     * GET jornadaAulaAspirante/{idJornadaAulaAspirante}/resultado?first=0&max=100
-     * Lista paginada de resultados de un aspirante en un aula de jornada.
-     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response findRange(
@@ -68,10 +64,6 @@ public class JornadaAulaAspiranteResultadoResource implements Serializable {
         }
     }
 
-    /**
-     * GET jornadaAulaAspirante/{idJornadaAulaAspirante}/resultado/{id}
-     * Obtiene un resultado por su ID verificando que pertenezca al aspirante indicado.
-     */
     @GET
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -79,9 +71,15 @@ public class JornadaAulaAspiranteResultadoResource implements Serializable {
             @PathParam("idJornadaAulaAspirante") Integer idJornadaAulaAspirante,
             @PathParam("id") Integer id) {
 
-        if (idJornadaAulaAspirante == null || id == null) {
+        if (idJornadaAulaAspirante == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idJornadaAulaAspirante, id")
+                    .header("Missing-parameter", "idJornadaAulaAspirante")
+                    .build();
+        }
+
+        if (id == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "id")
                     .build();
         }
 
@@ -104,10 +102,6 @@ public class JornadaAulaAspiranteResultadoResource implements Serializable {
         }
     }
 
-    /**
-     * POST jornadaAulaAspirante/{idJornadaAulaAspirante}/resultado
-     * Registra el resultado de un aspirante. El id debe venir nulo.
-     */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -116,9 +110,15 @@ public class JornadaAulaAspiranteResultadoResource implements Serializable {
             JornadaAulaAspiranteResultado entity,
             @Context UriInfo uriInfo) {
 
-        if (idJornadaAulaAspirante == null || entity == null) {
+        if (idJornadaAulaAspirante == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idJornadaAulaAspirante y entity son requeridos")
+                    .header("Missing-parameter", "idJornadaAulaAspirante")
+                    .build();
+        }
+
+        if (entity == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "entity")
                     .build();
         }
 
@@ -137,12 +137,10 @@ public class JornadaAulaAspiranteResultadoResource implements Serializable {
             }
 
             entity.setIdJornadaAulaAspirante(jaa);
-
             resultadoDAO.create(entity);
 
             return Response.created(
-                    uriInfo.getAbsolutePathBuilder()
-                            .build()
+                    uriInfo.getAbsolutePathBuilder().build()
             ).entity(entity).build();
 
         } catch (Exception e) {
@@ -161,11 +159,6 @@ public class JornadaAulaAspiranteResultadoResource implements Serializable {
         }
     }
 
-    /**
-     * PUT jornadaAulaAspirante/{idJornadaAulaAspirante}/resultado/{id}
-     * Actualiza el resultado de un aspirante verificando que pertenezca
-     * al aspirante indicado.
-     */
     @PUT
     @Path("{id}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -175,9 +168,21 @@ public class JornadaAulaAspiranteResultadoResource implements Serializable {
             @PathParam("id") Integer id,
             JornadaAulaAspiranteResultado entity) {
 
-        if (idJornadaAulaAspirante == null || id == null || entity == null) {
+        if (idJornadaAulaAspirante == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idJornadaAulaAspirante, id y entity son requeridos")
+                    .header("Missing-parameter", "idJornadaAulaAspirante")
+                    .build();
+        }
+
+        if (id == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "id")
+                    .build();
+        }
+
+        if (entity == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "entity")
                     .build();
         }
 
@@ -212,19 +217,21 @@ public class JornadaAulaAspiranteResultadoResource implements Serializable {
         }
     }
 
-    /**
-     * DELETE jornadaAulaAspirante/{idJornadaAulaAspirante}/resultado/{id}
-     * Elimina un resultado verificando que pertenezca al aspirante indicado.
-     */
     @DELETE
     @Path("{id}")
     public Response delete(
             @PathParam("idJornadaAulaAspirante") Integer idJornadaAulaAspirante,
             @PathParam("id") Integer id) {
 
-        if (idJornadaAulaAspirante == null || id == null) {
+        if (idJornadaAulaAspirante == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idJornadaAulaAspirante, id son requeridos")
+                    .header("Missing-parameter", "idJornadaAulaAspirante")
+                    .build();
+        }
+
+        if (id == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "id")
                     .build();
         }
 

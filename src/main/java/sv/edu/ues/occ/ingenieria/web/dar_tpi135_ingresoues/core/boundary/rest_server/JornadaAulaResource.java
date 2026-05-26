@@ -17,7 +17,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
-@Path("jornada/{idJornada}/aula/{idAula}")
+@Path("jornada/{idJornada}/aula")
 public class JornadaAulaResource implements Serializable {
 
     @Inject
@@ -29,21 +29,16 @@ public class JornadaAulaResource implements Serializable {
     @Inject
     AulaDAO aulaDAO;
 
-    /**
-     * GET jornada/{idJornada}/aula/{idAula}?first=0&max=100
-     * Lista paginada de aulas asignadas a una jornada.
-     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response findRange(
             @PathParam("idJornada") UUID idJornada,
-            @PathParam("idAula") UUID idAula,
             @Min(0) @DefaultValue("0") @QueryParam("first") int first,
             @Max(100) @Min(1) @DefaultValue("100") @QueryParam("max") int max) {
 
-        if (idJornada == null || idAula == null) {
+        if (idJornada == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idJornada, idAula")
+                    .header("Missing-parameter", "idJornada")
                     .build();
         }
 
@@ -61,13 +56,6 @@ public class JornadaAulaResource implements Serializable {
                         .build();
             }
 
-            Aula aula = aulaDAO.findById(idAula);
-            if (aula == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Aula con id " + idAula + " no encontrada")
-                        .build();
-            }
-
             Long total = jornadaAulaDAO.countByJornada(idJornada);
             List<JornadaAula> lista = jornadaAulaDAO.findByJornada(idJornada, first, max);
 
@@ -82,33 +70,32 @@ public class JornadaAulaResource implements Serializable {
         }
     }
 
-    /**
-     * GET jornada/{idJornada}/aula/{idAula}/{id}
-     * Obtiene un registro JornadaAula por su ID, verificando que pertenezca
-     * a la jornada y aula indicadas.
-     */
     @GET
-    @Path("{id}")
+    @Path("{idAula}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(
             @PathParam("idJornada") UUID idJornada,
-            @PathParam("idAula") UUID idAula,
-            @PathParam("id") Integer id) {
+            @PathParam("idAula") Integer idAula) {
 
-        if (idJornada == null || idAula == null || id == null) {
+        if (idJornada == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idJornada, idAula, id")
+                    .header("Missing-parameter", "idJornada")
+                    .build();
+        }
+
+        if (idAula == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "idAula")
                     .build();
         }
 
         try {
-            JornadaAula resp = jornadaAulaDAO.findById(id);
+            JornadaAula resp = jornadaAulaDAO.findById(idAula);
 
             if (resp == null
-                    || !resp.getIdJornada().getId().equals(idJornada)
-                    || !resp.getIdAula().getId().equals(idAula)) {
+                    || !resp.getIdJornada().getId().equals(idJornada)) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Registro no encontrado para la jornada y aula indicadas")
+                        .header("Not-found", "Registro no encontrado para la jornada indicada")
                         .build();
             }
 
@@ -121,28 +108,35 @@ public class JornadaAulaResource implements Serializable {
         }
     }
 
-    /**
-     * POST jornada/{idJornada}/aula/{idAula}
-     * Asigna un aula a una jornada. El id debe venir nulo.
-     */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response create(
             @PathParam("idJornada") UUID idJornada,
-            @PathParam("idAula") UUID idAula,
             JornadaAula entity,
             @Context UriInfo uriInfo) {
 
-        if (idJornada == null || idAula == null || entity == null) {
+        if (idJornada == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idJornada, idAula y entity son requeridos")
+                    .header("Missing-parameter", "idJornada")
+                    .build();
+        }
+
+        if (entity == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "entity")
                     .build();
         }
 
         if (entity.getId() != null) {
             return Response.status(422)
-                    .header("Missing-parameter", "entity.id must be null")
+                    .header("Missing-parameter", "entity.id debe ser nulo para creacion")
+                    .build();
+        }
+
+        if (entity.getIdAula() == null || entity.getIdAula().getId() == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "idAula")
                     .build();
         }
 
@@ -154,10 +148,10 @@ public class JornadaAulaResource implements Serializable {
                         .build();
             }
 
-            Aula aula = aulaDAO.findById(idAula);
+            Aula aula = aulaDAO.findById(entity.getIdAula().getId());
             if (aula == null) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Aula con id " + idAula + " no encontrada")
+                        .header("Not-found", "Aula con id " + entity.getIdAula().getId() + " no encontrada")
                         .build();
             }
 
@@ -167,8 +161,7 @@ public class JornadaAulaResource implements Serializable {
             jornadaAulaDAO.create(entity);
 
             return Response.created(
-                    uriInfo.getAbsolutePathBuilder()
-                            .build()
+                    uriInfo.getAbsolutePathBuilder().build()
             ).entity(entity).build();
 
         } catch (Exception e) {
@@ -187,56 +180,46 @@ public class JornadaAulaResource implements Serializable {
         }
     }
 
-    /**
-     * PUT jornada/{idJornada}/aula/{idAula}/{id}
-     * Actualiza una asignacion de aula en una jornada existente.
-     */
     @PUT
-    @Path("{id}")
+    @Path("{idAula}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response update(
             @PathParam("idJornada") UUID idJornada,
-            @PathParam("idAula") UUID idAula,
-            @PathParam("id") Integer id,
+            @PathParam("idAula") Integer idAula,
             JornadaAula entity) {
 
-        if (idJornada == null || idAula == null || id == null || entity == null) {
+        if (idJornada == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idJornada, idAula, id y entity son requeridos")
+                    .header("Missing-parameter", "idJornada")
+                    .build();
+        }
+
+        if (idAula == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "idAula")
+                    .build();
+        }
+
+        if (entity == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "entity")
                     .build();
         }
 
         try {
-            JornadaAula existing = jornadaAulaDAO.findById(id);
+            JornadaAula existing = jornadaAulaDAO.findById(idAula);
 
             if (existing == null
-                    || !existing.getIdJornada().getId().equals(idJornada)
-                    || !existing.getIdAula().getId().equals(idAula)) {
+                    || !existing.getIdJornada().getId().equals(idJornada)) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Registro no encontrado para la jornada y aula indicadas")
+                        .header("Not-found", "Registro no encontrado para la jornada indicada")
                         .build();
             }
 
-            Jornada jornada = jornadaDAO.findById(idJornada);
-            if (jornada == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Jornada con id " + idJornada + " no encontrada")
-                        .build();
-            }
+            existing.setFechaAsignacion(entity.getFechaAsignacion());
 
-            Aula aula = aulaDAO.findById(idAula);
-            if (aula == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Aula con id " + idAula + " no encontrada")
-                        .build();
-            }
-
-            entity.setId(id);
-            entity.setIdJornada(jornada);
-            entity.setIdAula(aula);
-
-            JornadaAula updated = jornadaAulaDAO.update(entity);
+            JornadaAula updated = jornadaAulaDAO.update(existing);
 
             return Response.ok(updated).build();
 
@@ -247,31 +230,31 @@ public class JornadaAulaResource implements Serializable {
         }
     }
 
-    /**
-     * DELETE jornada/{idJornada}/aula/{idAula}/{id}
-     * Elimina una asignacion verificando que pertenezca a la jornada y aula indicadas.
-     */
     @DELETE
-    @Path("{id}")
+    @Path("{idAula}")
     public Response delete(
             @PathParam("idJornada") UUID idJornada,
-            @PathParam("idAula") UUID idAula,
-            @PathParam("id") Integer id) {
+            @PathParam("idAula") Integer idAula) {
 
-        if (idJornada == null || idAula == null || id == null) {
+        if (idJornada == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idJornada, idAula, id son requeridos")
+                    .header("Missing-parameter", "idJornada")
+                    .build();
+        }
+
+        if (idAula == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "idAula")
                     .build();
         }
 
         try {
-            JornadaAula existing = jornadaAulaDAO.findById(id);
+            JornadaAula existing = jornadaAulaDAO.findById(idAula);
 
             if (existing == null
-                    || !existing.getIdJornada().getId().equals(idJornada)
-                    || !existing.getIdAula().getId().equals(idAula)) {
+                    || !existing.getIdJornada().getId().equals(idJornada)) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Registro no encontrado para la jornada y aula indicadas")
+                        .header("Not-found", "Registro no encontrado para la jornada indicada")
                         .build();
             }
 

@@ -11,35 +11,6 @@ import testing.SystemTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Pruebas de sistema para {@link JornadaAulaAspiranteResource}.
- *
- * <p>Levantan un entorno real con Docker (PostgreSQL + OpenLiberty) y verifican
- * el comportamiento del API REST de extremo a extremo.
- *
- * <p>Convenciones:
- * <ul>
- *   <li>Un {@code @Nested} por endpoint, ordenado con {@code @TestClassOrder}.</li>
- *   <li>Nombre de método: {@code respondeXXX_cuandoCondicion}.</li>
- *   <li>Patrón AAA (Arrange / Act / Assert) en cada test.</li>
- *   <li>Cada Assert verifica: status → headers → body.</li>
- *   <li>{@code IDCREADO} se puebla en {@code Create} y se reutiliza en
- *       {@code FindById} y {@code Update}.</li>
- * </ul>
- *
- * <p>Particularidades de este resource:
- * <ul>
- *   <li>Path: {@code jornadaAula/{idJornadaAula}/aspirantePrueba/{idAspirantePrueba}}.</li>
- *   <li>El {@code id} es {@code Integer} asignado por PostgreSQL via {@code serial}
- *       ({@code @GeneratedValue(IDENTITY)}) — se extrae del body del {@code 201}.</li>
- *   <li>{@code fechaAsignacion} es {@code @NotNull} — debe incluirse en el body JSON.</li>
- *   <li>{@code asistio} tiene default {@code false} en Java — puede omitirse.</li>
- *   <li>No tiene endpoints {@code FindRange} ni {@code DeleteById}.</li>
- * </ul>
- *
- * @see JornadaAulaAspiranteResource
- * @see BaseIntegrationAbstract
- */
 @SystemTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestClassOrder(ClassOrderer.OrderAnnotation.class)
@@ -47,82 +18,89 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(ContainerExtension.class)
 public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract {
 
-    // --- Arrange General ---
-
-    /**
-     * IDs de JornadaAula y AspirantePrueba existentes en BD.
-     * La combinación jornadaAula=3 + aspirantePrueba=1 NO viola la restricción UNIQUE
-     * si no existe ya en los datos iniciales del script.
-     */
     private static final Integer ID_JORNADA_AULA_EXISTENTE     = 3;
     private static final Integer ID_ASPIRANTE_PRUEBA_EXISTENTE = 1;
+    private static final Integer ID_JORNADA_AULA_INEXISTENTE   = Integer.MAX_VALUE;
 
-    /** IDs inexistentes para verificar respuestas {@code 404}. */
-    private static final Integer ID_JORNADA_AULA_INEXISTENTE    = Integer.MAX_VALUE;
-    private static final Integer ID_ASPIRANTE_PRUEBA_INEXISTENTE = Integer.MAX_VALUE - 1;
-
-    /**
-     * Id ({@code Integer}) del JornadaAulaAspirante creado en
-     * {@code Create.responde201_cuandoEntidadValida}.
-     * Se extrae del body JSON del {@code 201} y se comparte con
-     * {@code FindById} y {@code Update}.
-     */
     private static Integer IDCREADO;
-
-    /** Id inexistente para verificar respuestas {@code 404}. */
     private static final Integer ID_INEXISTENTE = Integer.MAX_VALUE;
 
     private static final String PATH_JORNADA_AULA     = "jornadaAula";
     private static final String PATH_ASPIRANTE_PRUEBA = "aspirantePrueba";
 
-    /**
-     * Pruebas del endpoint
-     * {@code POST /jornadaAula/{idJornadaAula}/aspirantePrueba/{idAspirantePrueba}}.
-     *
-     * <p>Requiere JornadaAula y AspirantePrueba existentes en BD.
-     * El resource rechaza con {@code 422} y header {@code Missing-parameter}
-     * si {@code entity.getId() != null}.
-     * Devuelve {@code 404} con header {@code Not-found} si JornadaAula no existe.
-     */
     @Nested
     @Order(1)
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+    class FindRange {
+
+        @Order(1)
+        @Test
+        void responde200_cuandoJornadaAulaExiste() {
+            Response response = target
+                    .path(PATH_JORNADA_AULA)
+                    .path(ID_JORNADA_AULA_EXISTENTE.toString())
+                    .path(PATH_ASPIRANTE_PRUEBA)
+                    .request(MediaType.APPLICATION_JSON)
+                    .get();
+
+            assertEquals(200, response.getStatus(),
+                    "Debe retornar 200 cuando la jornadaAula existe");
+
+            assertNotNull(response.getHeaderString("Total-records"),
+                    "El header Total-records debe estar presente");
+
+            String body = response.readEntity(String.class);
+            assertNotNull(body, "El body no debe ser nulo");
+            assertTrue(body.startsWith("["),
+                    "El body debe ser un array JSON");
+        }
+
+        @Order(2)
+        @Test
+        void responde404_cuandoJornadaAulaNoExiste() {
+            Response response = target
+                    .path(PATH_JORNADA_AULA)
+                    .path(ID_JORNADA_AULA_INEXISTENTE.toString())
+                    .path(PATH_ASPIRANTE_PRUEBA)
+                    .request(MediaType.APPLICATION_JSON)
+                    .get();
+
+            assertEquals(404, response.getStatus(),
+                    "Debe retornar 404 cuando la jornadaAula no existe");
+
+            assertNotNull(response.getHeaderString("Not-found"),
+                    "El header Not-found debe estar presente");
+        }
+    }
+
+    @Nested
+    @Order(2)
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class Create {
 
-        /**
-         * Verifica {@code 201 Created} con JornadaAula y AspirantePrueba válidos.
-         *
-         * <p>Comprueba que:
-         * <ul>
-         *   <li>El status sea {@code 201}.</li>
-         *   <li>El header {@code Location} esté presente.</li>
-         *   <li>El body contenga el campo {@code id} generado por el servidor.</li>
-         *   <li>El body contenga el valor {@code asistio} enviado.</li>
-         * </ul>
-         */
         @Order(1)
         @Test
         void responde201_cuandoEntidadValida() {
-            // Arrange
             String bodyJson = """
                     {
+                        "idAspirantePrueba": { "id": %d },
                         "horaLlegada": "06:45:00",
                         "asistio": true,
                         "fechaAsignacion": "2025-05-10T00:00:00Z"
                     }
-                    """;
+                    """.formatted(ID_ASPIRANTE_PRUEBA_EXISTENTE);
 
             Response response = target
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
                     .path(PATH_ASPIRANTE_PRUEBA)
-                    .path(ID_ASPIRANTE_PRUEBA_EXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(bodyJson));
 
             assertEquals(201, response.getStatus(),
                     "Debe retornar 201 Created al crear un JornadaAulaAspirante válido");
 
+            // Assert — headers
             assertNotNull(response.getHeaderString("Location"),
                     "El header Location debe estar presente");
 
@@ -140,12 +118,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
             assertNotNull(IDCREADO, "El id extraído del body no debe ser nulo");
         }
 
-        /**
-         * Verifica que un body JSON vacío resulta en error de servidor.
-         *
-         * <p>Liberty falla en deserialización antes del resource
-         * ({@code 400} o {@code 500}).
-         */
         @Order(2)
         @Test
         void respondeFallo_cuandoBodyJsonMalformado() {
@@ -153,7 +125,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
                     .path(PATH_ASPIRANTE_PRUEBA)
-                    .path(ID_ASPIRANTE_PRUEBA_EXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.entity("", MediaType.APPLICATION_JSON));
 
@@ -164,31 +135,22 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
             );
         }
 
-        /**
-         * Verifica {@code 422} cuando la entidad trae un {@code id} pre-asignado.
-         *
-         * <p>Comprueba que:
-         * <ul>
-         *   <li>El status sea {@code 422}.</li>
-         *   <li>El header {@code Missing-parameter} esté presente.</li>
-         * </ul>
-         */
         @Order(3)
         @Test
         void responde422_cuandoEntidadTieneIdPreasignado() {
             String bodyConId = """
                     {
                         "id": 99999,
+                        "idAspirantePrueba": { "id": %d },
                         "asistio": false,
                         "fechaAsignacion": "2025-05-10T00:00:00Z"
                     }
-                    """;
+                    """.formatted(ID_ASPIRANTE_PRUEBA_EXISTENTE);
 
             Response response = target
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
                     .path(PATH_ASPIRANTE_PRUEBA)
-                    .path(ID_ASPIRANTE_PRUEBA_EXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(bodyConId));
 
@@ -199,25 +161,21 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     "El header Missing-parameter debe estar presente");
         }
 
-        /**
-         * Verifica {@code 404} con header {@code Not-found} cuando la JornadaAula
-         * del path no existe en BD.
-         */
         @Order(4)
         @Test
         void responde404_cuandoJornadaAulaNoExiste() {
             String body = """
                     {
+                        "idAspirantePrueba": { "id": %d },
                         "asistio": false,
                         "fechaAsignacion": "2025-05-10T00:00:00Z"
                     }
-                    """;
+                    """.formatted(ID_ASPIRANTE_PRUEBA_EXISTENTE);
 
             Response response = target
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_INEXISTENTE.toString())
                     .path(PATH_ASPIRANTE_PRUEBA)
-                    .path(ID_ASPIRANTE_PRUEBA_EXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(body));
 
@@ -229,27 +187,11 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
         }
     }
 
-    /**
-     * Pruebas del endpoint
-     * {@code GET /jornadaAula/{idJornadaAula}/aspirantePrueba/{idAspirantePrueba}/{id}}.
-     *
-     * <p>Depende de que {@code Create.responde201_cuandoEntidadValida} haya
-     * poblado {@code IDCREADO}.
-     */
     @Nested
-    @Order(2)
+    @Order(3)
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class FindById {
 
-        /**
-         * Verifica {@code 200 OK} cuando el {@code id} existe.
-         *
-         * <p>Comprueba que:
-         * <ul>
-         *   <li>El status sea {@code 200}.</li>
-         *   <li>El body contenga el {@code id} consultado.</li>
-         * </ul>
-         */
         @Order(1)
         @Test
         void responde200_cuandoIdExiste() {
@@ -260,7 +202,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
                     .path(PATH_ASPIRANTE_PRUEBA)
-                    .path(ID_ASPIRANTE_PRUEBA_EXISTENTE.toString())
                     .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .get();
@@ -274,10 +215,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     "El body debe contener el id consultado");
         }
 
-        /**
-         * Verifica {@code 404} con header {@code Not-found} cuando el {@code id}
-         * no corresponde a ningún registro.
-         */
         @Order(2)
         @Test
         void responde404_cuandoIdNoExiste() {
@@ -285,7 +222,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
                     .path(PATH_ASPIRANTE_PRUEBA)
-                    .path(ID_ASPIRANTE_PRUEBA_EXISTENTE.toString())
                     .path(ID_INEXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .get();
@@ -298,25 +234,11 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
         }
     }
 
-    /**
-     * Pruebas del endpoint
-     * {@code PUT /jornadaAula/{idJornadaAula}/aspirantePrueba/{idAspirantePrueba}/{id}}.
-     */
     @Nested
-    @Order(3)
+    @Order(4)
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class Update {
 
-        /**
-         * Verifica {@code 200 OK} cuando el {@code id} existe y la entidad es válida.
-         *
-         * <p>Comprueba que:
-         * <ul>
-         *   <li>El status sea {@code 200}.</li>
-         *   <li>El body contenga el {@code id} del registro actualizado.</li>
-         *   <li>El body refleje el campo {@code asistio} actualizado.</li>
-         * </ul>
-         */
         @Order(1)
         @Test
         void responde200_cuandoIdExisteYEntidadValida() {
@@ -335,7 +257,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
                     .path(PATH_ASPIRANTE_PRUEBA)
-                    .path(ID_ASPIRANTE_PRUEBA_EXISTENTE.toString())
                     .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(bodyActualizado));
@@ -351,10 +272,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     "El body debe reflejar el campo asistio actualizado");
         }
 
-        /**
-         * Verifica {@code 404} con header {@code Not-found} cuando el {@code id}
-         * del path no corresponde a ningún registro.
-         */
         @Order(2)
         @Test
         void responde404_cuandoIdNoExiste() {
@@ -369,7 +286,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
                     .path(PATH_ASPIRANTE_PRUEBA)
-                    .path(ID_ASPIRANTE_PRUEBA_EXISTENTE.toString())
                     .path(ID_INEXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(body));
@@ -381,12 +297,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     "El header Not-found debe estar presente");
         }
 
-        /**
-         * Verifica que un body JSON vacío resulta en error de servidor.
-         *
-         * <p>Liberty falla en deserialización antes del resource
-         * ({@code 400} o {@code 500}).
-         */
         @Order(3)
         @Test
         void respondeFallo_cuandoBodyJsonMalformado() {
@@ -397,7 +307,6 @@ public class JornadaAulaAspiranteResourceSystem extends BaseIntegrationAbstract 
                     .path(PATH_JORNADA_AULA)
                     .path(ID_JORNADA_AULA_EXISTENTE.toString())
                     .path(PATH_ASPIRANTE_PRUEBA)
-                    .path(ID_ASPIRANTE_PRUEBA_EXISTENTE.toString())
                     .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.entity("", MediaType.APPLICATION_JSON));

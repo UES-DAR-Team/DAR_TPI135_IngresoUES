@@ -35,11 +35,6 @@ public class JornadaAulaAspiranteResultadoDAO extends IngresoDefaultDataAcces<Jo
         return JornadaAulaAspiranteResultado.class;
     }
 
-    @Override
-    public void create(JornadaAulaAspiranteResultado entity) {
-        em.persist(entity);
-    }
-
     public List<JornadaAulaAspiranteResultado> findByJornadaAulaAspirante(Integer idJornadaAulaAspirante, int first, int max)
             throws IllegalArgumentException, IllegalStateException {
 

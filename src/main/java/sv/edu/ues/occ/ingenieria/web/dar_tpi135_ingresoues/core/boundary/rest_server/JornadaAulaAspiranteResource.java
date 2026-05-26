@@ -16,7 +16,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAu
 import java.io.Serializable;
 import java.util.List;
 
-@Path("jornadaAula/{idJornadaAula}/aspirantePrueba/{idAspirantePrueba}")
+@Path("jornadaAula/{idJornadaAula}/aspirantePrueba")
 public class JornadaAulaAspiranteResource implements Serializable {
 
     @Inject
@@ -28,21 +28,16 @@ public class JornadaAulaAspiranteResource implements Serializable {
     @Inject
     AspirantePruebaDAO aspirantePruebaDAO;
 
-    /**
-     * GET jornadaAula/{idJornadaAula}/aspirantePrueba/{idAspirantePrueba}?first=0&max=100
-     * Lista paginada de aspirantes asignados a un aula de jornada.
-     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response findRange(
             @PathParam("idJornadaAula") Integer idJornadaAula,
-            @PathParam("idAspirantePrueba") Integer idAspirantePrueba,
             @Min(0) @DefaultValue("0") @QueryParam("first") int first,
             @Max(100) @Min(1) @DefaultValue("100") @QueryParam("max") int max) {
 
-        if (idJornadaAula == null || idAspirantePrueba == null) {
+        if (idJornadaAula == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idJornadaAula, idAspirantePrueba")
+                    .header("Missing-parameter", "idJornadaAula")
                     .build();
         }
 
@@ -60,13 +55,6 @@ public class JornadaAulaAspiranteResource implements Serializable {
                         .build();
             }
 
-            AspirantePrueba ap = aspirantePruebaDAO.findById(idAspirantePrueba);
-            if (ap == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "AspirantePrueba con id " + idAspirantePrueba + " no encontrada")
-                        .build();
-            }
-
             Long total = jaaDAO.countByJornadaAula(idJornadaAula);
             List<JornadaAulaAspirante> lista = jaaDAO.findByJornadaAula(idJornadaAula, first, max);
 
@@ -81,33 +69,32 @@ public class JornadaAulaAspiranteResource implements Serializable {
         }
     }
 
-    /**
-     * GET jornadaAula/{idJornadaAula}/aspirantePrueba/{idAspirantePrueba}/{id}
-     * Obtiene un registro por su ID verificando que pertenezca a la jornadaAula
-     * y aspirantePrueba indicadas.
-     */
     @GET
-    @Path("{id}")
+    @Path("{idAspirantePrueba}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(
             @PathParam("idJornadaAula") Integer idJornadaAula,
-            @PathParam("idAspirantePrueba") Integer idAspirantePrueba,
-            @PathParam("id") Integer id) {
+            @PathParam("idAspirantePrueba") Integer idAspirantePrueba) {
 
-        if (idJornadaAula == null || idAspirantePrueba == null || id == null) {
+        if (idJornadaAula == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idJornadaAula, idAspirantePrueba, id")
+                    .header("Missing-parameter", "idJornadaAula")
+                    .build();
+        }
+
+        if (idAspirantePrueba == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "idAspirantePrueba")
                     .build();
         }
 
         try {
-            JornadaAulaAspirante resp = jaaDAO.findById(id);
+            JornadaAulaAspirante resp = jaaDAO.findById(idAspirantePrueba);
 
             if (resp == null
-                    || !resp.getIdJornadaAula().getId().equals(idJornadaAula)
-                    || !resp.getIdAspirantePrueba().getId().equals(idAspirantePrueba)) {
+                    || !resp.getIdJornadaAula().getId().equals(idJornadaAula)) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Registro no encontrado para la jornadaAula y aspirantePrueba indicadas")
+                        .header("Not-found", "Registro no encontrado para la jornadaAula indicada")
                         .build();
             }
 
@@ -120,28 +107,36 @@ public class JornadaAulaAspiranteResource implements Serializable {
         }
     }
 
-    /**
-     * POST jornadaAula/{idJornadaAula}/aspirantePrueba/{idAspirantePrueba}
-     * Asigna un aspirante a un aula de jornada. El id debe venir nulo.
-     */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response create(
             @PathParam("idJornadaAula") Integer idJornadaAula,
-            @PathParam("idAspirantePrueba") Integer idAspirantePrueba,
             JornadaAulaAspirante entity,
             @Context UriInfo uriInfo) {
 
-        if (idJornadaAula == null || idAspirantePrueba == null || entity == null) {
+        if (idJornadaAula == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idJornadaAula, idAspirantePrueba y entity son requeridos")
+                    .header("Missing-parameter", "idJornadaAula")
+                    .build();
+        }
+
+        if (entity == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "entity")
                     .build();
         }
 
         if (entity.getId() != null) {
             return Response.status(422)
                     .header("Missing-parameter", "entity.id debe ser nulo para creacion")
+                    .build();
+        }
+
+        if (entity.getIdAspirantePrueba() == null
+                || entity.getIdAspirantePrueba().getId() == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "idAspirantePrueba")
                     .build();
         }
 
@@ -153,10 +148,12 @@ public class JornadaAulaAspiranteResource implements Serializable {
                         .build();
             }
 
-            AspirantePrueba ap = aspirantePruebaDAO.findById(idAspirantePrueba);
+            AspirantePrueba ap = aspirantePruebaDAO.findById(
+                    entity.getIdAspirantePrueba().getId());
             if (ap == null) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "AspirantePrueba con id " + idAspirantePrueba + " no encontrada")
+                        .header("Not-found", "AspirantePrueba con id "
+                                + entity.getIdAspirantePrueba().getId() + " no encontrada")
                         .build();
             }
 
@@ -166,8 +163,7 @@ public class JornadaAulaAspiranteResource implements Serializable {
             jaaDAO.create(entity);
 
             return Response.created(
-                    uriInfo.getAbsolutePathBuilder()
-                            .build()
+                    uriInfo.getAbsolutePathBuilder().build()
             ).entity(entity).build();
 
         } catch (Exception e) {
@@ -186,57 +182,47 @@ public class JornadaAulaAspiranteResource implements Serializable {
         }
     }
 
-    /**
-     * PUT jornadaAula/{idJornadaAula}/aspirantePrueba/{idAspirantePrueba}/{id}
-     * Actualiza una asignacion existente verificando que pertenezca a la
-     * jornadaAula y aspirantePrueba indicadas.
-     */
     @PUT
-    @Path("{id}")
+    @Path("{idAspirantePrueba}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response update(
             @PathParam("idJornadaAula") Integer idJornadaAula,
             @PathParam("idAspirantePrueba") Integer idAspirantePrueba,
-            @PathParam("id") Integer id,
             JornadaAulaAspirante entity) {
 
-        if (idJornadaAula == null || idAspirantePrueba == null || id == null || entity == null) {
+        if (idJornadaAula == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idJornadaAula, idAspirantePrueba, id y entity son requeridos")
+                    .header("Missing-parameter", "idJornadaAula")
+                    .build();
+        }
+
+        if (idAspirantePrueba == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "idAspirantePrueba")
+                    .build();
+        }
+
+        if (entity == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "entity")
                     .build();
         }
 
         try {
-            JornadaAulaAspirante existing = jaaDAO.findById(id);
+            JornadaAulaAspirante existing = jaaDAO.findById(idAspirantePrueba);
 
             if (existing == null
-                    || !existing.getIdJornadaAula().getId().equals(idJornadaAula)
-                    || !existing.getIdAspirantePrueba().getId().equals(idAspirantePrueba)) {
+                    || !existing.getIdJornadaAula().getId().equals(idJornadaAula)) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Registro no encontrado para la jornadaAula y aspirantePrueba indicadas")
+                        .header("Not-found", "Registro no encontrado para la jornadaAula indicada")
                         .build();
             }
 
-            JornadaAula ja = jornadaAulaDAO.findById(idJornadaAula);
-            if (ja == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "JornadaAula con id " + idJornadaAula + " no encontrada")
-                        .build();
-            }
+            existing.setHoraLlegada(entity.getHoraLlegada());
+            existing.setAsistio(entity.getAsistio());
 
-            AspirantePrueba ap = aspirantePruebaDAO.findById(idAspirantePrueba);
-            if (ap == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "AspirantePrueba con id " + idAspirantePrueba + " no encontrada")
-                        .build();
-            }
-
-            entity.setId(id);
-            entity.setIdJornadaAula(ja);
-            entity.setIdAspirantePrueba(ap);
-
-            JornadaAulaAspirante updated = jaaDAO.update(entity);
+            JornadaAulaAspirante updated = jaaDAO.update(existing);
 
             return Response.ok(updated).build();
 
@@ -247,32 +233,31 @@ public class JornadaAulaAspiranteResource implements Serializable {
         }
     }
 
-    /**
-     * DELETE jornadaAula/{idJornadaAula}/aspirantePrueba/{idAspirantePrueba}/{id}
-     * Elimina una asignacion verificando que pertenezca a la jornadaAula
-     * y aspirantePrueba indicadas.
-     */
     @DELETE
-    @Path("{id}")
+    @Path("{idAspirantePrueba}")
     public Response delete(
             @PathParam("idJornadaAula") Integer idJornadaAula,
-            @PathParam("idAspirantePrueba") Integer idAspirantePrueba,
-            @PathParam("id") Integer id) {
+            @PathParam("idAspirantePrueba") Integer idAspirantePrueba) {
 
-        if (idJornadaAula == null || idAspirantePrueba == null || id == null) {
+        if (idJornadaAula == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "idJornadaAula, idAspirantePrueba, id son requeridos")
+                    .header("Missing-parameter", "idJornadaAula")
+                    .build();
+        }
+
+        if (idAspirantePrueba == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "idAspirantePrueba")
                     .build();
         }
 
         try {
-            JornadaAulaAspirante existing = jaaDAO.findById(id);
+            JornadaAulaAspirante existing = jaaDAO.findById(idAspirantePrueba);
 
             if (existing == null
-                    || !existing.getIdJornadaAula().getId().equals(idJornadaAula)
-                    || !existing.getIdAspirantePrueba().getId().equals(idAspirantePrueba)) {
+                    || !existing.getIdJornadaAula().getId().equals(idJornadaAula)) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Registro no encontrado para la jornadaAula y aspirantePrueba indicadas")
+                        .header("Not-found", "Registro no encontrado para la jornadaAula indicada")
                         .build();
             }
 

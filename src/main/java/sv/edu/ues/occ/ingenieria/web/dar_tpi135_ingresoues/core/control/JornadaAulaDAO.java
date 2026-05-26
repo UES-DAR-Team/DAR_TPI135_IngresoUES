@@ -36,11 +36,6 @@ public class JornadaAulaDAO extends IngresoDefaultDataAcces<JornadaAula, Integer
         return JornadaAula.class;
     }
 
-    @Override
-    public void create(JornadaAula entity) {
-        em.persist(entity);
-    }
-
     public List<JornadaAula> findByJornada(UUID idJornada, int first, int max) {
 
         if (idJornada == null) {

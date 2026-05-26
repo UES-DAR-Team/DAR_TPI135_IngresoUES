@@ -154,27 +154,4 @@ public class OpcionResource implements Serializable {
                 .header("Missing-parameter", "id")
                 .build();
     }
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

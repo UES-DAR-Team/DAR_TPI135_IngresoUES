@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "jornada_aula", schema = "public")
@@ -27,6 +26,7 @@ import java.util.UUID;
         )
 })
 public class JornadaAula {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_jornada_aula", nullable = false)
@@ -46,6 +46,12 @@ public class JornadaAula {
     @Column(name = "fecha_asignacion", nullable = false)
     private OffsetDateTime fechaAsignacion;
 
+    @PrePersist
+    public void prePersist() {
+        if (fechaAsignacion == null) {
+            fechaAsignacion = OffsetDateTime.now();
+        }
+    }
 
     public Integer getId() {
         return id;

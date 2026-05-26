@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *   <li>Un {@code @Nested} por endpoint, ordenado con {@code @TestClassOrder}.</li>
  *   <li>Nombre de método: {@code respondeXXX_cuandoCondicion}.</li>
  *   <li>Patrón AAA (Arrange / Act / Assert) en cada test.</li>
+ *   <li>Cada Assert verifica: status → headers → body.</li>
  *   <li>{@code IDCREADO} se puebla en {@code Create} y se reutiliza en
  *       {@code FindById}, {@code Update} y {@code DeleteById}.</li>
  * </ul>
@@ -56,16 +57,24 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
     private static final String PATH = "jornada";
 
     /**
-     * <li>UUID del registro creado en {@code Create.responde201_cuandoEntidadValida}.
-     * Se comparte con {@code FindById}, {@code Update} y {@code DeleteById}.</li>
-     * <li>UUID inexistente para verificar respuestas {@code 404}.</li>
-     * <li>Parámetros de paginación válidos e inválidos para {@code FindRange}.</li>
+     * UUID del registro creado en {@code Create.responde201_cuandoEntidadValida}.
+     * Se comparte con {@code FindById}, {@code Update} y {@code DeleteById}.
      */
     private static UUID IDCREADO;
+
+    /** UUID inexistente para verificar respuestas {@code 404}. */
     private static final UUID IDINEXISTENTE = UUID.randomUUID();
+
+    /** Parámetro de paginación válido — primera página. */
     private static final int FIRST        = 0;
+
+    /** Parámetro de paginación válido — tamaño de página. */
     private static final int MAX          = 10;
+
+    /** Parámetro inválido — {@code first} negativo, viola {@code @Min(0)}. */
     private static final int INVALIDFIRST = -1;
+
+    /** Parámetro inválido — {@code max} excede el límite, viola {@code @Max(100)}. */
     private static final int INVALIDMAX   = 101;
 
     /**
@@ -81,13 +90,18 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
     class FindRange {
 
         /**
-         * Verifica {@code 200 OK} con parámetros válidos, cuerpo JSON presente
-         * y header {@code Total-records} incluido.
+         * Verifica {@code 200 OK} con parámetros válidos.
+         *
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 200}.</li>
+         *   <li>El header {@code Total-records} esté presente y sea un número {@code >= 0}.</li>
+         *   <li>El body sea un array JSON (empieza con {@code [}).</li>
+         * </ul>
          */
         @Order(1)
         @Test
         void responde200_cuandoParametrosValidos() {
-            // Act
             Response response = target
                     .path(PATH)
                     .queryParam("first", FIRST)
@@ -95,12 +109,19 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
-            assertEquals(200, response.getStatus());
-            assertNotNull(response.getHeaderString("Total-records"),
+            assertEquals(200, response.getStatus(),
+                    "Debe retornar 200 con parámetros válidos");
+
+            String totalRecords = response.getHeaderString("Total-records");
+            assertNotNull(totalRecords,
                     "El header Total-records debe estar presente");
-            assertTrue(response.hasEntity(),
-                    "La respuesta debe contener un cuerpo JSON");
+            assertTrue(Integer.parseInt(totalRecords) >= 0,
+                    "Total-records debe ser un número mayor o igual a 0");
+
+            String body = response.readEntity(String.class);
+            assertNotNull(body, "El body no debe ser nulo");
+            assertTrue(body.startsWith("["),
+                    "El body debe ser un array JSON");
         }
 
         /**
@@ -111,7 +132,6 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
         @Order(2)
         @Test
         void responde400_cuandoFirstNegativo() {
-            // Act
             Response response = target
                     .path(PATH)
                     .queryParam("first", INVALIDFIRST)
@@ -119,8 +139,8 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
-            assertEquals(400, response.getStatus());
+            assertEquals(400, response.getStatus(),
+                    "Liberty debe interceptar @Min(0) y retornar 400");
         }
 
         /**
@@ -131,7 +151,6 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
         @Order(3)
         @Test
         void responde400_cuandoMaxExcedeLimite() {
-            // Act
             Response response = target
                     .path(PATH)
                     .queryParam("first", FIRST)
@@ -139,8 +158,8 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
-            assertEquals(400, response.getStatus());
+            assertEquals(400, response.getStatus(),
+                    "Liberty debe interceptar @Max(100) y retornar 400");
         }
     }
 
@@ -163,13 +182,18 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
         /**
          * Verifica {@code 201 Created} con entidad válida sin {@code id}.
          *
-         * <p>El UUID generado se extrae del campo {@code id} del body JSON
-         * y se almacena en {@code IDCREADO} para los {@code @Nested} posteriores.
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 201}.</li>
+         *   <li>El header {@code Location} esté presente.</li>
+         *   <li>El body contenga el {@code id} generado por el servidor.</li>
+         *   <li>El body contenga el {@code nombreJornada} enviado.</li>
+         *   <li>El UUID extraído sea válido y se almacene en {@code IDCREADO}.</li>
+         * </ul>
          */
         @Order(1)
         @Test
         void responde201_cuandoEntidadValida() {
-            // Arrange
             String bodyJson = """
                     {
                         "nombreJornada": "Jornada de prueba de sistema",
@@ -181,22 +205,23 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH)
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(bodyJson));
 
-            // Assert
             assertEquals(201, response.getStatus(),
                     "Debe retornar 201 Created al crear una Jornada válida");
-            assertNotNull(response.getHeaderString("Location"),
-                    "El header Location debe contener la URI del nuevo recurso");
 
-            // Extraer el UUID del body JSON
+            assertNotNull(response.getHeaderString("Location"),
+                    "El header Location debe estar presente");
+
             String body = response.readEntity(String.class);
             assertNotNull(body, "El body no debe ser nulo");
-            assertTrue(body.contains("\"id\""), "El body debe contener el campo id");
+            assertTrue(body.contains("\"id\""),
+                    "El body debe contener el campo id generado por el servidor");
+            assertTrue(body.contains("Jornada de prueba de sistema"),
+                    "El body debe contener el nombreJornada enviado");
 
             int idStart = body.indexOf("\"id\":\"") + 6;
             int idEnd   = body.indexOf("\"", idStart);
@@ -213,13 +238,11 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
         @Order(2)
         @Test
         void respondeFallo_cuandoBodyJsonMalformado() {
-            // Act
             Response response = target
                     .path(PATH)
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.entity("", MediaType.APPLICATION_JSON));
 
-            // Assert
             assertTrue(
                     response.getStatus() == 400 || response.getStatus() == 500,
                     "Debe retornar 400 o 500 cuando el body JSON está vacío, " +
@@ -232,6 +255,12 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
          *
          * <p>El resource rechaza con {@code 422} y header {@code Missing-parameter}
          * si el cliente manda un {@code id}.
+         *
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 422}.</li>
+         *   <li>El header {@code Missing-parameter} esté presente.</li>
+         * </ul>
          */
         @Order(3)
         @Test
@@ -249,15 +278,14 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH)
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(bodyConId));
 
-            // Assert
             assertEquals(422, response.getStatus(),
                     "Debe retornar 422 cuando la entidad trae un id pre-asignado");
+
             assertNotNull(response.getHeaderString("Missing-parameter"),
                     "El header Missing-parameter debe estar presente");
         }
@@ -275,27 +303,36 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
     class FindById {
 
         /**
-         * Verifica {@code 200 OK} y cuerpo JSON cuando el {@code id} existe.
+         * Verifica {@code 200 OK} cuando el {@code id} existe.
+         *
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 200}.</li>
+         *   <li>El body contenga el {@code id} consultado.</li>
+         *   <li>El body contenga el nombre de la jornada creada.</li>
+         * </ul>
          */
         @Order(1)
         @Test
         void responde200_cuandoIdExiste() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "IDCREADO debe estar poblado por Create.responde201_cuandoEntidadValida");
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
             assertEquals(200, response.getStatus(),
                     "Debe retornar 200 cuando el id existe");
-            assertTrue(response.hasEntity(),
-                    "La respuesta debe contener la Jornada encontrada");
+
+            String body = response.readEntity(String.class);
+            assertNotNull(body, "El body no debe ser nulo");
+            assertTrue(body.contains(IDCREADO.toString()),
+                    "El body debe contener el id consultado");
+            assertTrue(body.contains("Jornada de prueba de sistema"),
+                    "El body debe contener el nombre de la jornada creada");
         }
 
         /**
@@ -305,16 +342,15 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
         @Order(2)
         @Test
         void responde404_cuandoIdNoExiste() {
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDINEXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 cuando el id no existe");
+
             assertNotNull(response.getHeaderString("Not-found"),
                     "El header Not-found debe estar presente");
         }
@@ -333,13 +369,18 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
     class Update {
 
         /**
-         * Verifica {@code 200 OK} y cuerpo actualizado cuando el {@code id} existe
-         * y la entidad es válida.
+         * Verifica {@code 200 OK} cuando el {@code id} existe y la entidad es válida.
+         *
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 200}.</li>
+         *   <li>El body contenga el nombre actualizado de la jornada.</li>
+         *   <li>El body conserve el mismo {@code id} de la jornada.</li>
+         * </ul>
          */
         @Order(1)
         @Test
         void responde200_cuandoIdExisteYEntidadValida() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "IDCREADO debe estar poblado por Create.responde201_cuandoEntidadValida");
 
@@ -354,18 +395,21 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(bodyActualizado));
 
-            // Assert
             assertEquals(200, response.getStatus(),
                     "Debe retornar 200 cuando el id existe y la entidad es válida");
-            assertTrue(response.hasEntity(),
-                    "La respuesta debe contener la Jornada actualizada");
+
+            String body = response.readEntity(String.class);
+            assertNotNull(body, "El body no debe ser nulo");
+            assertTrue(body.contains("Jornada actualizada por prueba de sistema"),
+                    "El body debe contener el nombre actualizado de la jornada");
+            assertTrue(body.contains(IDCREADO.toString()),
+                    "El body debe conservar el mismo id de la jornada");
         }
 
         /**
@@ -375,7 +419,6 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
         @Order(2)
         @Test
         void responde404_cuandoIdNoExiste() {
-            // Arrange
             String body = """
                     {
                         "nombreJornada": "No debe actualizarse",
@@ -387,16 +430,15 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
                     }
                     """;
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDINEXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(body));
 
-            // Assert
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 cuando el id no existe");
+
             assertNotNull(response.getHeaderString("Not-found"),
                     "El header Not-found debe estar presente");
         }
@@ -410,18 +452,15 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
         @Order(3)
         @Test
         void respondeFallo_cuandoBodyJsonMalformado() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "IDCREADO debe estar poblado por Create.responde201_cuandoEntidadValida");
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .put(Entity.entity("", MediaType.APPLICATION_JSON));
 
-            // Assert
             assertTrue(
                     response.getStatus() == 400 || response.getStatus() == 500,
                     "Debe retornar 400 o 500 cuando el body JSON está vacío, " +
@@ -449,16 +488,15 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
         @Order(1)
         @Test
         void responde404_cuandoIdNoExiste() {
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDINEXISTENTE.toString())
                     .request()
                     .delete();
 
-            // Assert
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 cuando el id no existe");
+
             assertNotNull(response.getHeaderString("Not-found"),
                     "El header Not-found debe estar presente");
         }
@@ -469,24 +507,28 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
          *
          * <p>Se ejecuta después del {@code 404} para no destruir el registro
          * que usan {@code FindById} y {@code Update}.
+         *
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 204}.</li>
+         *   <li>La respuesta no tenga cuerpo.</li>
+         * </ul>
          */
         @Order(2)
         @Test
         void responde204_cuandoIdExiste() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "IDCREADO debe estar poblado por Create.responde201_cuandoEntidadValida");
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
                     .request()
                     .delete();
 
-            // Assert
             assertEquals(204, response.getStatus(),
                     "Debe retornar 204 No Content al eliminar un registro existente");
+
             assertFalse(response.hasEntity(),
                     "La respuesta no debe contener cuerpo tras eliminar");
         }
@@ -494,24 +536,30 @@ public class JornadaResourceSystem extends BaseIntegrationAbstract {
         /**
          * Verifica {@code 404} al intentar acceder al registro ya eliminado,
          * confirmando que la eliminación fue persistida correctamente en BD.
+         *
+         * <p>Comprueba que:
+         * <ul>
+         *   <li>El status sea {@code 404}.</li>
+         *   <li>El header {@code Not-found} esté presente.</li>
+         * </ul>
          */
         @Order(3)
         @Test
         void responde404_cuandoSeIntentaAccederAlRegistroEliminado() {
-            // Arrange
             assertNotNull(IDCREADO,
                     "IDCREADO debe estar poblado por Create.responde201_cuandoEntidadValida");
 
-            // Act
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            // Assert
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 al intentar acceder a un registro ya eliminado");
+
+            assertNotNull(response.getHeaderString("Not-found"),
+                    "El header Not-found debe estar presente tras eliminar");
         }
     }
 }

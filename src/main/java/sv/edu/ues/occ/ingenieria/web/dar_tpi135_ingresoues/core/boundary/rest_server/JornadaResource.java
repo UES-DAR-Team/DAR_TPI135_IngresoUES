@@ -22,27 +22,25 @@ public class JornadaResource implements Serializable {
     @Produces(MediaType.APPLICATION_JSON)
     public Response findRange(
             @Min(0) @DefaultValue("0") @QueryParam("first") int first,
-            @Max(100) @DefaultValue("100") @QueryParam("max") int max
-    ) {
+            @Max(100) @Min(1) @DefaultValue("100") @QueryParam("max") int max) {
 
-        if (first >= 0 && max <= 100) {
-            try {
-                int total = jornadaDAO.count();
-
-                return Response.ok(jornadaDAO.findRange(first, max))
-                        .header("Total-records", total)
-                        .build();
-
-            } catch (Exception e) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db")
-                        .build();
-            }
+        if (first < 0 || max <= 0 || max > 100) {
+            return Response.status(422)
+                    .header("Missing-parameter", "first, max")
+                    .build();
         }
 
-        return Response.status(422)
-                .header("Missing-parameter", "first,max")
-                .build();
+        try {
+            int total = jornadaDAO.count();
+            return Response.ok(jornadaDAO.findRange(first, max))
+                    .header("Total-records", total)
+                    .build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .header("Server-exception", "Cannot access db")
+                    .build();
+        }
     }
 
     @GET
@@ -50,57 +48,28 @@ public class JornadaResource implements Serializable {
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(@PathParam("id") UUID id) {
 
-        if (id != null) {
-            try {
-                Jornada resp = jornadaDAO.findById(id);
-
-                if (resp != null) {
-                    return Response.ok(resp).build();
-                }
-
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Record with id " + id + " not found")
-                        .build();
-
-            } catch (Exception e) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db")
-                        .build();
-            }
+        if (id == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "id")
+                    .build();
         }
 
-        return Response.status(422)
-                .header("Missing-parameter", "id")
-                .build();
-    }
+        try {
+            Jornada resp = jornadaDAO.findById(id);
 
-    @DELETE
-    @Path("{id}")
-    public Response delete(@PathParam("id") UUID id) {
-
-        if (id != null) {
-            try {
-                Jornada resp = jornadaDAO.findById(id);
-
-                if (resp != null) {
-                    jornadaDAO.delete(resp);
-                    return Response.noContent().build();
-                }
-
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Record with id " + id + " not found")
-                        .build();
-
-            } catch (Exception e) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db")
-                        .build();
+            if (resp != null) {
+                return Response.ok(resp).build();
             }
-        }
 
-        return Response.status(422)
-                .header("Missing-parameter", "id")
-                .build();
+            return Response.status(Response.Status.NOT_FOUND)
+                    .header("Not-found", "Jornada con id " + id + " no encontrada")
+                    .build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .header("Server-exception", "Cannot access db")
+                    .build();
+        }
     }
 
     @POST
@@ -108,9 +77,15 @@ public class JornadaResource implements Serializable {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response create(Jornada entity, @Context UriInfo uriInfo) {
 
-        if (entity == null || entity.getId() != null) {
+        if (entity == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "entity must not be null and id must be null")
+                    .header("Missing-parameter", "entity must not be null")
+                    .build();
+        }
+
+        if (entity.getId() != null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "entity.id must be null")
                     .build();
         }
 
@@ -118,12 +93,19 @@ public class JornadaResource implements Serializable {
             jornadaDAO.create(entity);
 
             return Response.created(
-                    uriInfo.getAbsolutePathBuilder()
-                            .path(String.valueOf(entity.getId()))
-                            .build()
+                    uriInfo.getAbsolutePathBuilder().build()
             ).entity(entity).build();
 
         } catch (Exception e) {
+            Throwable cause = e.getCause() != null ? e.getCause() : e;
+            String msg = cause.getMessage() != null ? cause.getMessage() : "";
+
+            if (msg.contains("duplicate key")) {
+                return Response.status(Response.Status.CONFLICT)
+                        .header("Conflict", "Ya existe una jornada con esos datos")
+                        .build();
+            }
+
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .header("Server-exception", "Cannot access db")
                     .build();
@@ -136,9 +118,15 @@ public class JornadaResource implements Serializable {
     @Produces(MediaType.APPLICATION_JSON)
     public Response update(@PathParam("id") UUID id, Jornada entity) {
 
-        if (id == null || entity == null) {
+        if (id == null) {
             return Response.status(422)
-                    .header("Missing-parameter", "id,entity")
+                    .header("Missing-parameter", "id")
+                    .build();
+        }
+
+        if (entity == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "entity")
                     .build();
         }
 
@@ -147,7 +135,7 @@ public class JornadaResource implements Serializable {
 
             if (existing == null) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Record with id " + id + " not found")
+                        .header("Not-found", "Jornada con id " + id + " no encontrada")
                         .build();
             }
 
@@ -159,6 +147,35 @@ public class JornadaResource implements Serializable {
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .header("Server-exception", e.getMessage())
+                    .build();
+        }
+    }
+
+    @DELETE
+    @Path("{id}")
+    public Response delete(@PathParam("id") UUID id) {
+
+        if (id == null) {
+            return Response.status(422)
+                    .header("Missing-parameter", "id")
+                    .build();
+        }
+
+        try {
+            Jornada existing = jornadaDAO.findById(id);
+
+            if (existing == null) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .header("Not-found", "Jornada con id " + id + " no encontrada")
+                        .build();
+            }
+
+            jornadaDAO.delete(existing);
+            return Response.noContent().build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .header("Server-exception", "Cannot access db")
                     .build();
         }
     }

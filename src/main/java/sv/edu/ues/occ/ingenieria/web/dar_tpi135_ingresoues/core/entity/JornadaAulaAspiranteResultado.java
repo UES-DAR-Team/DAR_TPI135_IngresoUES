@@ -24,9 +24,14 @@ import java.time.OffsetDateTime;
         @NamedQuery(
                 name = "JornadaAulaAspiranteResultado.countByAprobado",
                 query = "SELECT COUNT(r) FROM JornadaAulaAspiranteResultado r WHERE r.aprobado = :aprobado"
+        ),
+        @NamedQuery(
+                name = "JornadaAulaAspiranteResultado.countByJornadaAulaAspirante",
+                query = "SELECT COUNT(r) FROM JornadaAulaAspiranteResultado r WHERE r.idJornadaAulaAspirante.id = :idJornadaAulaAspirante"
         )
 })
 public class JornadaAulaAspiranteResultado {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_jornada_aula_aspirante_resultado", nullable = false)
@@ -45,6 +50,13 @@ public class JornadaAulaAspiranteResultado {
 
     @Column(name = "fecha_calificacion")
     private OffsetDateTime fechaCalificacion;
+
+    @PrePersist
+    public void prePersist() {
+        if (fechaCalificacion == null) {
+            fechaCalificacion = OffsetDateTime.now();
+        }
+    }
 
     public Integer getId() {
         return id;
@@ -85,5 +97,4 @@ public class JornadaAulaAspiranteResultado {
     public void setFechaCalificacion(OffsetDateTime fechaCalificacion) {
         this.fechaCalificacion = fechaCalificacion;
     }
-
 }

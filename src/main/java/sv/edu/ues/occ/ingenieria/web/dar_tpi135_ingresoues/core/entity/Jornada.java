@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -30,6 +29,7 @@ import java.util.UUID;
         )
 })
 public class Jornada {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id_jornada", nullable = false)
@@ -50,6 +50,16 @@ public class Jornada {
     @NotNull
     @Column(name = "activo", nullable = false)
     private Boolean activo = false;
+
+    @PrePersist
+    public void prePersist() {
+        if (fechaCreacion == null) {
+            fechaCreacion = OffsetDateTime.now();
+        }
+        if (activo == null) {
+            activo = false;
+        }
+    }
 
     public UUID getId() {
         return id;
@@ -90,5 +100,4 @@ public class Jornada {
     public void setActivo(Boolean activo) {
         this.activo = activo;
     }
-
 }

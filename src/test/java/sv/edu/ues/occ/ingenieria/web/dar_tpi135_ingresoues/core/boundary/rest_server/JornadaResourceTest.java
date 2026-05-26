@@ -4,7 +4,12 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.JornadaDAO;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Jornada;
 
@@ -14,6 +19,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class JornadaResourceTest {
 
     private JornadaResource resource;
@@ -23,206 +30,256 @@ class JornadaResourceTest {
     void setUp() {
         resource = new JornadaResource();
         dao = mock(JornadaDAO.class);
-
         resource.jornadaDAO = dao;
     }
 
-    @Test
-    void findRange_success() {
-        when(dao.count()).thenReturn(1);
-        when(dao.findRange(0, 10)).thenReturn(Collections.emptyList());
+    @Nested
+    class FindRange {
 
-        Response r = resource.findRange(0, 10);
+        @Test
+        void retorna200_cuandoParametrosSonValidos() {
+            when(dao.count()).thenReturn(1);
+            when(dao.findRange(0, 10)).thenReturn(Collections.emptyList());
 
-        assertEquals(200, r.getStatus());
+            Response r = resource.findRange(0, 10);
+
+            assertEquals(200, r.getStatus());
+            assertEquals("1", r.getHeaderString("Total-records"));
+        }
+
+        @Test
+        void retorna422_cuandoFirstEsNegativo() {
+            Response r = resource.findRange(-1, 10);
+            assertEquals(422, r.getStatus());
+        }
+
+        @Test
+        void retorna422_cuandoMaxEsCero() {
+            Response r = resource.findRange(0, 0);
+            assertEquals(422, r.getStatus());
+        }
+
+        @Test
+        void retorna422_cuandoMaxExcedeLimite() {
+            Response r = resource.findRange(0, 101);
+            assertEquals(422, r.getStatus());
+        }
+
+        @Test
+        void retorna500_cuandoDAOLanzaExcepcion() {
+            when(dao.count()).thenThrow(new RuntimeException());
+
+            Response r = resource.findRange(0, 10);
+
+            assertEquals(500, r.getStatus());
+        }
     }
 
-    @Test
-    void findRange_invalid() {
-        Response r = resource.findRange(-1, 200);
+    @Nested
+    class FindById {
 
-        assertEquals(422, r.getStatus());
+        @Test
+        void retorna200_cuandoExiste() {
+            UUID id = UUID.randomUUID();
+            when(dao.findById(id)).thenReturn(new Jornada());
+
+            Response r = resource.findById(id);
+
+            assertEquals(200, r.getStatus());
+        }
+
+        @Test
+        void retorna404_cuandoNoExiste() {
+            UUID id = UUID.randomUUID();
+            when(dao.findById(id)).thenReturn(null);
+
+            Response r = resource.findById(id);
+
+            assertEquals(404, r.getStatus());
+        }
+
+        @Test
+        void retorna422_cuandoIdEsNulo() {
+            Response r = resource.findById(null);
+            assertEquals(422, r.getStatus());
+        }
+
+        @Test
+        void retorna500_cuandoDAOLanzaExcepcion() {
+            UUID id = UUID.randomUUID();
+            when(dao.findById(id)).thenThrow(new RuntimeException());
+
+            Response r = resource.findById(id);
+
+            assertEquals(500, r.getStatus());
+        }
     }
 
-    @Test
-    void findRange_exception() {
-        when(dao.count()).thenThrow(new RuntimeException());
+    @Nested
+    class Create {
 
-        Response r = resource.findRange(0, 10);
+        @Test
+        void retorna201_cuandoCreacionExitosa() {
+            Jornada entity = new Jornada();
+            UriInfo uriInfo = mock(UriInfo.class);
+            when(uriInfo.getAbsolutePathBuilder())
+                    .thenReturn(UriBuilder.fromUri("http://localhost"));
 
-        assertEquals(500, r.getStatus());
-    }
+            doAnswer(inv -> {
+                entity.setId(UUID.randomUUID());
+                return null;
+            }).when(dao).create(entity);
 
-    @Test
-    void findById_success() {
-        UUID id = UUID.randomUUID();
+            Response r = resource.create(entity, uriInfo);
 
-        when(dao.findById(id)).thenReturn(new Jornada());
+            assertEquals(201, r.getStatus());
+        }
 
-        Response r = resource.findById(id);
+        @Test
+        void retorna422_cuandoEntityEsNula() {
+            Response r = resource.create(null, mock(UriInfo.class));
+            assertEquals(422, r.getStatus());
+        }
 
-        assertEquals(200, r.getStatus());
-    }
-
-    @Test
-    void findById_notFound() {
-        UUID id = UUID.randomUUID();
-
-        when(dao.findById(id)).thenReturn(null);
-
-        Response r = resource.findById(id);
-
-        assertEquals(404, r.getStatus());
-    }
-
-    @Test
-    void findById_null() {
-        Response r = resource.findById(null);
-
-        assertEquals(422, r.getStatus());
-    }
-
-    @Test
-    void findById_exception() {
-        UUID id = UUID.randomUUID();
-
-        when(dao.findById(id)).thenThrow(new RuntimeException());
-
-        Response r = resource.findById(id);
-
-        assertEquals(500, r.getStatus());
-    }
-
-    @Test
-    void delete_success() {
-        UUID id = UUID.randomUUID();
-        Jornada j = new Jornada();
-
-        when(dao.findById(id)).thenReturn(j);
-
-        Response r = resource.delete(id);
-
-        assertEquals(204, r.getStatus());
-        verify(dao).delete(j);
-    }
-
-    @Test
-    void delete_notFound() {
-        UUID id = UUID.randomUUID();
-
-        when(dao.findById(id)).thenReturn(null);
-
-        Response r = resource.delete(id);
-
-        assertEquals(404, r.getStatus());
-    }
-
-    @Test
-    void delete_null() {
-        Response r = resource.delete(null);
-
-        assertEquals(422, r.getStatus());
-    }
-
-    @Test
-    void delete_exception() {
-        UUID id = UUID.randomUUID();
-
-        when(dao.findById(id)).thenThrow(new RuntimeException());
-
-        Response r = resource.delete(id);
-
-        assertEquals(500, r.getStatus());
-    }
-
-    @Test
-    void create_success() {
-        Jornada entity = new Jornada();
-
-        UriInfo uriInfo = mock(UriInfo.class);
-        when(uriInfo.getAbsolutePathBuilder())
-                .thenReturn(UriBuilder.fromUri("http://localhost"));
-
-        doAnswer(inv -> {
+        @Test
+        void retorna422_cuandoIdNoEsNulo() {
+            Jornada entity = new Jornada();
             entity.setId(UUID.randomUUID());
-            return null;
-        }).when(dao).create(entity);
 
-        Response r = resource.create(entity, uriInfo);
+            Response r = resource.create(entity, mock(UriInfo.class));
 
-        assertEquals(201, r.getStatus());
+            assertEquals(422, r.getStatus());
+        }
+
+        @Test
+        void retorna409_cuandoHayDuplicateKey() {
+            Jornada entity = new Jornada();
+            UriInfo uriInfo = mock(UriInfo.class);
+            when(uriInfo.getAbsolutePathBuilder())
+                    .thenReturn(UriBuilder.fromUri("http://localhost"));
+
+            RuntimeException cause = new RuntimeException("duplicate key value violates unique constraint");
+            doThrow(new RuntimeException(cause)).when(dao).create(entity);
+
+            Response r = resource.create(entity, uriInfo);
+
+            assertEquals(409, r.getStatus());
+            assertEquals("Ya existe una jornada con esos datos",
+                    r.getHeaderString("Conflict"));
+        }
+
+        @Test
+        void retorna500_cuandoExcepcionSinCause() {
+            // e.getCause() == null → usa e directamente
+            Jornada entity = new Jornada();
+            doThrow(new RuntimeException("error generico")).when(dao).create(entity);
+
+            Response r = resource.create(entity, mock(UriInfo.class));
+
+            assertEquals(500, r.getStatus());
+        }
+
+        @Test
+        void retorna500_cuandoExcepcionSinMensaje() {
+            // cause.getMessage() == null → msg queda como ""
+            Jornada entity = new Jornada();
+            doThrow(new RuntimeException(new RuntimeException((String) null)))
+                    .when(dao).create(entity);
+
+            Response r = resource.create(entity, mock(UriInfo.class));
+
+            assertEquals(500, r.getStatus());
+        }
     }
 
-    @Test
-    void create_null() {
-        Response r = resource.create(null, mock(UriInfo.class));
+    @Nested
+    class Update {
 
-        assertEquals(422, r.getStatus());
+        @Test
+        void retorna200_cuandoActualizacionExitosa() {
+            UUID id = UUID.randomUUID();
+            when(dao.findById(id)).thenReturn(new Jornada());
+            when(dao.update(any())).thenReturn(new Jornada());
+
+            Response r = resource.update(id, new Jornada());
+
+            assertEquals(200, r.getStatus());
+        }
+
+        @Test
+        void retorna422_cuandoIdEsNulo() {
+            // id == null (cortocircuito)
+            Response r = resource.update(null, new Jornada());
+            assertEquals(422, r.getStatus());
+        }
+
+        @Test
+        void retorna422_cuandoEntityEsNula() {
+            // id != null pero entity == null
+            Response r = resource.update(UUID.randomUUID(), null);
+            assertEquals(422, r.getStatus());
+        }
+
+        @Test
+        void retorna404_cuandoNoExiste() {
+            UUID id = UUID.randomUUID();
+            when(dao.findById(id)).thenReturn(null);
+
+            Response r = resource.update(id, new Jornada());
+
+            assertEquals(404, r.getStatus());
+        }
+
+        @Test
+        void retorna500_cuandoDAOLanzaExcepcion() {
+            UUID id = UUID.randomUUID();
+            when(dao.findById(id)).thenThrow(new RuntimeException("boom"));
+
+            Response r = resource.update(id, new Jornada());
+
+            assertEquals(500, r.getStatus());
+        }
     }
 
-    @Test
-    void create_withId() {
-        Jornada entity = new Jornada();
-        entity.setId(UUID.randomUUID());
+    @Nested
+    class Delete {
 
-        Response r = resource.create(entity, mock(UriInfo.class));
+        @Test
+        void retorna204_cuandoEliminacionExitosa() {
+            UUID id = UUID.randomUUID();
+            Jornada j = new Jornada();
+            when(dao.findById(id)).thenReturn(j);
 
-        assertEquals(422, r.getStatus());
-    }
+            Response r = resource.delete(id);
 
-    @Test
-    void create_exception() {
-        Jornada entity = new Jornada();
+            assertEquals(204, r.getStatus());
+            verify(dao).delete(j);
+        }
 
-        doThrow(new RuntimeException()).when(dao).create(entity);
+        @Test
+        void retorna404_cuandoNoExiste() {
+            UUID id = UUID.randomUUID();
+            when(dao.findById(id)).thenReturn(null);
 
-        UriInfo uriInfo = mock(UriInfo.class);
-        when(uriInfo.getAbsolutePathBuilder())
-                .thenReturn(UriBuilder.fromUri("http://localhost"));
+            Response r = resource.delete(id);
 
-        Response r = resource.create(entity, uriInfo);
+            assertEquals(404, r.getStatus());
+        }
 
-        assertEquals(500, r.getStatus());
-    }
+        @Test
+        void retorna422_cuandoIdEsNulo() {
+            Response r = resource.delete(null);
+            assertEquals(422, r.getStatus());
+        }
 
-    @Test
-    void update_success() {
-        UUID id = UUID.randomUUID();
+        @Test
+        void retorna500_cuandoDAOLanzaExcepcion() {
+            UUID id = UUID.randomUUID();
+            when(dao.findById(id)).thenThrow(new RuntimeException());
 
-        when(dao.findById(id)).thenReturn(new Jornada());
-        when(dao.update(any())).thenReturn(new Jornada());
+            Response r = resource.delete(id);
 
-        Response r = resource.update(id, new Jornada());
-
-        assertEquals(200, r.getStatus());
-    }
-
-    @Test
-    void update_invalid() {
-        Response r = resource.update(null, null);
-
-        assertEquals(422, r.getStatus());
-    }
-
-    @Test
-    void update_notFound() {
-        UUID id = UUID.randomUUID();
-
-        when(dao.findById(id)).thenReturn(null);
-
-        Response r = resource.update(id, new Jornada());
-
-        assertEquals(404, r.getStatus());
-    }
-
-    @Test
-    void update_exception() {
-        UUID id = UUID.randomUUID();
-
-        when(dao.findById(id)).thenThrow(new RuntimeException("boom"));
-
-        Response r = resource.update(id, new Jornada());
-
-        assertEquals(500, r.getStatus());
+            assertEquals(500, r.getStatus());
+        }
     }
 }

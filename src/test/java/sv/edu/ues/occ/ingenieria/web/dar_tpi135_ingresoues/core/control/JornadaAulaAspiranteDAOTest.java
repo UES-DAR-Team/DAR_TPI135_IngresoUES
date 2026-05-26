@@ -3,199 +3,266 @@ package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAulaAspirante;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class JornadaAulaAspiranteDAOTest {
 
     private JornadaAulaAspiranteDAO dao;
     private EntityManager em;
+    private TypedQuery<JornadaAulaAspirante> query;
+    private TypedQuery<Long> queryLong;
 
     @BeforeEach
-    void setUp() {
+    @SuppressWarnings("unchecked")
+    void setUp() throws Exception {
         dao = new JornadaAulaAspiranteDAO();
         em = mock(EntityManager.class);
+        query = mock(TypedQuery.class);
+        queryLong = mock(TypedQuery.class);
 
-        dao = Mockito.spy(dao);
-        doReturn(em).when(dao).getEntityManager();
+        // Inyectamos el mock directamente en el campo via reflexión
+        // para que create() y getEntityManager() funcionen correctamente
+        var field = JornadaAulaAspiranteDAO.class.getDeclaredField("em");
+        field.setAccessible(true);
+        field.set(dao, em);
     }
 
-    @Test
-    void findByJornadaAula_ok() {
-        Integer id = 1;
+    @Nested
+    class GetEntityManager {
 
-        TypedQuery<JornadaAulaAspirante> q = mock(TypedQuery.class);
-
-        when(em.createNamedQuery("JornadaAulaAspirante.buscarPorJornadaAula", JornadaAulaAspirante.class))
-                .thenReturn(q);
-        when(q.setParameter("idJornadaAula", id)).thenReturn(q);
-        when(q.setFirstResult(0)).thenReturn(q);
-        when(q.setMaxResults(10)).thenReturn(q);
-        when(q.getResultList()).thenReturn(List.of(new JornadaAulaAspirante()));
-
-        List<JornadaAulaAspirante> result = dao.findByJornadaAula(id, 0, 10);
-
-        assertFalse(result.isEmpty());
+        @Test
+        void retornaEntityManager_cuandoEstaInyectado() {
+            assertNotNull(dao.getEntityManager());
+        }
     }
 
-    @Test
-    void findByJornadaAula_null() {
-        assertThrows(IllegalArgumentException.class,
-                () -> dao.findByJornadaAula(null, 0, 10));
+    @Nested
+    class GetEntityClass {
+
+        @Test
+        void retornaClaseJornadaAulaAspirante() {
+            assertEquals(JornadaAulaAspirante.class, dao.getEntityClass());
+        }
     }
 
-    @Test
-    void findByJornadaAula_paramInvalidos() {
-        assertThrows(IllegalArgumentException.class,
-                () -> dao.findByJornadaAula(1, -1, 10));
+    @Nested
+    class Create {
 
-        assertThrows(IllegalArgumentException.class,
-                () -> dao.findByJornadaAula(1, 0, 0));
+        @Test
+        void invocaPersist_cuandoEntityEsValida() {
+            JornadaAulaAspirante entity = new JornadaAulaAspirante();
+            dao.create(entity);
+            verify(em).persist(entity);
+        }
     }
 
-    @Test
-    void findByJornadaAula_exception() {
-        when(em.createNamedQuery(anyString(), eq(JornadaAulaAspirante.class)))
-                .thenThrow(new RuntimeException());
+    @Nested
+    class FindByJornadaAula {
 
-        List<JornadaAulaAspirante> result =
-                dao.findByJornadaAula(1, 0, 10);
+        @Test
+        void lanzaIllegalArgumentException_cuandoIdEsNulo() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findByJornadaAula(null, 0, 10));
+        }
 
-        assertTrue(result.isEmpty());
+        @Test
+        void lanzaIllegalArgumentException_cuandoFirstEsNegativo() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findByJornadaAula(1, -1, 10));
+        }
+
+        @Test
+        void lanzaIllegalArgumentException_cuandoMaxEsCero() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findByJornadaAula(1, 0, 0));
+        }
+
+        @Test
+        void retornaLista_cuandoParametrosSonValidos() {
+            when(em.createNamedQuery("JornadaAulaAspirante.buscarPorJornadaAula", JornadaAulaAspirante.class))
+                    .thenReturn(query);
+            when(query.setParameter("idJornadaAula", 1)).thenReturn(query);
+            when(query.setFirstResult(0)).thenReturn(query);
+            when(query.setMaxResults(10)).thenReturn(query);
+            when(query.getResultList()).thenReturn(List.of(new JornadaAulaAspirante()));
+
+            List<JornadaAulaAspirante> result = dao.findByJornadaAula(1, 0, 10);
+
+            assertFalse(result.isEmpty());
+        }
+
+        @Test
+        void lanzaIllegalStateException_cuandoQueryFalla() {
+            when(em.createNamedQuery(anyString(), eq(JornadaAulaAspirante.class)))
+                    .thenThrow(new RuntimeException("DB error"));
+
+            assertThrows(IllegalStateException.class,
+                    () -> dao.findByJornadaAula(1, 0, 10));
+        }
     }
 
-    @Test
-    void findByAspirantePrueba_ok() {
-        Integer id = 1;
+    @Nested
+    class FindByAspirantePrueba {
 
-        TypedQuery<JornadaAulaAspirante> q = mock(TypedQuery.class);
+        @Test
+        void lanzaIllegalArgumentException_cuandoIdEsNulo() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findByAspirantePrueba(null, 0, 10));
+        }
 
-        when(em.createNamedQuery("JornadaAulaAspirante.buscarPorAspirantePrueba", JornadaAulaAspirante.class))
-                .thenReturn(q);
-        when(q.setParameter("idAspirantePrueba", id)).thenReturn(q);
-        when(q.setFirstResult(0)).thenReturn(q);
-        when(q.setMaxResults(10)).thenReturn(q);
-        when(q.getResultList()).thenReturn(List.of(new JornadaAulaAspirante()));
+        @Test
+        void lanzaIllegalArgumentException_cuandoFirstEsNegativo() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findByAspirantePrueba(1, -1, 10));
+        }
 
-        List<JornadaAulaAspirante> result = dao.findByAspirantePrueba(id, 0, 10);
+        @Test
+        void lanzaIllegalArgumentException_cuandoMaxEsCero() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findByAspirantePrueba(1, 0, 0));
+        }
 
-        assertFalse(result.isEmpty());
+        @Test
+        void retornaLista_cuandoParametrosSonValidos() {
+            when(em.createNamedQuery("JornadaAulaAspirante.buscarPorAspirantePrueba", JornadaAulaAspirante.class))
+                    .thenReturn(query);
+            when(query.setParameter("idAspirantePrueba", 1)).thenReturn(query);
+            when(query.setFirstResult(0)).thenReturn(query);
+            when(query.setMaxResults(10)).thenReturn(query);
+            when(query.getResultList()).thenReturn(List.of(new JornadaAulaAspirante()));
+
+            List<JornadaAulaAspirante> result = dao.findByAspirantePrueba(1, 0, 10);
+
+            assertFalse(result.isEmpty());
+        }
+
+        @Test
+        void lanzaIllegalStateException_cuandoQueryFalla() {
+            when(em.createNamedQuery(anyString(), eq(JornadaAulaAspirante.class)))
+                    .thenThrow(new RuntimeException("DB error"));
+
+            assertThrows(IllegalStateException.class,
+                    () -> dao.findByAspirantePrueba(1, 0, 10));
+        }
     }
 
-    @Test
-    void findByAspirantePrueba_null() {
-        assertThrows(IllegalArgumentException.class,
-                () -> dao.findByAspirantePrueba(null, 0, 10));
+    @Nested
+    class FindByAsistencia {
+
+        @Test
+        void lanzaIllegalArgumentException_cuandoAsistioEsNulo() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findByAsistencia(null, 0, 10));
+        }
+
+        @Test
+        void lanzaIllegalArgumentException_cuandoFirstEsNegativo() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findByAsistencia(true, -1, 10));
+        }
+
+        @Test
+        void lanzaIllegalArgumentException_cuandoMaxEsCero() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.findByAsistencia(true, 0, 0));
+        }
+
+        @Test
+        void retornaLista_cuandoParametrosSonValidos() {
+            when(em.createNamedQuery("JornadaAulaAspirante.buscarPorAsistencia", JornadaAulaAspirante.class))
+                    .thenReturn(query);
+            when(query.setParameter("asistio", true)).thenReturn(query);
+            when(query.setFirstResult(0)).thenReturn(query);
+            when(query.setMaxResults(10)).thenReturn(query);
+            when(query.getResultList()).thenReturn(List.of(new JornadaAulaAspirante()));
+
+            List<JornadaAulaAspirante> result = dao.findByAsistencia(true, 0, 10);
+
+            assertFalse(result.isEmpty());
+        }
+
+        @Test
+        void lanzaIllegalStateException_cuandoQueryFalla() {
+            when(em.createNamedQuery(anyString(), eq(JornadaAulaAspirante.class)))
+                    .thenThrow(new RuntimeException("DB error"));
+
+            assertThrows(IllegalStateException.class,
+                    () -> dao.findByAsistencia(true, 0, 10));
+        }
     }
 
-    @Test
-    void findByAspirantePrueba_exception() {
-        when(em.createNamedQuery(anyString(), eq(JornadaAulaAspirante.class)))
-                .thenThrow(new RuntimeException());
+    @Nested
+    class CountByJornadaAula {
 
-        List<JornadaAulaAspirante> result =
-                dao.findByAspirantePrueba(1, 0, 10);
+        @Test
+        void lanzaIllegalArgumentException_cuandoIdEsNulo() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.countByJornadaAula(null));
+        }
 
-        assertTrue(result.isEmpty());
+        @Test
+        void retornaConteo_cuandoIdEsValido() {
+            when(em.createNamedQuery("JornadaAulaAspirante.countByJornadaAula", Long.class))
+                    .thenReturn(queryLong);
+            when(queryLong.setParameter("idJornadaAula", 1)).thenReturn(queryLong);
+            when(queryLong.getSingleResult()).thenReturn(5L);
+
+            Long result = dao.countByJornadaAula(1);
+
+            assertEquals(5L, result);
+        }
+
+        @Test
+        void lanzaIllegalStateException_cuandoQueryFalla() {
+            when(em.createNamedQuery(anyString(), eq(Long.class)))
+                    .thenThrow(new RuntimeException("DB error"));
+
+            assertThrows(IllegalStateException.class,
+                    () -> dao.countByJornadaAula(1));
+        }
     }
 
-    @Test
-    void findByAsistencia_ok() {
-        TypedQuery<JornadaAulaAspirante> q = mock(TypedQuery.class);
+    @Nested
+    class CountByAsistencia {
 
-        when(em.createNamedQuery("JornadaAulaAspirante.buscarPorAsistencia", JornadaAulaAspirante.class))
-                .thenReturn(q);
-        when(q.setParameter("asistio", true)).thenReturn(q);
-        when(q.setFirstResult(0)).thenReturn(q);
-        when(q.setMaxResults(10)).thenReturn(q);
-        when(q.getResultList()).thenReturn(List.of(new JornadaAulaAspirante()));
+        @Test
+        void lanzaIllegalArgumentException_cuandoAsistioEsNulo() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> dao.countByAsistencia(null));
+        }
 
-        List<JornadaAulaAspirante> result = dao.findByAsistencia(true, 0, 10);
+        @Test
+        void retornaConteo_cuandoAsistioEsValido() {
+            when(em.createNamedQuery("JornadaAulaAspirante.countByAsistencia", Long.class))
+                    .thenReturn(queryLong);
+            when(queryLong.setParameter("asistio", true)).thenReturn(queryLong);
+            when(queryLong.getSingleResult()).thenReturn(3L);
 
-        assertFalse(result.isEmpty());
-    }
+            Long result = dao.countByAsistencia(true);
 
-    @Test
-    void findByAsistencia_null() {
-        assertThrows(IllegalArgumentException.class,
-                () -> dao.findByAsistencia(null, 0, 10));
-    }
+            assertEquals(3L, result);
+        }
 
-    @Test
-    void findByAsistencia_exception() {
-        when(em.createNamedQuery(anyString(), eq(JornadaAulaAspirante.class)))
-                .thenThrow(new RuntimeException());
+        @Test
+        void lanzaIllegalStateException_cuandoQueryFalla() {
+            when(em.createNamedQuery(anyString(), eq(Long.class)))
+                    .thenThrow(new RuntimeException("DB error"));
 
-        List<JornadaAulaAspirante> result =
-                dao.findByAsistencia(true, 0, 10);
-
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void countByJornadaAula_ok() {
-        TypedQuery<Long> q = mock(TypedQuery.class);
-
-        when(em.createNamedQuery("JornadaAulaAspirante.countByJornadaAula", Long.class))
-                .thenReturn(q);
-        when(q.setParameter("idJornadaAula", 1)).thenReturn(q);
-        when(q.getSingleResult()).thenReturn(5L);
-
-        Long result = dao.countByJornadaAula(1);
-
-        assertEquals(5L, result);
-    }
-
-    @Test
-    void countByJornadaAula_null() {
-        assertThrows(IllegalArgumentException.class,
-                () -> dao.countByJornadaAula(null));
-    }
-
-    @Test
-    void countByJornadaAula_exception() {
-        when(em.createNamedQuery(anyString(), eq(Long.class)))
-                .thenThrow(new RuntimeException());
-
-        Long result = dao.countByJornadaAula(1);
-
-        assertEquals(0L, result);
-    }
-
-    @Test
-    void countByAsistencia_ok() {
-        TypedQuery<Long> q = mock(TypedQuery.class);
-
-        when(em.createNamedQuery("JornadaAulaAspirante.countByAsistencia", Long.class))
-                .thenReturn(q);
-        when(q.setParameter("asistio", true)).thenReturn(q);
-        when(q.getSingleResult()).thenReturn(3L);
-
-        Long result = dao.countByAsistencia(true);
-
-        assertEquals(3L, result);
-    }
-
-    @Test
-    void countByAsistencia_null() {
-        assertThrows(IllegalArgumentException.class,
-                () -> dao.countByAsistencia(null));
-    }
-
-    @Test
-    void countByAsistencia_exception() {
-        when(em.createNamedQuery(anyString(), eq(Long.class)))
-                .thenThrow(new RuntimeException());
-
-        Long result = dao.countByAsistencia(true);
-
-        assertEquals(0L, result);
+            assertThrows(IllegalStateException.class,
+                    () -> dao.countByAsistencia(true));
+        }
     }
 }

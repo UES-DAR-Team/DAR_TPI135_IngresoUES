@@ -3,6 +3,7 @@ package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAulaAspirante;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.JornadaAulaAspiranteResultado;
 import testing.BaseIntegrationAbstract;
 import testing.ContainerExtension;
@@ -33,10 +34,32 @@ public class JornadaAulaAspiranteResultadoDAOIT extends BaseIntegrationAbstract 
         }
     }
 
+    /**
+     * JornadaAulaAspiranteResultado usa GenerationType.IDENTITY.
+     * Sin flush(), EclipseLink difiere el INSERT — rollback no llega a la BD.
+     */
     @Test
     @Order(1)
-    public void testFinds_OK() {
+    public void testCreate() {
+        // Obtenemos un JornadaAulaAspirante existente para la FK
+        JornadaAulaAspiranteDAO jaaDAO = new JornadaAulaAspiranteDAO();
+        jaaDAO.em = em;
+        List<JornadaAulaAspirante> jaaData = jaaDAO.findRange(0, 1);
+        assertFalse(jaaData.isEmpty(), "Debe existir data en la BD");
 
+        JornadaAulaAspiranteResultado nuevo = new JornadaAulaAspiranteResultado();
+        nuevo.setIdJornadaAulaAspirante(jaaData.get(0));
+        nuevo.setPuntajeObtenido(new BigDecimal("75.50"));
+        nuevo.setAprobado(true);
+
+        em.getTransaction().begin();
+        assertDoesNotThrow(() -> cut.create(nuevo));
+        em.getTransaction().rollback();
+    }
+
+    @Test
+    @Order(2)
+    public void testFinds_OK() {
         assertDoesNotThrow(() -> {
             List<JornadaAulaAspiranteResultado> r1 =
                     cut.findByJornadaAulaAspirante(1, 0, 10);
@@ -48,8 +71,7 @@ public class JornadaAulaAspiranteResultadoDAOIT extends BaseIntegrationAbstract 
                     cut.findByRangoPuntaje(
                             BigDecimal.ZERO,
                             new BigDecimal("100"),
-                            0,
-                            10
+                            0, 10
                     );
 
             assertNotNull(r1);
@@ -59,25 +81,23 @@ public class JornadaAulaAspiranteResultadoDAOIT extends BaseIntegrationAbstract 
     }
 
     @Test
-    @Order(2)
+    @Order(3)
     public void testCount_OK() {
         Long total = cut.countByAprobado(true);
-
         assertNotNull(total);
         assertTrue(total >= 0);
     }
 
     @Test
-    @Order(3)
+    @Order(4)
     public void testGetters() {
         assertEquals(JornadaAulaAspiranteResultado.class, cut.getEntityClass());
         assertNotNull(cut.getEntityManager());
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     public void testNullValidations() {
-
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class,
                         () -> cut.findByJornadaAulaAspirante(null, 0, 10)),
@@ -100,78 +120,67 @@ public class JornadaAulaAspiranteResultadoDAOIT extends BaseIntegrationAbstract 
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     public void testInvalidRanges() {
-
         assertThrows(IllegalArgumentException.class, () ->
                 cut.findByRangoPuntaje(
                         new BigDecimal("10"),
                         new BigDecimal("5"),
-                        0,
-                        10
+                        0, 10
                 )
         );
     }
 
     @Test
-    @Order(6)
+    @Order(7)
     public void testInvalidPagination() {
-
         assertAll(
-                // jornada
                 () -> assertThrows(IllegalArgumentException.class,
                         () -> cut.findByJornadaAulaAspirante(1, -1, 10)),
-
                 () -> assertThrows(IllegalArgumentException.class,
                         () -> cut.findByJornadaAulaAspirante(1, 0, 0)),
 
-                // aprobado
                 () -> assertThrows(IllegalArgumentException.class,
                         () -> cut.findByAprobado(true, -1, 10)),
-
                 () -> assertThrows(IllegalArgumentException.class,
                         () -> cut.findByAprobado(true, 0, 0)),
 
-                // rango
                 () -> assertThrows(IllegalArgumentException.class,
                         () -> cut.findByRangoPuntaje(BigDecimal.ZERO, new BigDecimal("10"), -1, 10)),
-
                 () -> assertThrows(IllegalArgumentException.class,
                         () -> cut.findByRangoPuntaje(BigDecimal.ZERO, new BigDecimal("10"), 0, 0))
         );
     }
 
-
     @Test
-    @Order(7)
+    @Order(8)
     public void testExceptions_entityManagerClosed() {
-
         em.close();
 
         assertAll(
                 () -> assertThrows(IllegalStateException.class,
                         () -> cut.findByJornadaAulaAspirante(1, 0, 10)),
-
                 () -> assertThrows(IllegalStateException.class,
                         () -> cut.findByAprobado(true, 0, 10)),
-
                 () -> assertThrows(IllegalStateException.class,
                         () -> cut.findByRangoPuntaje(BigDecimal.ZERO, new BigDecimal("10"), 0, 10)),
-
                 () -> assertThrows(IllegalStateException.class,
                         () -> cut.countByAprobado(true))
         );
     }
 
     @Test
-    @Order(8)
+    @Order(9)
     public void testExceptions_entityManagerNull() {
-
         cut.em = null;
 
         assertAll(
                 () -> assertThrows(IllegalStateException.class,
                         () -> cut.findByJornadaAulaAspirante(1, 0, 10)),
+
+                // findByAprobado también debe cubrirse con em null
+                () -> assertThrows(IllegalStateException.class,
+                        () -> cut.findByAprobado(true, 0, 10)),
 
                 () -> assertThrows(IllegalStateException.class,
                         () -> cut.findByRangoPuntaje(BigDecimal.ZERO, new BigDecimal("10"), 0, 10)),

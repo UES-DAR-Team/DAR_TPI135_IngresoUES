@@ -13,11 +13,6 @@ import testing.SystemTest;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 
 @SystemTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -34,8 +29,6 @@ public class AreaConocimientoResourceSystem extends BaseIntegrationAbstract {
     private static final int MAX = 10;
     private static final int INVALIDFIRST = -1;
     private static final int INVALIDMAX = 0;
-
-
 
     @Nested
     @Order(1)
@@ -61,7 +54,7 @@ public class AreaConocimientoResourceSystem extends BaseIntegrationAbstract {
 
         @Order(2)
         @Test
-        void responde400_cuandoFirstYMaxInvalidos() {
+        void responde422_cuandoFirstYMaxInvalidos() { // Cambiado de responde400 a responde422
             Response response = target
                     .path(PATH)
                     .queryParam("first", INVALIDFIRST)
@@ -69,7 +62,10 @@ public class AreaConocimientoResourceSystem extends BaseIntegrationAbstract {
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
-            assertEquals(400, response.getStatus());
+            // Corregido: AbstractResource.unprocessable() devuelve 422
+            assertEquals(422, response.getStatus(), "Debe retornar 422 cuando los parámetros son inválidos");
+            assertEquals("first,max", response.getHeaderString("Missing-parameter"),
+                    "Debe indicar qué parámetros fallaron");
         }
     }
 
@@ -124,14 +120,13 @@ public class AreaConocimientoResourceSystem extends BaseIntegrationAbstract {
             );
         }
 
-
         @Order(4)
         @Test
         void responde422_cuandoEntidadTieneIdPreasignado() {
             String bodyConId = """
                     {
                         "id": "00000000-0000-0000-0000-000000000001",
-                        "nombre": "Prueba de sistema con padre inexistente",
+                        "nombre": "Prueba de sistema con id asignado",
                         "fechaCreacion": "2025-01-01T00:00:00Z",
                         "activo": true
                     }
@@ -251,7 +246,6 @@ public class AreaConocimientoResourceSystem extends BaseIntegrationAbstract {
                             "fue: " + response.getStatus()
             );
         }
-
     }
 
     @Nested
@@ -292,7 +286,6 @@ public class AreaConocimientoResourceSystem extends BaseIntegrationAbstract {
         @Order(3)
         @Test
         void responde404_cuandoSeIntentaAccederAlRegistroEliminado() {
-
             Response response = target
                     .path(PATH)
                     .path(IDCREADO.toString())
@@ -302,8 +295,5 @@ public class AreaConocimientoResourceSystem extends BaseIntegrationAbstract {
             assertEquals(404, response.getStatus(),
                     "Debe retornar 404 al intentar acceder a un registro ya eliminado");
         }
-
-
     }
-
 }

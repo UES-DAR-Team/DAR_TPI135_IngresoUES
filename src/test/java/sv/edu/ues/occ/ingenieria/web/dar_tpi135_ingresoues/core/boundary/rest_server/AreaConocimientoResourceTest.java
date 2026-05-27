@@ -1,6 +1,5 @@
 package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.boundary.rest_server;
 
-import com.sun.tools.rngom.util.Uri;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
@@ -13,9 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.AreaConocimientoDAO;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.AreaConocimiento;
-import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Distractor;
 
-import java.awt.geom.Area;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
@@ -81,12 +78,13 @@ class AreaConocimientoResourceTest {
 
         @Test
         void retorna422_cuandoFirstInvalido(){
-                Response response = areaConocimientoResource.findRange(INVALIDFIRST, MAX);
+            Response response = areaConocimientoResource.findRange(INVALIDFIRST, MAX);
 
-                assertEquals(422, response.getStatus());
-                assertEquals("first,max", response.getHeaderString("Missing-parameter"));
-                verifyNoInteractions(areaConocimientoDAO);
+            assertEquals(422, response.getStatus());
+            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(areaConocimientoDAO);
         }
+
         @Test
         void retorna422_cuandoMaxEsInvalido(){
             Response response = areaConocimientoResource.findRange(FIRST, INVALIDMAX);
@@ -95,6 +93,7 @@ class AreaConocimientoResourceTest {
             assertEquals("first,max", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(areaConocimientoDAO);
         }
+
         @Test
         void retorna422_cuandoMaxEsInvalidoPorMas(){
             Response response = areaConocimientoResource.findRange(FIRST, EXCEEDMAX);
@@ -104,16 +103,8 @@ class AreaConocimientoResourceTest {
             verifyNoInteractions(areaConocimientoDAO);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(areaConocimientoDAO.findRange(FIRST, MAX)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = areaConocimientoResource.findRange(FIRST, MAX);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(areaConocimientoDAO).findRange(FIRST, MAX);
-        }
+        // se eliminaron los test retorna500_cuandoDAOLanzaExcepcion
+        // ya que ahora es responsabilidad del GlobalExceptionMapper interceptar esta excepción
     }
 
     @Nested
@@ -146,18 +137,8 @@ class AreaConocimientoResourceTest {
             Response response = areaConocimientoResource.findById(id);
 
             assertEquals(404, response.getStatus());
-            assertEquals("Record with id " + id + " not found", response.getHeaderString("Not-found-id"));
-            verify(areaConocimientoDAO).findById(id);
-        }
-
-        @Test
-        void retorna500_cuandoDAOlanzaExcepcion() {
-            when(areaConocimientoDAO.findById(id)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = areaConocimientoResource.findById(id);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
+            // Actualizado para coincidir con el metodo notFound() de AbstractResource
+            assertEquals("AreaConocimiento with id " + id + " not found", response.getHeaderString("Not-found-id"));
             verify(areaConocimientoDAO).findById(id);
         }
     }
@@ -191,18 +172,7 @@ class AreaConocimientoResourceTest {
             Response response = areaConocimientoResource.deleteById(id);
 
             assertEquals(404, response.getStatus());
-            assertEquals("Record with id " + id + " not found", response.getHeaderString("Not-found-id"));
-            verify(areaConocimientoDAO).findById(id);
-        }
-
-        @Test
-        void retorna500_cuandoDAOlanzaExcepcion() {
-            when(areaConocimientoDAO.findById(id)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = areaConocimientoResource.deleteById(id);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
+            assertEquals("AreaConocimiento with id " + id + " not found", response.getHeaderString("Not-found-id"));
             verify(areaConocimientoDAO).findById(id);
         }
 
@@ -274,17 +244,6 @@ class AreaConocimientoResourceTest {
         }
 
         @Test
-        void retorna500_cuandoDAOlanzaExcepcion() {
-            doThrow(new RuntimeException("DB error")).when(areaConocimientoDAO).create(entity);
-
-            Response response = areaConocimientoResource.create(entity, uriInfo);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(areaConocimientoDAO).create(entity);
-        }
-
-        @Test
         void retorna404_cuandoAreaPadreAsignadaNoExiste() {
             AreaConocimiento padre = new AreaConocimiento();
             UUID padreIdInexistente = UUID.randomUUID();
@@ -296,7 +255,8 @@ class AreaConocimientoResourceTest {
             Response response = areaConocimientoResource.create(entity, uriInfo);
 
             assertEquals(404, response.getStatus());
-            assertEquals("idAutoReferenciaArea with id " + padreIdInexistente + " not found", response.getHeaderString("Invalid-parameter"));
+            // Actualizado para usar el nombre del recurso dinámico en el 404
+            assertEquals("idAutoReferenciaArea with id " + padreIdInexistente + " not found", response.getHeaderString("Not-found-id"));
             verify(areaConocimientoDAO).findById(padreIdInexistente);
             verify(areaConocimientoDAO, never()).create(any());
         }
@@ -323,7 +283,6 @@ class AreaConocimientoResourceTest {
             verify(areaConocimientoDAO).findById(padreId);
             verify(areaConocimientoDAO).create(entity);
         }
-
     }
 
     @Nested
@@ -370,20 +329,10 @@ class AreaConocimientoResourceTest {
             Response response = areaConocimientoResource.update(id, entity);
 
             assertEquals(404, response.getStatus());
-            assertEquals("Record with id " + id + " not found", response.getHeaderString("Not-found-id"));
+            assertEquals("AreaConocimiento with id " + id + " not found", response.getHeaderString("Not-found-id"));
             verify(areaConocimientoDAO).findById(id);
         }
 
-        @Test
-        void retorna500_cuandoDAOlanzaExcepcion() {
-            when(areaConocimientoDAO.findById(id)).thenThrow( new RuntimeException("DB error"));;
-
-            Response response = areaConocimientoResource.update(id, entity);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(areaConocimientoDAO).findById(id);
-        }
         @Test
         void retorna404_cuandoAreaPadreAsignadaNoExiste() {
             AreaConocimiento existing = new AreaConocimiento();
@@ -400,7 +349,7 @@ class AreaConocimientoResourceTest {
             Response response = areaConocimientoResource.update(id, entity);
 
             assertEquals(404, response.getStatus());
-            assertEquals("idAutoReferenciaArea with id " + padreId + " not found", response.getHeaderString("Invalid-parameter"));
+            assertEquals("idAutoReferenciaArea with id " + padreId + " not found", response.getHeaderString("Not-found-id"));
             verify(areaConocimientoDAO).findById(id);
             verify(areaConocimientoDAO).findById(padreId);
             verify(areaConocimientoDAO, never()).update(any());

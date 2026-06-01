@@ -36,7 +36,7 @@ public class PruebaResource implements Serializable {
                 int total = pruebaDAO.count();
                 return Response.ok(encontrados).header("X-Total-Count", total).build();
             } catch (Exception ex) {
-                LOG.log(Level.SEVERE, "Error retrieving Prueba range");
+                LOG.log(Level.SEVERE, "Error retrieving Prueba range", ex);
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                         .header("Server-exception", "Cannot access db").build();
             }
@@ -95,9 +95,10 @@ public class PruebaResource implements Serializable {
                 try {
                     pruebaDAO.create(entity);
                     return Response.created(
-                                    uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build())
-                            .entity(entity)
-                            .build();
+                                    uriInfo.getAbsolutePathBuilder()
+                                            .path(entity.getId().toString())
+                                            .build())
+                                            .build();
                 } catch (Exception ex) {
                     LOG.log(Level.SEVERE, "Error creating Prueba", ex);
                     return Response.status(Response.Status.INTERNAL_SERVER_ERROR)

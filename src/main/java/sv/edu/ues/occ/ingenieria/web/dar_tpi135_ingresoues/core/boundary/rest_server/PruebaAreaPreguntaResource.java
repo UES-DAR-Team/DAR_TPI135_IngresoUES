@@ -23,9 +23,9 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 @Path("pruebaArea/{idPruebaArea}/pregunta")
 public class PruebaAreaPreguntaResource implements Serializable {
+
     @Inject
     PruebaAreaPreguntaDAO pruebaAreaPreguntaDAO;
 
@@ -51,11 +51,10 @@ public class PruebaAreaPreguntaResource implements Serializable {
             return Response.status(422).header("Missing-parameter", "first,max").build();
         }
         try {
-            // validar existencia de pruebaArea padre
             PruebaArea pruebaArea = pruebaAreaDAO.findById(idPruebaArea);
             if (pruebaArea == null) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "PruebaArea with id " + idPruebaArea + " not found")
+                        .header("Not-found-id", "PruebaArea with id " + idPruebaArea + " not found")
                         .build();
             }
             List<PruebaAreaPregunta> encontrados = pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, first, max);
@@ -123,13 +122,13 @@ public class PruebaAreaPreguntaResource implements Serializable {
             PruebaArea pruebaArea = pruebaAreaDAO.findById(idPruebaArea);
             if (pruebaArea == null) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "PruebaArea with id " + idPruebaArea + " not found")
+                        .header("Not-found-id", "PruebaArea with id " + idPruebaArea + " not found")
                         .build();
             }
             Pregunta pregunta = preguntaDAO.findById(entity.getIdPregunta().getId());
             if (pregunta == null) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Pregunta with id " + entity.getIdPregunta().getId() + " not found")
+                        .header("Not-found-id", "Pregunta with id " + entity.getIdPregunta().getId() + " not found")
                         .build();
             }
             entity.setIdPruebaArea(pruebaArea);
@@ -172,7 +171,6 @@ public class PruebaAreaPreguntaResource implements Serializable {
                         .build();
             }
             PruebaAreaPregunta existing = foundOpt.get();
-            // Actualizar solo campos permitidos: orden
             existing.setOrden(entity.getOrden());
             PruebaAreaPregunta updated = pruebaAreaPreguntaDAO.update(existing);
             return Response.ok(updated).build();

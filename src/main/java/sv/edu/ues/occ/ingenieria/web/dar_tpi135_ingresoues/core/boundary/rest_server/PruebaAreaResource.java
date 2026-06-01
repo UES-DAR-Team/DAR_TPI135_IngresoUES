@@ -54,7 +54,7 @@ public class PruebaAreaResource implements Serializable {
             Prueba prueba = pruebaDAO.findById(idPrueba);
             if (prueba == null) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Prueba with id " + idPrueba + " not found")
+                        .header("Not-found-id", "Prueba with id " + idPrueba + " not found")
                         .build();
             }
             List<PruebaArea> encontrados = pruebaAreaDAO.findByPrueba(idPrueba, first, max);
@@ -106,27 +106,27 @@ public class PruebaAreaResource implements Serializable {
             @PathParam("idPrueba") UUID idPrueba,
             PruebaArea entity,
             @Context UriInfo uriInfo) {
-        if (idPrueba == null) {
+            if (idPrueba == null) {
             return Response.status(422).header("Missing-parameter", "idPrueba").build();
-        }
-        if (entity == null) {
-            return Response.status(422).header("Missing-parameter", "entity must not be null").build();
-        }
-        if (entity.getId() != null) {
-            return Response.status(422).header("Missing-parameter", "entity.id must be null").build();
-        }
-        if (entity.getIdAreaConocimiento() == null || entity.getIdAreaConocimiento().getId() == null) {
-            return Response.status(422).header("Missing-parameter", "idAreaConocimiento must be provided in body").build();
-        }
-        try {
-            Prueba prueba = pruebaDAO.findById(idPrueba);
-            if (prueba == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Prueba with id " + idPrueba + " not found")
-                        .build();
             }
-            AreaConocimiento area = areaConocimientoDAO.findById(entity.getIdAreaConocimiento().getId());
-            if (area == null) {
+            if (entity == null) {
+            return Response.status(422).header("Missing-parameter", "entity must not be null").build();
+            }
+           if (entity.getId() != null) {
+            return Response.status(422).header("Missing-parameter", "entity.id must be null").build();
+           }
+           if (entity.getIdAreaConocimiento() == null || entity.getIdAreaConocimiento().getId() == null) {
+            return Response.status(422).header("Missing-parameter", "idAreaConocimiento must be provided in body").build();
+           }
+           try {
+               Prueba prueba = pruebaDAO.findById(idPrueba);
+               if (prueba == null) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .header("Not-found-id", "Prueba with id " + idPrueba + " not found")
+                        .build();
+                }
+               AreaConocimiento area = areaConocimientoDAO.findById(entity.getIdAreaConocimiento().getId());
+               if (area == null) {
                 return Response.status(Response.Status.NOT_FOUND)
                         .header("Not-found", "AreaConocimiento with id " + entity.getIdAreaConocimiento().getId() + " not found")
                         .build();
@@ -136,8 +136,7 @@ public class PruebaAreaResource implements Serializable {
             entity.setFechaAsignacion(OffsetDateTime.now());
             pruebaAreaDAO.create(entity);
             return Response.created(uriInfo.getAbsolutePathBuilder().path(entity.getIdAreaConocimiento().getId().toString()).build())
-                    .entity(entity)
-                    .build();
+                    .entity(entity).build();
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, "Error creating PruebaArea", ex);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)

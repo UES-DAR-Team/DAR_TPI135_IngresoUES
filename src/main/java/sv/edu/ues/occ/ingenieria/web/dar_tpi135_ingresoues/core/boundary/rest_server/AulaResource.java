@@ -32,7 +32,7 @@ public class AulaResource implements Serializable {
                 List<Aula> list = aulaDAO.findRange(first, max);
                 int total = aulaDAO.count();
                 return Response.ok(list)
-                        .header("Total-records", total)
+                        .header("X-Total-Count", total)
                         .build();
             } catch (Exception ex) {
                 LOG.log(Level.SEVERE, "Error retrieving Aula range", ex);
@@ -50,19 +50,15 @@ public class AulaResource implements Serializable {
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(@PathParam("id") UUID id) {
-
         if (id != null) {
             try {
                 Aula entity = aulaDAO.findById(id);
-
                 if (entity != null) {
                     return Response.ok(entity).build();
                 }
-
                 return Response.status(Response.Status.NOT_FOUND)
                         .header("Not-found-id", "Record with id " + id + " not found")
                         .build();
-
             } catch (Exception ex) {
                 LOG.log(Level.SEVERE, "Error retrieving Aula by id", ex);
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -70,7 +66,6 @@ public class AulaResource implements Serializable {
                         .build();
             }
         }
-
         return Response.status(422)
                 .header("Missing-parameter", "id")
                 .build();
@@ -79,20 +74,16 @@ public class AulaResource implements Serializable {
     @DELETE
     @Path("{id}")
     public Response delete(@PathParam("id") UUID id) {
-
         if (id != null) {
             try {
                 Aula entity = aulaDAO.findById(id);
-
                 if (entity != null) {
                     aulaDAO.delete(entity);
                     return Response.noContent().build();
                 }
-
                 return Response.status(Response.Status.NOT_FOUND)
                         .header("Not-found-id", "Record with id " + id + " not found")
                         .build();
-
             } catch (Exception ex) {
                 LOG.log(Level.SEVERE, "Error deleting Aula", ex);
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -110,19 +101,15 @@ public class AulaResource implements Serializable {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response create(Aula entity, @Context UriInfo uriInfo) {
-
         if (entity != null) {
-
             if (entity.getId() == null) {
                 try {
                     aulaDAO.create(entity);
-
                     return Response.created(
                             uriInfo.getAbsolutePathBuilder()
                                     .path(entity.getId().toString())
                                     .build()
-                    ).entity(entity).build();
-
+                                    ).build();
                 } catch (Exception ex) {
                     LOG.log(Level.SEVERE, "Error creating Aula", ex);
                     return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -130,12 +117,10 @@ public class AulaResource implements Serializable {
                             .build();
                 }
             }
-
             return Response.status(422)
                     .header("Missing-parameter", "entity.id must be null")
                     .build();
         }
-
         return Response.status(422)
                 .header("Missing-parameter", "entity must not be null")
                 .build();
@@ -146,23 +131,18 @@ public class AulaResource implements Serializable {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response update(@PathParam("id") UUID id, Aula entity) {
-
         if (id != null) {
-
             if (entity != null) {
                 try {
                     Aula existing = aulaDAO.findById(id);
-
                     if (existing != null) {
                         entity.setId(id);
                         aulaDAO.update(entity);
                         return Response.ok(entity).build();
                     }
-
                     return Response.status(Response.Status.NOT_FOUND)
                             .header("Not-found-id", "Record with id " + id + " not found")
                             .build();
-
                 } catch (Exception ex) {
                     LOG.log(Level.SEVERE, "Error updating Aula", ex);
                     return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -170,12 +150,10 @@ public class AulaResource implements Serializable {
                             .build();
                 }
             }
-
             return Response.status(422)
                     .header("Missing-parameter", "entity must not be null")
                     .build();
         }
-
         return Response.status(422)
                 .header("Missing-parameter", "id")
                 .build();

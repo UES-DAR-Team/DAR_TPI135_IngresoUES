@@ -4,7 +4,10 @@ import jakarta.inject.Inject;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.*;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.DistractorDAO;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.PruebaAreaPreguntaDAO;
@@ -18,11 +21,9 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Path("pruebaAreaPregunta/{idPruebaAreaPregunta}/distractor")
-public class PruebaAreaPreguntaDistractorResource implements Serializable {
+public class PruebaAreaPreguntaDistractorResource extends AbstractResource implements Serializable {
 
     @Inject
     PruebaAreaPreguntaDistractorDAO papdDAO;
@@ -33,8 +34,6 @@ public class PruebaAreaPreguntaDistractorResource implements Serializable {
     @Inject
     DistractorDAO distractorDAO;
 
-    private static final Logger LOG = Logger.getLogger(PruebaAreaPreguntaDistractorResource.class.getName());
-
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response findRange(
@@ -43,29 +42,24 @@ public class PruebaAreaPreguntaDistractorResource implements Serializable {
             @Max(10) @Min(1) @DefaultValue("10") @QueryParam("max") int max) {
 
         if (idPruebaAreaPregunta == null) {
-            return Response.status(422).header("Missing-parameter", "idPruebaAreaPregunta").build();
+            return unprocessable("idPruebaAreaPregunta");
         }
-        if (first < 0 || max <= 0 || max > 10) {
-            return Response.status(422).header("Missing-parameter", "first,max").build();
+        if (first < 0) {
+            return unprocessable("first");
         }
-        try {
-            PruebaAreaPregunta padre = pruebaAreaPreguntaDAO.findById(idPruebaAreaPregunta);
-            if (padre == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "PruebaAreaPregunta with id " + idPruebaAreaPregunta + " not found")
-                        .build();
-            }
-            List<PruebaAreaPreguntaDistractor> encontrados = papdDAO.findByPruebaAreaPregunta(idPruebaAreaPregunta, first, max);
-            int total = papdDAO.count();
-            return Response.ok(encontrados)
-                    .header("X-Total-Count", total)
-                    .build();
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error retrieving PruebaAreaPreguntaDistractor range", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
+        if (max <= 0 || max > 10) {
+            return unprocessable("max");
         }
+        PruebaAreaPregunta padre = pruebaAreaPreguntaDAO.findById(idPruebaAreaPregunta);
+        if (padre == null) {
+            return notFound(idPruebaAreaPregunta.toString(), "PruebaAreaPregunta");
+        }
+        List<PruebaAreaPreguntaDistractor> encontrados = papdDAO.findByPruebaAreaPregunta(idPruebaAreaPregunta, first, max);
+        int total = papdDAO.count();
+
+        return Response.ok(encontrados)
+                .header("X-Total-Count", total)
+                .build();
     }
 
     @GET
@@ -75,29 +69,19 @@ public class PruebaAreaPreguntaDistractorResource implements Serializable {
             @PathParam("idPruebaAreaPregunta") Integer idPruebaAreaPregunta,
             @PathParam("idDistractor") UUID idDistractor) {
 
-        if (idPruebaAreaPregunta == null || idDistractor == null) {
-            return Response.status(422).header("Missing-parameter", "idPruebaAreaPregunta,idDistractor").build();
+        if (idPruebaAreaPregunta == null) return unprocessable("idPruebaAreaPregunta");
+        if (idDistractor == null) return unprocessable("idDistractor");
+
+        List<PruebaAreaPreguntaDistractor> list = papdDAO.findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE);
+        Optional<PruebaAreaPreguntaDistractor> found = list.stream()
+                .filter(d -> d.getIdDistractor() != null && idDistractor.equals(d.getIdDistractor().getId()))
+                .findFirst();
+
+        if (found.isPresent()) {
+            return Response.ok(found.get()).build();
         }
 
-        try {
-            List<PruebaAreaPreguntaDistractor> list = papdDAO.findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE);
-            Optional<PruebaAreaPreguntaDistractor> found = list.stream()
-                    .filter(d -> d.getIdDistractor() != null && idDistractor.equals(d.getIdDistractor().getId()))
-                    .findFirst();
-
-            if (found.isPresent()) {
-                return Response.ok(found.get()).build();
-            } else {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record linking pruebaAreaPregunta " + idPruebaAreaPregunta + " and distractor " + idDistractor + " not found")
-                        .build();
-            }
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error retrieving PruebaAreaPreguntaDistractor", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
-        }
+        return notFound("linking pruebaAreaPregunta " + idPruebaAreaPregunta + " and distractor " + idDistractor, "Record");
     }
 
     @POST
@@ -108,47 +92,29 @@ public class PruebaAreaPreguntaDistractorResource implements Serializable {
             PruebaAreaPreguntaDistractor entity,
             @Context UriInfo uriInfo) {
 
-        if (idPruebaAreaPregunta == null) {
-            return Response.status(422).header("Missing-parameter", "idPruebaAreaPregunta").build();
-        }
-        if (entity == null) {
-            return Response.status(422).header("Missing-parameter", "entity must not be null").build();
-        }
-        if (entity.getId() != null) {
-            return Response.status(422).header("Missing-parameter", "entity.id must be null").build();
-        }
+        if (idPruebaAreaPregunta == null) return unprocessable("idPruebaAreaPregunta");
+        if (entity == null) return unprocessable("entity must not be null");
+        if (entity.getId() != null) return unprocessable("entity.id must be null");
         if (entity.getIdDistractor() == null || entity.getIdDistractor().getId() == null) {
-            return Response.status(422).header("Missing-parameter", "idDistractor must be provided in body").build();
+            return unprocessable("idDistractor must be provided in body");
         }
-
-        try {
-            PruebaAreaPregunta padre = pruebaAreaPreguntaDAO.findById(idPruebaAreaPregunta);
-            if (padre == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "PruebaAreaPregunta with id " + idPruebaAreaPregunta + " not found")
-                        .build();
-            }
-            Distractor dist = distractorDAO.findById(entity.getIdDistractor().getId());
-            if (dist == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Distractor with id " + entity.getIdDistractor().getId() + " not found")
-                        .build();
-            }
-            entity.setIdPruebaAreaPregunta(padre);
-            entity.setIdDistractor(dist);
-            if (entity.getFechaRegistro() == null) {
-                entity.setFechaRegistro(OffsetDateTime.now());
-            }
-            papdDAO.create(entity);
-            return Response.created(uriInfo.getAbsolutePathBuilder().path(dist.getId().toString()).build())
-                    .entity(entity)
-                    .build();
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error creating PruebaAreaPreguntaDistractor", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
+        PruebaAreaPregunta padre = pruebaAreaPreguntaDAO.findById(idPruebaAreaPregunta);
+        if (padre == null) {
+            return notFound(idPruebaAreaPregunta.toString(), "PruebaAreaPregunta");
         }
+        Distractor dist = distractorDAO.findById(entity.getIdDistractor().getId());
+        if (dist == null) {
+            return notFound(entity.getIdDistractor().getId().toString(), "Distractor");
+        }
+        entity.setIdPruebaAreaPregunta(padre);
+        entity.setIdDistractor(dist);
+        if (entity.getFechaRegistro() == null) {
+            entity.setFechaRegistro(OffsetDateTime.now());
+        }
+        papdDAO.create(entity);
+        return Response.created(uriInfo.getAbsolutePathBuilder().path(dist.getId().toString()).build())
+                .entity(entity)
+                .build();
     }
 
     @PUT
@@ -160,34 +126,23 @@ public class PruebaAreaPreguntaDistractorResource implements Serializable {
             @PathParam("idDistractor") UUID idDistractor,
             PruebaAreaPreguntaDistractor entity) {
 
-        if (idPruebaAreaPregunta == null || idDistractor == null) {
-            return Response.status(422).header("Missing-parameter", "idPruebaAreaPregunta,idDistractor").build();
-        }
-        if (entity == null) {
-            return Response.status(422).header("Missing-parameter", "entity must not be null").build();
-        }
+        if (idPruebaAreaPregunta == null) return unprocessable("idPruebaAreaPregunta");
+        if (idDistractor == null) return unprocessable("idDistractor");
+        if (entity == null) return unprocessable("entity must not be null");
 
-        try {
-            List<PruebaAreaPreguntaDistractor> list = papdDAO.findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE);
-            Optional<PruebaAreaPreguntaDistractor> foundOpt = list.stream()
-                    .filter(d -> d.getIdDistractor() != null && idDistractor.equals(d.getIdDistractor().getId()))
-                    .findFirst();
+        List<PruebaAreaPreguntaDistractor> list = papdDAO.findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE);
+        Optional<PruebaAreaPreguntaDistractor> foundOpt = list.stream()
+                .filter(d -> d.getIdDistractor() != null && idDistractor.equals(d.getIdDistractor().getId()))
+                .findFirst();
 
-            if (foundOpt.isEmpty()) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record linking pruebaAreaPregunta " + idPruebaAreaPregunta + " and distractor " + idDistractor + " not found")
-                        .build();
-            }
-            PruebaAreaPreguntaDistractor existing = foundOpt.get();
-            existing.setEsRespuestaCorrecta(entity.getEsRespuestaCorrecta());
-            PruebaAreaPreguntaDistractor updated = papdDAO.update(existing);
-            return Response.ok(updated).build();
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error updating PruebaAreaPreguntaDistractor", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
+        if (foundOpt.isEmpty()) {
+            return notFound("linking pruebaAreaPregunta " + idPruebaAreaPregunta + " and distractor " + idDistractor, "Record");
         }
+        PruebaAreaPreguntaDistractor existing = foundOpt.get();
+        existing.setEsRespuestaCorrecta(entity.getEsRespuestaCorrecta());
+
+        PruebaAreaPreguntaDistractor updated = papdDAO.update(existing);
+        return Response.ok(updated).build();
     }
 
     @DELETE
@@ -196,26 +151,16 @@ public class PruebaAreaPreguntaDistractorResource implements Serializable {
             @PathParam("idPruebaAreaPregunta") Integer idPruebaAreaPregunta,
             @PathParam("idDistractor") UUID idDistractor) {
 
-        if (idPruebaAreaPregunta == null || idDistractor == null) {
-            return Response.status(422).header("Missing-parameter", "idPruebaAreaPregunta,idDistractor").build();
+        if (idPruebaAreaPregunta == null) return unprocessable("idPruebaAreaPregunta");
+        if (idDistractor == null) return unprocessable("idDistractor");
+        List<PruebaAreaPreguntaDistractor> list = papdDAO.findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE);
+        Optional<PruebaAreaPreguntaDistractor> found = list.stream()
+                .filter(d -> d.getIdDistractor() != null && idDistractor.equals(d.getIdDistractor().getId()))
+                .findFirst();
+        if (found.isEmpty()) {
+            return notFound("linking pruebaAreaPregunta " + idPruebaAreaPregunta + " and distractor " + idDistractor, "Record");
         }
-        try {
-            List<PruebaAreaPreguntaDistractor> list = papdDAO.findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE);
-            Optional<PruebaAreaPreguntaDistractor> found = list.stream()
-                    .filter(d -> d.getIdDistractor() != null && idDistractor.equals(d.getIdDistractor().getId()))
-                    .findFirst();
-            if (found.isEmpty()) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record linking pruebaAreaPregunta " + idPruebaAreaPregunta + " and distractor " + idDistractor + " not found")
-                        .build();
-            }
-            papdDAO.delete(found.get());
-            return Response.noContent().build();
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error deleting PruebaAreaPreguntaDistractor", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
-        }
+        papdDAO.delete(found.get());
+        return Response.noContent().build();
     }
 }

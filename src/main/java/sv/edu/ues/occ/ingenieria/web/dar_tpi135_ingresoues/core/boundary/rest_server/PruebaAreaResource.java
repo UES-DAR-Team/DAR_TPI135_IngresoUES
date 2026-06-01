@@ -110,7 +110,6 @@ public class PruebaAreaResource extends AbstractResource implements Serializable
         pruebaAreaDAO.create(entity);
 
         return Response.created(uriInfo.getAbsolutePathBuilder().path(entity.getIdAreaConocimiento().getId().toString()).build())
-                .entity(entity)
                 .build();
     }
 

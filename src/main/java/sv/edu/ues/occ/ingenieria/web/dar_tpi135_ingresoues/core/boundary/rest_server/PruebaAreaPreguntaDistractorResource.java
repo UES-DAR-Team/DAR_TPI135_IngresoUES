@@ -113,7 +113,6 @@ public class PruebaAreaPreguntaDistractorResource extends AbstractResource imple
         }
         papdDAO.create(entity);
         return Response.created(uriInfo.getAbsolutePathBuilder().path(dist.getId().toString()).build())
-                .entity(entity)
                 .build();
     }
 

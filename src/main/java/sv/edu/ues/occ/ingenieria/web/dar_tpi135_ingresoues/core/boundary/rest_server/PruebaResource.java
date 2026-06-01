@@ -77,7 +77,6 @@ public class PruebaResource extends AbstractResource implements Serializable {
         }
         pruebaDAO.create(entity);
         return Response.created(uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build())
-                .entity(entity)
                 .build();
     }
 

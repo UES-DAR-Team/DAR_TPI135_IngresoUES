@@ -109,7 +109,6 @@ public class PruebaAreaPreguntaResource extends AbstractResource implements Seri
         entity.setFechaAsignacion(OffsetDateTime.now());
         pruebaAreaPreguntaDAO.create(entity);
         return Response.created(uriInfo.getAbsolutePathBuilder().path(entity.getIdPregunta().getId().toString()).build())
-                .entity(entity)
                 .build();
     }
 

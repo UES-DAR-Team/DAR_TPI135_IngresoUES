@@ -107,7 +107,6 @@ public class PruebaJornadaResource extends AbstractResource implements Serializa
         }
         pruebaJornadaDAO.create(entity);
         return Response.created(uriInfo.getAbsolutePathBuilder().path(jornada.getId().toString()).build())
-                .entity(entity)
                 .build();
     }
 

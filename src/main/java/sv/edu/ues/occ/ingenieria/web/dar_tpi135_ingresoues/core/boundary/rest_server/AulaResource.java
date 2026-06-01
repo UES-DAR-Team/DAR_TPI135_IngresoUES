@@ -77,7 +77,6 @@ public class AulaResource extends AbstractResource implements Serializable {
         }
         aulaDAO.create(entity);
         return Response.created(uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build())
-                .entity(entity)
                 .build();
     }
 
@@ -98,7 +97,6 @@ public class AulaResource extends AbstractResource implements Serializable {
         }
         entity.setId(id);
         Aula updated = aulaDAO.update(entity);
-
         return Response.ok(updated).build();
     }
 }

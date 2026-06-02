@@ -106,7 +106,9 @@ public class PruebaAreaResource extends AbstractResource implements Serializable
         }
         entity.setIdPrueba(prueba);
         entity.setIdAreaConocimiento(area);
-        entity.setFechaAsignacion(OffsetDateTime.now());
+        if (entity.getFechaAsignacion() == null) {
+            entity.setFechaAsignacion(OffsetDateTime.now());
+        }
         pruebaAreaDAO.create(entity);
 
         return Response.created(uriInfo.getAbsolutePathBuilder().path(entity.getIdAreaConocimiento().getId().toString()).build())

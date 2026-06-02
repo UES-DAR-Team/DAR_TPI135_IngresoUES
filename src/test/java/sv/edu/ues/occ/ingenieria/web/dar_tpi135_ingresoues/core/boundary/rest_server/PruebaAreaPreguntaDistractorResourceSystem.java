@@ -26,14 +26,51 @@ public class PruebaAreaPreguntaDistractorResourceSystem extends BaseIntegrationA
     private static final int ID_PRUEBA_AREA_PREGUNTA_INEXISTENTE = 99999;
     private static final UUID ID_DISTRACTOR = UUID.fromString("d4000000-0000-0000-0000-000000000001");
     private static final UUID ID_DISTRACTOR_INEXISTENTE = UUID.fromString("99999999-9999-9999-9999-999999999999");
-    private static final int ID_EXISTENTE = 1;
-    private static final int ID_INEXISTENTE = 99999;
     private static final UUID ID_DISTRACTOR_NUEVO = UUID.fromString("d4000000-0000-0000-0000-000000000005");
 
     @Nested
     @Order(1)
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-    class FindById {
+    class FindRange {
+
+        @Test
+        @Order(1)
+        void responde200ParametrosValidos() {
+            Response response = target
+                    .path(PATH)
+                    .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
+                    .path("distractor")
+                    .queryParam("first", 0)
+                    .queryParam("max", 10)
+                    .request(MediaType.APPLICATION_JSON)
+                    .get();
+
+            assertEquals(200, response.getStatus());
+            assertNotNull(response.getHeaderString("X-Total-Count"));
+            assertTrue(response.hasEntity());
+        }
+
+        @Test
+        @Order(2)
+        void responde404CuandoPruebaAreaPreguntaNoExiste() {
+            Response response = target
+                    .path(PATH)
+                    .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA_INEXISTENTE))
+                    .path("distractor")
+                    .queryParam("first", 0)
+                    .queryParam("max", 10)
+                    .request(MediaType.APPLICATION_JSON)
+                    .get();
+
+            assertEquals(404, response.getStatus());
+            assertNotNull(response.getHeaderString("Not-found-id"));
+        }
+    }
+
+    @Nested
+    @Order(2)
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+    class FindOne {
 
         @Test
         @Order(1)
@@ -43,7 +80,6 @@ public class PruebaAreaPreguntaDistractorResourceSystem extends BaseIntegrationA
                     .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
                     .path("distractor")
                     .path(ID_DISTRACTOR.toString())
-                    .path(String.valueOf(ID_EXISTENTE))
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
@@ -53,117 +89,118 @@ public class PruebaAreaPreguntaDistractorResourceSystem extends BaseIntegrationA
 
         @Test
         @Order(2)
-        void responde404CuandoNoExiste() {
-            Response response = target
-                    .path(PATH)
-                    .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
-                    .path("distractor")
-                    .path(ID_DISTRACTOR.toString())
-                    .path(String.valueOf(ID_INEXISTENTE))
-                    .request(MediaType.APPLICATION_JSON)
-                    .get();
-
-            assertEquals(404, response.getStatus());
-        }
-
-        @Test
-        @Order(3)
-        void responde404CuandoIdPruebaAreaPreguntaNoCoincide() {
-            Response response = target
-                    .path(PATH)
-                    .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA_INEXISTENTE))
-                    .path("distractor")
-                    .path(ID_DISTRACTOR.toString())
-                    .path(String.valueOf(ID_EXISTENTE))
-                    .request(MediaType.APPLICATION_JSON)
-                    .get();
-
-            assertEquals(404, response.getStatus());
-        }
-
-        @Test
-        @Order(4)
-        void responde404CuandoIdDistractorNoCoincide() {
+        void responde404CuandoDistractorNoExiste() {
             Response response = target
                     .path(PATH)
                     .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
                     .path("distractor")
                     .path(ID_DISTRACTOR_INEXISTENTE.toString())
-                    .path(String.valueOf(ID_EXISTENTE))
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
             assertEquals(404, response.getStatus());
+            assertNotNull(response.getHeaderString("Not-found-id"));
+        }
+
+        @Test
+        @Order(3)
+        void responde404CuandoPruebaAreaPreguntaNoExiste() {
+            Response response = target
+                    .path(PATH)
+                    .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA_INEXISTENTE))
+                    .path("distractor")
+                    .path(ID_DISTRACTOR.toString())
+                    .request(MediaType.APPLICATION_JSON)
+                    .get();
+
+            assertEquals(404, response.getStatus());
+            assertNotNull(response.getHeaderString("Not-found-id"));
         }
     }
 
     @Nested
-    @Order(2)
+    @Order(3)
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class Create {
 
         @Test
         @Order(1)
         void responde404CuandoPruebaAreaPreguntaNoExiste() {
-            String body = "{}";
+            String body = """
+                    { "idDistractor": { "id": "%s" } }
+                    """.formatted(ID_DISTRACTOR_NUEVO);
 
             Response response = target
                     .path(PATH)
                     .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA_INEXISTENTE))
                     .path("distractor")
-                    .path(ID_DISTRACTOR_NUEVO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(body));
 
             assertEquals(404, response.getStatus());
-            assertNotNull(response.getHeaderString("Not-found"));
+            assertNotNull(response.getHeaderString("Not-found-id"));
         }
 
         @Test
         @Order(2)
         void responde404CuandoDistractorNoExiste() {
-            String body = "{}";
+            String body = """
+                    { "idDistractor": { "id": "%s" } }
+                    """.formatted(ID_DISTRACTOR_INEXISTENTE);
 
             Response response = target
                     .path(PATH)
                     .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
                     .path("distractor")
-                    .path(ID_DISTRACTOR_INEXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(body));
 
             assertEquals(404, response.getStatus());
-            assertNotNull(response.getHeaderString("Not-found"));
+            assertNotNull(response.getHeaderString("Not-found-id"));
         }
 
         @Test
         @Order(3)
         void responde422CuandoEntityTieneId() {
             String body = """
-                    { "id": 1 }
-                    """;
+                    { "id": 1, "idDistractor": { "id": "%s" } }
+                    """.formatted(ID_DISTRACTOR_NUEVO);
 
             Response response = target
                     .path(PATH)
                     .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
                     .path("distractor")
-                    .path(ID_DISTRACTOR_NUEVO.toString())
-                    .request()
+                    .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(body));
 
             assertEquals(422, response.getStatus());
+            assertNotNull(response.getHeaderString("Missing-parameter"));
         }
 
         @Test
         @Order(4)
+        void respondeErrorCuandoBodyVacio() {
+            Response response = target
+                    .path(PATH)
+                    .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
+                    .path("distractor")
+                    .request(MediaType.APPLICATION_JSON)
+                    .post(Entity.entity("", MediaType.APPLICATION_JSON));
+
+            assertTrue(response.getStatus() == 400 || response.getStatus() == 500);
+        }
+
+        @Test
+        @Order(5)
         void responde500OErrorCuandoRelacionYaExiste() {
-            String body = "{}";
+            String body = """
+                    { "idDistractor": { "id": "%s" } }
+                    """.formatted(ID_DISTRACTOR);
 
             Response response = target
                     .path(PATH)
                     .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
                     .path("distractor")
-                    .path(ID_DISTRACTOR.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(body));
 
@@ -171,118 +208,153 @@ public class PruebaAreaPreguntaDistractorResourceSystem extends BaseIntegrationA
         }
 
         @Test
-        @Order(5)
-        void responde201OErrorCuandoCombinacionNueva() {
+        @Order(6)
+        void responde201CuandoCombinacionNueva() {
             String body = """
-            { "esRespuestaCorrecta": false, "fechaRegistro": "2025-06-01T08:00:00Z" }
-            """;
+                    {
+                        "idDistractor": { "id": "%s" },
+                        "esRespuestaCorrecta": false,
+                        "fechaRegistro": "2025-06-01T08:00:00Z"
+                    }
+                    """.formatted(ID_DISTRACTOR_NUEVO);
 
             Response response = target
                     .path(PATH)
                     .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
                     .path("distractor")
-                    .path(ID_DISTRACTOR_NUEVO.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(body));
 
-            assertTrue(response.getStatus() == 201 || response.getStatus() == 500);
+            assertEquals(201, response.getStatus());
+            assertNotNull(response.getHeaderString("Location"));
         }
     }
 
     @Nested
-    @Order(3)
+    @Order(4)
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class Update {
 
         @Test
         @Order(1)
         void responde200CuandoExiste() {
-           String body = """
-                   { "esRespuestaCorrecta": true, "fechaRegistro": "2025-06-01T08:00:00Z" }staCorrecta": true }
-                   """;
+            String body = """
+                    { "esRespuestaCorrecta": true }
+                    """;
 
             Response response = target
                     .path(PATH)
                     .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
                     .path("distractor")
                     .path(ID_DISTRACTOR.toString())
-                    .path(String.valueOf(ID_EXISTENTE))
-                    .request()
+                    .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(body));
 
             assertEquals(200, response.getStatus());
+            assertTrue(response.hasEntity());
         }
 
         @Test
         @Order(2)
-        void responde404CuandoNoExiste() {
+        void responde404CuandoDistractorNoExiste() {
             String body = """
-        { "esRespuestaCorrecta": true, "fechaRegistro": "2025-06-01T08:00:00Z" }
-        """;
-
-            Response response = target
-                    .path(PATH)
-                    .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
-                    .path("distractor")
-                    .path(ID_DISTRACTOR.toString())
-                    .path(String.valueOf(ID_INEXISTENTE))
-                    .request()
-                    .put(Entity.json(body));
-
-            assertEquals(404, response.getStatus());
-        }
-
-        @Test
-        @Order(3)
-        void responde404CuandoIdPruebaAreaPreguntaNoCoincide() {
-            String body = """
-        { "esRespuestaCorrecta": true, "fechaRegistro": "2025-06-01T08:00:00Z" }
-        """;
-
-            Response response = target
-                    .path(PATH)
-                    .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA_INEXISTENTE))
-                    .path("distractor")
-                    .path(ID_DISTRACTOR.toString())
-                    .path(String.valueOf(ID_EXISTENTE))
-                    .request()
-                    .put(Entity.json(body));
-
-            assertEquals(404, response.getStatus());
-        }
-
-        @Test
-        @Order(4)
-        void responde404CuandoIdDistractorNoCoincide() {
-            String body = """
-        { "esRespuestaCorrecta": true, "fechaRegistro": "2025-06-01T08:00:00Z" }
-        """;
+                    { "esRespuestaCorrecta": true }
+                    """;
 
             Response response = target
                     .path(PATH)
                     .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
                     .path("distractor")
                     .path(ID_DISTRACTOR_INEXISTENTE.toString())
-                    .path(String.valueOf(ID_EXISTENTE))
-                    .request()
+                    .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(body));
 
             assertEquals(404, response.getStatus());
+            assertNotNull(response.getHeaderString("Not-found-id"));
         }
 
         @Test
-        @Order(5)
+        @Order(3)
+        void responde404CuandoPruebaAreaPreguntaNoExiste() {
+            String body = """
+                    { "esRespuestaCorrecta": true }
+                    """;
+
+            Response response = target
+                    .path(PATH)
+                    .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA_INEXISTENTE))
+                    .path("distractor")
+                    .path(ID_DISTRACTOR.toString())
+                    .request(MediaType.APPLICATION_JSON)
+                    .put(Entity.json(body));
+
+            assertEquals(404, response.getStatus());
+            assertNotNull(response.getHeaderString("Not-found-id"));
+        }
+
+        @Test
+        @Order(4)
         void respondeErrorCuandoBodyVacio() {
             Response response = target
                     .path(PATH)
                     .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
                     .path("distractor")
                     .path(ID_DISTRACTOR.toString())
-                    .path(String.valueOf(ID_EXISTENTE))
-                    .request()
+                    .request(MediaType.APPLICATION_JSON)
                     .put(Entity.entity("", MediaType.APPLICATION_JSON));
 
             assertTrue(response.getStatus() == 400 || response.getStatus() == 500);
+        }
+    }
+
+    @Nested
+    @Order(5)
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+    class DeleteById {
+
+        @Test
+        @Order(1)
+        void responde404CuandoNoExiste() {
+            Response response = target
+                    .path(PATH)
+                    .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
+                    .path("distractor")
+                    .path(ID_DISTRACTOR_INEXISTENTE.toString())
+                    .request()
+                    .delete();
+
+            assertEquals(404, response.getStatus());
+            assertNotNull(response.getHeaderString("Not-found-id"));
+        }
+
+        @Test
+        @Order(2)
+        void responde204CuandoExiste() {
+            Response response = target
+                    .path(PATH)
+                    .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
+                    .path("distractor")
+                    .path(ID_DISTRACTOR_NUEVO.toString())
+                    .request()
+                    .delete();
+
+            assertEquals(204, response.getStatus());
+            assertFalse(response.hasEntity());
+        }
+
+        @Test
+        @Order(3)
+        void responde404CuandoSeIntentaAccederAlRegistroEliminado() {
+            Response response = target
+                    .path(PATH)
+                    .path(String.valueOf(ID_PRUEBA_AREA_PREGUNTA))
+                    .path("distractor")
+                    .path(ID_DISTRACTOR_NUEVO.toString())
+                    .request(MediaType.APPLICATION_JSON)
+                    .get();
+
+            assertEquals(404, response.getStatus());
+            assertNotNull(response.getHeaderString("Not-found-id"));
         }
     }
 }

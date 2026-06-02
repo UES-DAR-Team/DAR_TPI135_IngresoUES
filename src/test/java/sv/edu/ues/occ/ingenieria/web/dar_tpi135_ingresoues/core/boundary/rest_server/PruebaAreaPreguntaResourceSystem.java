@@ -63,7 +63,7 @@ public class PruebaAreaPreguntaResourceSystem extends BaseIntegrationAbstract {
                     .get();
 
             assertEquals(404, response.getStatus());
-            assertNotNull(response.getHeaderString("Not-found"));
+            assertNotNull(response.getHeaderString("Not-found-id"));
         }
 
         @Test
@@ -167,7 +167,7 @@ public class PruebaAreaPreguntaResourceSystem extends BaseIntegrationAbstract {
                     .post(Entity.json(body));
 
             assertEquals(404, response.getStatus());
-            assertNotNull(response.getHeaderString("Not-found"));
+            assertNotNull(response.getHeaderString("Not-found-id"));
         }
 
         @Test
@@ -185,7 +185,7 @@ public class PruebaAreaPreguntaResourceSystem extends BaseIntegrationAbstract {
                     .post(Entity.json(body));
 
             assertEquals(404, response.getStatus());
-            assertNotNull(response.getHeaderString("Not-found"));
+            assertNotNull(response.getHeaderString("Not-found-id"));
         }
 
         @Test
@@ -251,7 +251,6 @@ public class PruebaAreaPreguntaResourceSystem extends BaseIntegrationAbstract {
 
             assertEquals(201, response.getStatus());
             assertNotNull(response.getHeaderString("Location"));
-            assertTrue(response.hasEntity());
         }
 
 

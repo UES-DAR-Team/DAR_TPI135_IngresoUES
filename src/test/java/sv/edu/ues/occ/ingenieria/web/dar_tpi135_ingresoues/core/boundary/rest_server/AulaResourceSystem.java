@@ -43,7 +43,7 @@ public class AulaResourceSystem extends BaseIntegrationAbstract {
                     .get();
 
             assertEquals(200, response.getStatus());
-            assertNotNull(response.getHeaderString("Total-records"));
+            assertNotNull(response.getHeaderString("X-Total-Count"), "Se esperaX-Total-Count");
             assertTrue(response.hasEntity());
         }
 
@@ -122,9 +122,13 @@ public class AulaResourceSystem extends BaseIntegrationAbstract {
         @Order(3)
         void responde201CuandoEntidadValida() {
             String body = """
-                    { "nombreAula": "Aula Test Sistema", "capacidad": 25,
-                      "fechaCreacion": "2025-06-01T08:00:00Z", "activo": true }
-                    """;
+            {
+                "nombreAula": "Aula Test Sistema",
+                "capacidad": 25,
+                "fechaCreacion": "2025-06-01T08:00:00Z",
+                "activo": true
+            }
+            """;
 
             Response response = target
                     .path(PATH)
@@ -132,141 +136,141 @@ public class AulaResourceSystem extends BaseIntegrationAbstract {
                     .post(Entity.json(body));
 
             assertEquals(201, response.getStatus());
-            assertNotNull(response.getHeaderString("Location"));
-            assertTrue(response.hasEntity());
 
-            String responseBody = response.readEntity(String.class);
-            int idStart = responseBody.indexOf("\"id\":\"") + 6;
-            int idEnd = responseBody.indexOf("\"", idStart);
-            ID_CREADO = UUID.fromString(responseBody.substring(idStart, idEnd));
-        }
-    }
+            String location = response.getHeaderString("Location");
+            assertNotNull(location, "El Header Location debe estar en un 201");
 
-    @Nested
-    @Order(3)
-    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-    class FindById {
-
-        @Test
-        @Order(1)
-        void responde200CuandoExiste() {
-            Response response = target
-                    .path(PATH)
-                    .path(ID_EXISTENTE.toString())
-                    .request(MediaType.APPLICATION_JSON)
-                    .get();
-
-            assertEquals(200, response.getStatus());
-            assertTrue(response.hasEntity());
+            String[] parts = location.split("/");
+            ID_CREADO = UUID.fromString(parts[parts.length - 1]);
         }
 
-        @Test
-        @Order(2)
-        void responde404CuandoNoExiste() {
-            Response response = target
-                    .path(PATH)
-                    .path(ID_INEXISTENTE.toString())
-                    .request(MediaType.APPLICATION_JSON)
-                    .get();
-
-            assertEquals(404, response.getStatus());
-            assertNotNull(response.getHeaderString("Not-found-id"));
-        }
-    }
-
-    @Nested
-    @Order(4)
-    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-    class Update {
-
-        @Test
-        @Order(1)
-        void responde200CuandoExiste() {
-            String body = """
-                    { "nombreAula": "Aula Test Actualizada", "capacidad": 35,
-                      "fechaCreacion": "2025-06-01T08:00:00Z", "activo": true }
-                    """;
-
-            Response response = target
-                    .path(PATH)
-                    .path(ID_EXISTENTE.toString())
-                    .request()
-                    .put(Entity.json(body));
-
-            assertEquals(200, response.getStatus());
-        }
-
-        @Test
-        @Order(2)
-        void responde404CuandoNoExiste() {
-            String body = """
-                    { "nombreAula": "Aula Test", "capacidad": 25,
-                      "fechaCreacion": "2025-06-01T08:00:00Z", "activo": true }
-                    """;
-
-            Response response = target
-                    .path(PATH)
-                    .path(ID_INEXISTENTE.toString())
-                    .request()
-                    .put(Entity.json(body));
-
-            assertEquals(404, response.getStatus());
-        }
-
-        @Test
+        @Nested
         @Order(3)
-        void respondeErrorCuandoBodyVacio() {
-            Response response = target
-                    .path(PATH)
-                    .path(ID_EXISTENTE.toString())
-                    .request()
-                    .put(Entity.entity("", MediaType.APPLICATION_JSON));
+        @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+        class FindById {
 
-            assertTrue(response.getStatus() == 400 || response.getStatus() == 500);
-        }
-    }
+            @Test
+            @Order(1)
+            void responde200CuandoExiste() {
+                Response response = target
+                        .path(PATH)
+                        .path(ID_EXISTENTE.toString())
+                        .request(MediaType.APPLICATION_JSON)
+                        .get();
 
-    @Nested
-    @Order(5)
-    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-    class DeleteById {
+                assertEquals(200, response.getStatus());
+                assertTrue(response.hasEntity());
+            }
 
-        @Test
-        @Order(1)
-        void responde404CuandoNoExiste() {
-            Response response = target
-                    .path(PATH)
-                    .path(ID_INEXISTENTE.toString())
-                    .request()
-                    .delete();
+            @Test
+            @Order(2)
+            void responde404CuandoNoExiste() {
+                Response response = target
+                        .path(PATH)
+                        .path(ID_INEXISTENTE.toString())
+                        .request(MediaType.APPLICATION_JSON)
+                        .get();
 
-            assertEquals(404, response.getStatus());
-            assertNotNull(response.getHeaderString("Not-found-id"));
-        }
-
-        @Test
-        @Order(2)
-        void responde204CuandoExiste() {
-            Response response = target
-                    .path(PATH)
-                    .path(ID_CREADO.toString())
-                    .request()
-                    .delete();
-
-            assertEquals(204, response.getStatus());
-            assertFalse(response.hasEntity());
+                assertEquals(404, response.getStatus());
+                assertNotNull(response.getHeaderString("Not-found-id"));
+            }
         }
 
-        @Test
-        @Order(3)
-        void responde404CuandoSeIntentaAccederAlRegistroEliminado() {
-            Response response = target
-                    .path(PATH)
-                    .path(ID_CREADO.toString())
-                    .request(MediaType.APPLICATION_JSON)
-                    .get();
+        @Nested
+        @Order(4)
+        @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+        class Update {
 
-            assertEquals(404, response.getStatus());
+            @Test
+            @Order(1)
+            void responde200CuandoExiste() {
+                String body = """
+                        { "nombreAula": "Aula Test Actualizada", "capacidad": 35,
+                          "fechaCreacion": "2025-06-01T08:00:00Z", "activo": true }
+                        """;
+
+                Response response = target
+                        .path(PATH)
+                        .path(ID_EXISTENTE.toString())
+                        .request()
+                        .put(Entity.json(body));
+
+                assertEquals(200, response.getStatus());
+            }
+
+            @Test
+            @Order(2)
+            void responde404CuandoNoExiste() {
+                String body = """
+                        { "nombreAula": "Aula Test", "capacidad": 25,
+                          "fechaCreacion": "2025-06-01T08:00:00Z", "activo": true }
+                        """;
+
+                Response response = target
+                        .path(PATH)
+                        .path(ID_INEXISTENTE.toString())
+                        .request()
+                        .put(Entity.json(body));
+
+                assertEquals(404, response.getStatus());
+            }
+
+            @Test
+            @Order(3)
+            void respondeErrorCuandoBodyVacio() {
+                Response response = target
+                        .path(PATH)
+                        .path(ID_EXISTENTE.toString())
+                        .request()
+                        .put(Entity.entity("", MediaType.APPLICATION_JSON));
+
+                assertTrue(response.getStatus() == 400 || response.getStatus() == 500);
+            }
+        }
+
+        @Nested
+        @Order(5)
+        @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+        class DeleteById {
+
+            @Test
+            @Order(1)
+            void responde404CuandoNoExiste() {
+                Response response = target
+                        .path(PATH)
+                        .path(ID_INEXISTENTE.toString())
+                        .request()
+                        .delete();
+
+                assertEquals(404, response.getStatus());
+                assertNotNull(response.getHeaderString("Not-found-id"));
+            }
+
+            @Test
+            @Order(2)
+            void responde204CuandoExiste() {
+                Response response = target
+                        .path(PATH)
+                        .path(ID_CREADO.toString())
+                        .request()
+                        .delete();
+
+                assertEquals(204, response.getStatus());
+                assertFalse(response.hasEntity());
+            }
+
+            @Test
+            @Order(3)
+            void responde404CuandoSeIntentaAccederAlRegistroEliminado() {
+                Response response = target
+                        .path(PATH)
+                        .path(ID_CREADO.toString())
+                        .request(MediaType.APPLICATION_JSON)
+                        .get();
+
+                assertEquals(404, response.getStatus());
+                assertNotNull(response.getHeaderString("Not-found-id"));
+            }
         }
     }
 }

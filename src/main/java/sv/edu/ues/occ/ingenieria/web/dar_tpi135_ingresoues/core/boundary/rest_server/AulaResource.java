@@ -4,45 +4,36 @@ import jakarta.inject.Inject;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.*;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.AulaDAO;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aula;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Path("aula")
-public class AulaResource implements Serializable {
+public class AulaResource extends AbstractResource implements Serializable {
 
     @Inject
     AulaDAO aulaDAO;
-
-    private static final Logger LOG = Logger.getLogger(AulaResource.class.getName());
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response findRange(
             @Min(0) @DefaultValue("0") @QueryParam("first") int first,
             @Max(10) @Min(1) @DefaultValue("10") @QueryParam("max") int max) {
-        if (first >= 0 && max > 0 && max <= 10) {
-            try {
-                List<Aula> list = aulaDAO.findRange(first, max);
-                int total = aulaDAO.count();
-                return Response.ok(list)
-                        .header("Total-records", total)
-                        .build();
-            } catch (Exception ex) {
-                LOG.log(Level.SEVERE, "Error retrieving Aula range", ex);
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db")
-                        .build();
-            }
+
+        if (first < 0 || max <= 0 || max > 10) {
+            return unprocessable("first,max");
         }
-        return Response.status(422)
-                .header("Missing-parameter", "first,max")
+        List<Aula> list = aulaDAO.findRange(first, max);
+        int total = aulaDAO.count();
+        return Response.ok(list)
+                .header("X-Total-Count", total)
                 .build();
     }
 
@@ -50,94 +41,42 @@ public class AulaResource implements Serializable {
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(@PathParam("id") UUID id) {
-
-        if (id != null) {
-            try {
-                Aula entity = aulaDAO.findById(id);
-
-                if (entity != null) {
-                    return Response.ok(entity).build();
-                }
-
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record with id " + id + " not found")
-                        .build();
-
-            } catch (Exception ex) {
-                LOG.log(Level.SEVERE, "Error retrieving Aula by id", ex);
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db")
-                        .build();
-            }
+        if (id == null) {
+            return unprocessable("id");
         }
-
-        return Response.status(422)
-                .header("Missing-parameter", "id")
-                .build();
+        Aula entity = aulaDAO.findById(id);
+        if (entity == null) {
+            return notFound(id.toString(), "Aula");
+        }
+        return Response.ok(entity).build();
     }
 
     @DELETE
     @Path("{id}")
     public Response delete(@PathParam("id") UUID id) {
-
-        if (id != null) {
-            try {
-                Aula entity = aulaDAO.findById(id);
-
-                if (entity != null) {
-                    aulaDAO.delete(entity);
-                    return Response.noContent().build();
-                }
-
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record with id " + id + " not found")
-                        .build();
-
-            } catch (Exception ex) {
-                LOG.log(Level.SEVERE, "Error deleting Aula", ex);
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db")
-                        .build();
-            }
+        if (id == null) {
+            return unprocessable("id");
         }
-
-        return Response.status(422)
-                .header("Missing-parameter", "id")
-                .build();
+        Aula entity = aulaDAO.findById(id);
+        if (entity == null) {
+            return notFound(id.toString(), "Aula");
+        }
+        aulaDAO.delete(entity);
+        return Response.noContent().build();
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response create(Aula entity, @Context UriInfo uriInfo) {
-
-        if (entity != null) {
-
-            if (entity.getId() == null) {
-                try {
-                    aulaDAO.create(entity);
-
-                    return Response.created(
-                            uriInfo.getAbsolutePathBuilder()
-                                    .path(entity.getId().toString())
-                                    .build()
-                    ).entity(entity).build();
-
-                } catch (Exception ex) {
-                    LOG.log(Level.SEVERE, "Error creating Aula", ex);
-                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                            .header("Server-exception", "Cannot access db")
-                            .build();
-                }
-            }
-
-            return Response.status(422)
-                    .header("Missing-parameter", "entity.id must be null")
-                    .build();
+        if (entity == null) {
+            return unprocessable("entity must not be null");
         }
-
-        return Response.status(422)
-                .header("Missing-parameter", "entity must not be null")
+        if (entity.getId() != null) {
+            return unprocessable("entity.id must be null");
+        }
+        aulaDAO.create(entity);
+        return Response.created(uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build())
                 .build();
     }
 
@@ -146,38 +85,18 @@ public class AulaResource implements Serializable {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response update(@PathParam("id") UUID id, Aula entity) {
-
-        if (id != null) {
-
-            if (entity != null) {
-                try {
-                    Aula existing = aulaDAO.findById(id);
-
-                    if (existing != null) {
-                        entity.setId(id);
-                        aulaDAO.update(entity);
-                        return Response.ok(entity).build();
-                    }
-
-                    return Response.status(Response.Status.NOT_FOUND)
-                            .header("Not-found-id", "Record with id " + id + " not found")
-                            .build();
-
-                } catch (Exception ex) {
-                    LOG.log(Level.SEVERE, "Error updating Aula", ex);
-                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                            .header("Server-exception", "Cannot access db")
-                            .build();
-                }
-            }
-
-            return Response.status(422)
-                    .header("Missing-parameter", "entity must not be null")
-                    .build();
+        if (id == null) {
+            return unprocessable("id");
         }
-
-        return Response.status(422)
-                .header("Missing-parameter", "id")
-                .build();
+        if (entity == null) {
+            return unprocessable("entity must not be null");
+        }
+        Aula existing = aulaDAO.findById(id);
+        if (existing == null) {
+            return notFound(id.toString(), "Aula");
+        }
+        entity.setId(id);
+        Aula updated = aulaDAO.update(entity);
+        return Response.ok(updated).build();
     }
 }

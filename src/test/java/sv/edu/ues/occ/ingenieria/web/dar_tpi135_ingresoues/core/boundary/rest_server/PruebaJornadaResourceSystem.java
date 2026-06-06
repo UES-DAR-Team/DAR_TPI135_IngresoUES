@@ -26,11 +26,44 @@ public class PruebaJornadaResourceSystem extends BaseIntegrationAbstract {
     private static final UUID ID_JORNADA = UUID.fromString("e5000000-0000-0000-0000-000000000001");
     private static final UUID ID_PRUEBA_INEXISTENTE = UUID.fromString("99999999-9999-9999-9999-999999999999");
     private static final UUID ID_JORNADA_INEXISTENTE = UUID.fromString("99999999-9999-9999-9999-999999999998");
-    private static final int ID_EXISTENTE = 1;
-    private static final int ID_INEXISTENTE = 99999;
 
     @Nested
     @Order(1)
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+    class FindRange {
+
+        @Test
+        @Order(1)
+        void responde200CuandoPruebaExiste() {
+            Response response = target
+                    .path(PATH)
+                    .path(ID_PRUEBA.toString())
+                    .path("jornada")
+                    .request(MediaType.APPLICATION_JSON)
+                    .get();
+
+            assertEquals(200, response.getStatus());
+            assertNotNull(response.getHeaderString("X-Total-Count"));
+            assertTrue(response.hasEntity());
+        }
+
+        @Test
+        @Order(2)
+        void responde404CuandoPruebaNoExiste() {
+            Response response = target
+                    .path(PATH)
+                    .path(ID_PRUEBA_INEXISTENTE.toString())
+                    .path("jornada")
+                    .request(MediaType.APPLICATION_JSON)
+                    .get();
+
+            assertEquals(404, response.getStatus());
+            assertNotNull(response.getHeaderString("Not-found-id"));
+        }
+    }
+
+    @Nested
+    @Order(2)
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class FindById {
 
@@ -42,7 +75,6 @@ public class PruebaJornadaResourceSystem extends BaseIntegrationAbstract {
                     .path(ID_PRUEBA.toString())
                     .path("jornada")
                     .path(ID_JORNADA.toString())
-                    .path(String.valueOf(ID_EXISTENTE))
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
@@ -52,52 +84,37 @@ public class PruebaJornadaResourceSystem extends BaseIntegrationAbstract {
 
         @Test
         @Order(2)
-        void responde404CuandoNoExiste() {
-            Response response = target
-                    .path(PATH)
-                    .path(ID_PRUEBA.toString())
-                    .path("jornada")
-                    .path(ID_JORNADA.toString())
-                    .path(String.valueOf(ID_INEXISTENTE))
-                    .request(MediaType.APPLICATION_JSON)
-                    .get();
-
-            assertEquals(404, response.getStatus());
-        }
-
-        @Test
-        @Order(3)
-        void responde404CuandoIdPruebaNoCoincide() {
-            Response response = target
-                    .path(PATH)
-                    .path(ID_PRUEBA_INEXISTENTE.toString())
-                    .path("jornada")
-                    .path(ID_JORNADA.toString())
-                    .path(String.valueOf(ID_EXISTENTE))
-                    .request(MediaType.APPLICATION_JSON)
-                    .get();
-
-            assertEquals(404, response.getStatus());
-        }
-
-        @Test
-        @Order(4)
-        void responde404CuandoIdJornadaNoCoincide() {
+        void responde404CuandoJornadaNoExiste() {
             Response response = target
                     .path(PATH)
                     .path(ID_PRUEBA.toString())
                     .path("jornada")
                     .path(ID_JORNADA_INEXISTENTE.toString())
-                    .path(String.valueOf(ID_EXISTENTE))
                     .request(MediaType.APPLICATION_JSON)
                     .get();
 
             assertEquals(404, response.getStatus());
+            assertNotNull(response.getHeaderString("Not-found-id"));
+        }
+
+        @Test
+        @Order(3)
+        void responde404CuandoPruebaNoExiste() {
+            Response response = target
+                    .path(PATH)
+                    .path(ID_PRUEBA_INEXISTENTE.toString())
+                    .path("jornada")
+                    .path(ID_JORNADA.toString())
+                    .request(MediaType.APPLICATION_JSON)
+                    .get();
+
+            assertEquals(404, response.getStatus());
+            assertNotNull(response.getHeaderString("Not-found-id"));
         }
     }
 
     @Nested
-    @Order(2)
+    @Order(3)
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class Create {
 
@@ -105,56 +122,64 @@ public class PruebaJornadaResourceSystem extends BaseIntegrationAbstract {
         @Order(1)
         void responde404CuandoPruebaNoExiste() {
             String body = """
-                    { "fechaAsignacion": "2025-06-01T08:00:00Z" }
-                    """;
+                    {
+                        "idJornada": { "id": "%s" },
+                        "fechaAsignacion": "2025-06-01T08:00:00Z"
+                    }
+                    """.formatted(ID_JORNADA);
 
             Response response = target
                     .path(PATH)
                     .path(ID_PRUEBA_INEXISTENTE.toString())
                     .path("jornada")
-                    .path(ID_JORNADA.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(body));
 
             assertEquals(404, response.getStatus());
-            assertNotNull(response.getHeaderString("Not-found"));
+            assertNotNull(response.getHeaderString("Not-found-id"));
         }
 
         @Test
         @Order(2)
         void responde404CuandoJornadaNoExiste() {
             String body = """
-                    { "fechaAsignacion": "2025-06-01T08:00:00Z" }
-                    """;
+                    {
+                        "idJornada": { "id": "%s" },
+                        "fechaAsignacion": "2025-06-01T08:00:00Z"
+                    }
+                    """.formatted(ID_JORNADA_INEXISTENTE);
 
             Response response = target
                     .path(PATH)
                     .path(ID_PRUEBA.toString())
                     .path("jornada")
-                    .path(ID_JORNADA_INEXISTENTE.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(body));
 
             assertEquals(404, response.getStatus());
-            assertNotNull(response.getHeaderString("Not-found"));
+            assertNotNull(response.getHeaderString("Not-found-id"));
         }
 
         @Test
         @Order(3)
         void responde422CuandoEntityTieneId() {
             String body = """
-                    { "id": 1, "fechaAsignacion": "2025-06-01T08:00:00Z" }
-                    """;
+                    {
+                        "id": 1,
+                        "idJornada": { "id": "%s" },
+                        "fechaAsignacion": "2025-06-01T08:00:00Z"
+                    }
+                    """.formatted(ID_JORNADA);
 
             Response response = target
                     .path(PATH)
                     .path(ID_PRUEBA.toString())
                     .path("jornada")
-                    .path(ID_JORNADA.toString())
-                    .request()
+                    .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(body));
 
             assertEquals(422, response.getStatus());
+            assertNotNull(response.getHeaderString("Missing-parameter"));
         }
 
         @Test
@@ -164,8 +189,7 @@ public class PruebaJornadaResourceSystem extends BaseIntegrationAbstract {
                     .path(PATH)
                     .path(ID_PRUEBA.toString())
                     .path("jornada")
-                    .path(ID_JORNADA.toString())
-                    .request()
+                    .request(MediaType.APPLICATION_JSON)
                     .post(Entity.entity("", MediaType.APPLICATION_JSON));
 
             assertTrue(response.getStatus() == 400 || response.getStatus() == 500);
@@ -175,14 +199,16 @@ public class PruebaJornadaResourceSystem extends BaseIntegrationAbstract {
         @Order(5)
         void responde500OErrorCuandoRelacionYaExiste() {
             String body = """
-                    { "fechaAsignacion": "2025-06-01T08:00:00Z" }
-                    """;
+                    {
+                        "idJornada": { "id": "%s" },
+                        "fechaAsignacion": "2025-06-01T08:00:00Z"
+                    }
+                    """.formatted(ID_JORNADA);
 
             Response response = target
                     .path(PATH)
                     .path(ID_PRUEBA.toString())
                     .path("jornada")
-                    .path(ID_JORNADA.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(body));
 
@@ -194,26 +220,26 @@ public class PruebaJornadaResourceSystem extends BaseIntegrationAbstract {
         void responde201CuandoCombinacionNueva() {
             UUID idPrueba2 = UUID.fromString("07000000-0000-0000-0000-000000000002");
             String body = """
-                    { "fechaAsignacion": "2025-06-01T08:00:00Z" }
-                    """;
+                    {
+                        "idJornada": { "id": "%s" },
+                        "fechaAsignacion": "2025-06-01T08:00:00Z"
+                    }
+                    """.formatted(ID_JORNADA);
 
             Response response = target
                     .path(PATH)
                     .path(idPrueba2.toString())
                     .path("jornada")
-                    .path(ID_JORNADA.toString())
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(body));
 
             assertEquals(201, response.getStatus());
             assertNotNull(response.getHeaderString("Location"));
-            assertTrue(response.hasEntity());
         }
-
     }
 
     @Nested
-    @Order(3)
+    @Order(4)
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class Update {
 
@@ -229,54 +255,16 @@ public class PruebaJornadaResourceSystem extends BaseIntegrationAbstract {
                     .path(ID_PRUEBA.toString())
                     .path("jornada")
                     .path(ID_JORNADA.toString())
-                    .path(String.valueOf(ID_EXISTENTE))
-                    .request()
+                    .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(body));
 
             assertEquals(200, response.getStatus());
+            assertTrue(response.hasEntity());
         }
 
         @Test
         @Order(2)
-        void responde404CuandoNoExiste() {
-            String body = """
-                    { "fechaAsignacion": "2025-07-15T10:00:00Z" }
-                    """;
-
-            Response response = target
-                    .path(PATH)
-                    .path(ID_PRUEBA.toString())
-                    .path("jornada")
-                    .path(ID_JORNADA.toString())
-                    .path(String.valueOf(ID_INEXISTENTE))
-                    .request()
-                    .put(Entity.json(body));
-
-            assertEquals(404, response.getStatus());
-        }
-
-        @Test
-        @Order(3)
-        void responde404CuandoIdPruebaNoCoincide() {
-            String body = """
-                    { "fechaAsignacion": "2025-07-15T10:00:00Z" }
-                    """;
-
-            Response response = target
-                    .path(PATH)
-                    .path(ID_PRUEBA_INEXISTENTE.toString())
-                    .path("jornada")
-                    .path(ID_JORNADA.toString())
-                    .path(String.valueOf(ID_EXISTENTE))
-                    .request()
-                    .put(Entity.json(body));
-
-            assertEquals(404, response.getStatus());
-        }
-
-        @Test
-        @Order(4)
-        void responde404CuandoIdJornadaNoCoincide() {
+        void responde404CuandoJornadaNoExiste() {
             String body = """
                     { "fechaAsignacion": "2025-07-15T10:00:00Z" }
                     """;
@@ -286,26 +274,99 @@ public class PruebaJornadaResourceSystem extends BaseIntegrationAbstract {
                     .path(ID_PRUEBA.toString())
                     .path("jornada")
                     .path(ID_JORNADA_INEXISTENTE.toString())
-                    .path(String.valueOf(ID_EXISTENTE))
-                    .request()
+                    .request(MediaType.APPLICATION_JSON)
                     .put(Entity.json(body));
 
             assertEquals(404, response.getStatus());
+            assertNotNull(response.getHeaderString("Not-found-id"));
         }
 
         @Test
-        @Order(5)
+        @Order(3)
+        void responde404CuandoPruebaNoExiste() {
+            String body = """
+                    { "fechaAsignacion": "2025-07-15T10:00:00Z" }
+                    """;
+
+            Response response = target
+                    .path(PATH)
+                    .path(ID_PRUEBA_INEXISTENTE.toString())
+                    .path("jornada")
+                    .path(ID_JORNADA.toString())
+                    .request(MediaType.APPLICATION_JSON)
+                    .put(Entity.json(body));
+
+            assertEquals(404, response.getStatus());
+            assertNotNull(response.getHeaderString("Not-found-id"));
+        }
+
+        @Test
+        @Order(4)
         void respondeErrorCuandoBodyVacio() {
             Response response = target
                     .path(PATH)
                     .path(ID_PRUEBA.toString())
                     .path("jornada")
                     .path(ID_JORNADA.toString())
-                    .path(String.valueOf(ID_EXISTENTE))
-                    .request()
+                    .request(MediaType.APPLICATION_JSON)
                     .put(Entity.entity("", MediaType.APPLICATION_JSON));
 
             assertTrue(response.getStatus() == 400 || response.getStatus() == 500);
+        }
+    }
+
+    @Nested
+    @Order(5)
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+    class DeleteById {
+
+        @Test
+        @Order(1)
+        void responde404CuandoJornadaNoExiste() {
+            Response response = target
+                    .path(PATH)
+                    .path(ID_PRUEBA.toString())
+                    .path("jornada")
+                    .path(ID_JORNADA_INEXISTENTE.toString())
+                    .request()
+                    .delete();
+
+            assertEquals(404, response.getStatus());
+            assertNotNull(response.getHeaderString("Not-found-id"));
+        }
+
+        @Test
+        @Order(2)
+        void responde204CuandoExiste() {
+            UUID idPrueba2 = UUID.fromString("07000000-0000-0000-0000-000000000002");
+
+            Response response = target
+                    .path(PATH)
+                    .path(idPrueba2.toString())
+                    .path("jornada")
+                    .path(ID_JORNADA.toString())
+                    .request()
+                    .delete();
+
+            assertEquals(204, response.getStatus());
+            assertFalse(response.hasEntity());
+        }
+
+        @Test
+        @Order(3)
+        void responde404CuandoSeIntentaAccederAlRegistroEliminado() {
+            UUID idPrueba2 = UUID.fromString("07000000-0000-0000-0000-000000000002");
+
+            Response response = target
+                    .path(PATH)
+                    .path(idPrueba2.toString())
+                    .path("jornada")
+                    .path(ID_JORNADA.toString())
+                    .request(MediaType.APPLICATION_JSON)
+                    .get();
+
+            assertEquals(404, response.getStatus());
+            assertNotNull(response.getHeaderString("Not-found-id"));
         }
     }
 }

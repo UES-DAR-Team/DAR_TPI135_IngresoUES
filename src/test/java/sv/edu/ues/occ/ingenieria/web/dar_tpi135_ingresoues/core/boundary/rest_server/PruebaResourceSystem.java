@@ -106,13 +106,12 @@ public class PruebaResourceSystem extends BaseIntegrationAbstract {
         @Test
         void responde201EntidadValida() {
             String bodyJson = """
-                    {
-                        "nombrePrueba": "Prueba de sistema",
-                        "fechaCreacion": "2025-01-01T00:00:00Z",
-                        "activo": true
-                    }
-                    """;
-
+            {
+                "nombrePrueba": "Prueba de sistema",
+                "fechaCreacion": "2025-01-01T00:00:00Z",
+                "activo": true
+            }
+            """;
             Response response = target
                     .path(PATH)
                     .request(MediaType.APPLICATION_JSON)
@@ -120,17 +119,13 @@ public class PruebaResourceSystem extends BaseIntegrationAbstract {
 
             assertEquals(201, response.getStatus(),
                     "Debe retornar 201 Created al crear una Prueba válida");
-            assertNotNull(response.getHeaderString("Location"),
-                    "El header Location debe contener la URI del nuevo recurso");
 
-            String body = response.readEntity(String.class);
-            assertNotNull(body, "El body no debe ser nulo");
-            assertTrue(body.contains("\"id\""), "El body debe contener el campo id");
+            String location = response.getHeaderString("Location");
+            assertNotNull(location, "El header Location debe contener la URI del nuevo recurso");
 
-            int idStart = body.indexOf("\"id\":\"") + 6;
-            int idEnd = body.indexOf("\"", idStart);
-            IDCREADO = UUID.fromString(body.substring(idStart, idEnd));
-            assertNotNull(IDCREADO, "El UUID extraído del body no debe ser nulo");
+            String[] parts = location.split("/");
+            IDCREADO = UUID.fromString(parts[parts.length - 1]);
+            assertNotNull(IDCREADO, "El UUID extraído del Location no debe ser nulo");
         }
 
         @Order(2)

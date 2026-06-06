@@ -1,6 +1,5 @@
 package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.boundary.rest_server;
 
-import jakarta.validation.constraints.Max;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
@@ -12,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.PruebaDAO;
-import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Distractor;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Prueba;
 
 import java.net.URI;
@@ -22,7 +20,6 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class PruebaResourceTest {
@@ -43,9 +40,11 @@ class PruebaResourceTest {
     private static final int MAX = 10;
     private static final int INVALIDFIRST = -1;
     private static final int INVALIDMAX = 0;
+    private static final int EXCEEDMAX = 11;
     private static final List<Prueba> LISTA = List.of(
             new Prueba(), new Prueba()
     );
+
     private UUID id;
     private Prueba prueba;
     private Prueba entity;
@@ -58,7 +57,6 @@ class PruebaResourceTest {
         entity = new Prueba();
     }
 
-
     @Nested
     class FindRange {
 
@@ -70,6 +68,7 @@ class PruebaResourceTest {
             Response response = pruebaResource.findRange(FIRST, MAX);
 
             assertEquals(200, response.getStatus());
+            assertEquals(LISTA, response.getEntity());
             List<?> entidad = (List<?>) response.getEntity();
             assertEquals(2, entidad.size());
             assertEquals("2", response.getHeaderString("X-Total-Count"));
@@ -78,8 +77,8 @@ class PruebaResourceTest {
         }
 
         @Test
-        void retorna422_cuandoParametrosSonInvalidos() {
-            Response response = pruebaResource.findRange(INVALIDFIRST, INVALIDMAX);
+        void retorna422_cuandoFirstEsInvalido() {
+            Response response = pruebaResource.findRange(INVALIDFIRST, MAX);
 
             assertEquals(422, response.getStatus());
             assertEquals("first,max", response.getHeaderString("Missing-parameter"));
@@ -87,19 +86,27 @@ class PruebaResourceTest {
         }
 
         @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(pruebaDAO.findRange(FIRST, MAX)).thenThrow(new RuntimeException("DB error"));
+        void retorna422_cuandoMaxEsCero() {
+            Response response = pruebaResource.findRange(FIRST, INVALIDMAX);
 
-            Response response = pruebaResource.findRange(FIRST, MAX);
+            assertEquals(422, response.getStatus());
+            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaDAO);
+        }
 
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(pruebaDAO).findRange(FIRST, MAX);
+        @Test
+        void retorna422_cuandoMaxExcedeLimite() {
+            Response response = pruebaResource.findRange(FIRST, EXCEEDMAX);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaDAO);
         }
     }
 
     @Nested
     class FindById {
+
         @Test
         void retorna200ConEntidad_cuandoIdEsValido() {
             when(pruebaDAO.findById(id)).thenReturn(prueba);
@@ -121,30 +128,20 @@ class PruebaResourceTest {
         }
 
         @Test
-        void retorna404_cuandoNoSeEncuentraRegistro() {
+        void retorna404_cuandoRegistroNoExiste() {
             when(pruebaDAO.findById(id)).thenReturn(null);
 
             Response response = pruebaResource.findById(id);
 
             assertEquals(404, response.getStatus());
-            assertEquals("Record with id " + id + " not found", response.getHeaderString("Not-found-id"));
-            verify(pruebaDAO).findById(id);
-        }
-
-        @Test
-        void retorna500_cuandoDAOlanzaExcepcion() {
-            when(pruebaDAO.findById(id)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = pruebaResource.findById(id);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
+            assertEquals("Prueba with id " + id + " not found", response.getHeaderString("Not-found-id"));
             verify(pruebaDAO).findById(id);
         }
     }
 
     @Nested
     class Delete {
+
         @Test
         void retorna204_cuandoIdEsValido() {
             when(pruebaDAO.findById(id)).thenReturn(prueba);
@@ -166,35 +163,25 @@ class PruebaResourceTest {
         }
 
         @Test
-        void retorna404_cuandoNoSeEncuentraRegistro() {
+        void retorna404_cuandoRegistroNoExiste() {
             when(pruebaDAO.findById(id)).thenReturn(null);
 
             Response response = pruebaResource.deleteById(id);
 
             assertEquals(404, response.getStatus());
-            assertEquals("Record with id " + id + " not found", response.getHeaderString("Not-found-id"));
-            verify(pruebaDAO).findById(id);
-        }
-
-        @Test
-        void retorna500_cuandoDAOlanzaExcepcion() {
-            when(pruebaDAO.findById(id)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = pruebaResource.deleteById(id);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
+            assertEquals("Prueba with id " + id + " not found", response.getHeaderString("Not-found-id"));
             verify(pruebaDAO).findById(id);
         }
     }
 
     @Nested
     class Create {
+
         @Test
         void retorna201_cuandoEntidadEsValida() {
             when(uriInfo.getAbsolutePathBuilder()).thenReturn(uriBuilder);
             when(uriBuilder.path(anyString())).thenReturn(uriBuilder);
-            when(uriBuilder.build()).thenReturn(URI.create("resources/v1/prueba"));
+            when(uriBuilder.build()).thenReturn(URI.create("resources/v1/prueba/" + id));
             doAnswer(invocationOnMock -> {
                 entity.setId(id);
                 return null;
@@ -203,7 +190,7 @@ class PruebaResourceTest {
             Response response = pruebaResource.create(entity, uriInfo);
 
             assertEquals(201, response.getStatus());
-            assertEquals(entity, response.getEntity());
+            assertNull(response.getEntity());
             verify(pruebaDAO).create(entity);
         }
 
@@ -226,27 +213,18 @@ class PruebaResourceTest {
             assertEquals("entity.id must be null", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaDAO);
         }
-
-        @Test
-        void retorna500_cuandoDAOlanzaExcepcion() {
-            doThrow(new RuntimeException("DB error")).when(pruebaDAO).create(entity);
-
-            Response response = pruebaResource.create(entity, uriInfo);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(pruebaDAO).create(entity);
-        }
     }
 
     @Nested
     class Update {
+
         @Test
         void retorna200_cuandoEntidadEsValida() {
             Prueba existing = new Prueba();
             existing.setId(id);
             Prueba updated = new Prueba();
             updated.setId(id);
+
             when(pruebaDAO.findById(id)).thenReturn(existing);
             when(pruebaDAO.update(updated)).thenReturn(updated);
 
@@ -277,24 +255,13 @@ class PruebaResourceTest {
         }
 
         @Test
-        void retorna404_cuandoNoSeEncuentraRegistro() {
+        void retorna404_cuandoRegistroNoExiste() {
             when(pruebaDAO.findById(id)).thenReturn(null);
 
             Response response = pruebaResource.update(id, entity);
 
             assertEquals(404, response.getStatus());
-            assertEquals("Record with id " + id + " not found", response.getHeaderString("Not-found-id"));
-            verify(pruebaDAO).findById(id);
-        }
-
-        @Test
-        void retorna500_cuandoDAOlanzaExcepcion() {
-            when(pruebaDAO.findById(id)).thenThrow( new RuntimeException("DB error"));
-
-            Response response = pruebaResource.update(id, entity);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
+            assertEquals("Prueba with id " + id + " not found", response.getHeaderString("Not-found-id"));
             verify(pruebaDAO).findById(id);
         }
     }

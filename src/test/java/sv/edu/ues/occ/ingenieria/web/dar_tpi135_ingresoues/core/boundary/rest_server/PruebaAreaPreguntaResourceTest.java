@@ -13,12 +13,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.PreguntaDAO;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.PruebaAreaDAO;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.PruebaAreaPreguntaDAO;
+import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Pregunta;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaArea;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAreaPregunta;
-import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Pregunta;
 
 import java.net.URI;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,26 +28,20 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PruebaAreaPreguntaResourceTest {
 
-    @Mock
-    PruebaAreaPreguntaDAO pruebaAreaPreguntaDAO;
-
-    @Mock
-    PruebaAreaDAO pruebaAreaDAO;
-
-    @Mock
-    PreguntaDAO preguntaDAO;
-
-    @Mock
-    UriInfo uriInfo;
-
-    @Mock
-    UriBuilder uriBuilder;
+    @Mock PruebaAreaPreguntaDAO pruebaAreaPreguntaDAO;
+    @Mock PruebaAreaDAO pruebaAreaDAO;
+    @Mock PreguntaDAO preguntaDAO;
+    @Mock UriInfo uriInfo;
+    @Mock UriBuilder uriBuilder;
 
     @InjectMocks
     PruebaAreaPreguntaResource resource;
 
     private static final int FIRST = 0;
     private static final int MAX = 10;
+    private static final int INVALIDFIRST = -1;
+    private static final int INVALIDMAX = 0;
+    private static final int EXCEEDMAX = 11;
 
     private Integer idPruebaArea;
     private UUID idPregunta;
@@ -63,504 +56,412 @@ class PruebaAreaPreguntaResourceTest {
         idPregunta = UUID.randomUUID();
 
         pruebaArea = new PruebaArea();
-        pruebaArea.setId(1);
+        pruebaArea.setId(idPruebaArea);
 
         pregunta = new Pregunta();
         pregunta.setId(idPregunta);
 
         pap = new PruebaAreaPregunta();
-        pap.setId(1);
+        pap.setId(10);
         pap.setIdPruebaArea(pruebaArea);
         pap.setIdPregunta(pregunta);
-        pap.setFechaAsignacion(OffsetDateTime.now());
-        pap.setOrden((short)2);
 
         entity = new PruebaAreaPregunta();
     }
 
     @Nested
     class FindRange {
+
         @Test
         void retorna200ConListaYHeader_cuandoParametrosSonValidos() {
+            List<PruebaAreaPregunta> lista = List.of(pap);
             when(pruebaAreaDAO.findById(idPruebaArea)).thenReturn(pruebaArea);
-            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, FIRST, MAX)).thenReturn(List.of(pap));
+            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, FIRST, MAX)).thenReturn(lista);
             when(pruebaAreaPreguntaDAO.count()).thenReturn(1);
 
-            Response resp = resource.findRange(idPruebaArea, FIRST, MAX);
+            Response response = resource.findRange(idPruebaArea, FIRST, MAX);
 
-            assertEquals(200, resp.getStatus());
-            List<?> entidad = (List<?>) resp.getEntity();
-            assertEquals(1, entidad.size());
-            assertEquals("1", resp.getHeaderString("X-Total-Count"));
+            assertEquals(200, response.getStatus());
+            assertEquals(lista, response.getEntity());
+            assertEquals("1", response.getHeaderString("X-Total-Count"));
             verify(pruebaAreaDAO).findById(idPruebaArea);
             verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, FIRST, MAX);
             verify(pruebaAreaPreguntaDAO).count();
         }
 
         @Test
-        void retorna422_cuandoIdPruebaAreaEsNulo() {
-            Response resp = resource.findRange(null, FIRST, MAX);
-            assertEquals(422, resp.getStatus());
-            assertEquals("idPruebaArea", resp.getHeaderString("Missing-parameter"));
+        void retorna422_cuandoIdPruebaAreaNulo() {
+            Response response = resource.findRange(null, FIRST, MAX);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("idPruebaArea", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaDAO, pruebaAreaPreguntaDAO);
         }
 
         @Test
-        void retorna422_cuandoParametrosInvalidos() {
-            Response resp = resource.findRange(idPruebaArea, -1, 0);
-            assertEquals(422, resp.getStatus());
-            assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
+        void retorna422_cuandoFirstInvalido() {
+            Response response = resource.findRange(idPruebaArea, INVALIDFIRST, MAX);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("first", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaDAO, pruebaAreaPreguntaDAO);
+        }
+
+        @Test
+        void retorna422_cuandoMaxInvalido() {
+            Response response = resource.findRange(idPruebaArea, FIRST, INVALIDMAX);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("max", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaDAO, pruebaAreaPreguntaDAO);
+        }
+
+        @Test
+        void retorna422_cuandoMaxExcedeLimite() {
+            Response response = resource.findRange(idPruebaArea, FIRST, EXCEEDMAX);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("max", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaDAO, pruebaAreaPreguntaDAO);
         }
 
         @Test
         void retorna404_cuandoPruebaAreaNoExiste() {
             when(pruebaAreaDAO.findById(idPruebaArea)).thenReturn(null);
-            Response resp = resource.findRange(idPruebaArea, FIRST, MAX);
-            assertEquals(404, resp.getStatus());
-            assertEquals("PruebaArea with id " + idPruebaArea + " not found", resp.getHeaderString("Not-found"));
+
+            Response response = resource.findRange(idPruebaArea, FIRST, MAX);
+
+            assertEquals(404, response.getStatus());
+            assertEquals("PruebaArea with id " + idPruebaArea + " not found", response.getHeaderString("Not-found-id"));
             verify(pruebaAreaDAO).findById(idPruebaArea);
-            verifyNoMoreInteractions(pruebaAreaPreguntaDAO);
-        }
-
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(pruebaAreaDAO.findById(idPruebaArea)).thenReturn(pruebaArea);
-            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, FIRST, MAX)).thenThrow(new RuntimeException("DB"));
-            Response resp = resource.findRange(idPruebaArea, FIRST, MAX);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(pruebaAreaDAO).findById(idPruebaArea);
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, FIRST, MAX);
-        }
-
-        @Test
-        void retorna422_cuandoMaxExcedeLimite() {
-            Response resp = resource.findRange(idPruebaArea, 0, 11);
-            assertEquals(422, resp.getStatus());
-            assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaDAO, pruebaAreaPreguntaDAO);
-        }
-
-        @Test
-        void retorna422_cuandoMaxEsCero() {
-            Response resp = resource.findRange(idPruebaArea, 0, 0);
-            assertEquals(422, resp.getStatus());
-            assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaDAO, pruebaAreaPreguntaDAO);
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
         }
     }
 
     @Nested
     class FindOne {
+
         @Test
-        void retorna200ConEntidad_cuandoExiste() {
+        void retorna200ConEntidad_cuandoParametrosSonValidos() {
             when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenReturn(List.of(pap));
-            Response resp = resource.findOne(idPruebaArea, idPregunta);
-            assertEquals(200, resp.getStatus());
-            assertEquals(pap, resp.getEntity());
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
+
+            Response response = resource.findOne(idPruebaArea, idPregunta);
+
+            assertEquals(200, response.getStatus());
+            assertEquals(pap, response.getEntity());
         }
 
         @Test
-        void retorna422_cuandoParametrosNulos() {
-            Response resp = resource.findOne(null, null);
-            assertEquals(422, resp.getStatus());
-            assertEquals("idPruebaArea,idPregunta", resp.getHeaderString("Missing-parameter"));
+        void retorna422_cuandoIdPruebaAreaNulo() {
+            Response response = resource.findOne(null, idPregunta);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("idPruebaArea", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaPreguntaDAO);
         }
 
         @Test
-        void retorna404_cuandoNoSeEncuentra() {
+        void retorna422_cuandoIdPreguntaNulo() {
+            Response response = resource.findOne(idPruebaArea, null);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("idPregunta", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
+        }
+
+        @Test
+        void retorna404_cuandoListaVacia() {
             when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenReturn(List.of());
-            Response resp = resource.findOne(idPruebaArea, idPregunta);
-            assertEquals(404, resp.getStatus());
-            assertEquals("Record linking pruebaArea " + idPruebaArea + " and pregunta " + idPregunta + " not found",
-                    resp.getHeaderString("Not-found-id"));
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
+
+            Response response = resource.findOne(idPruebaArea, idPregunta);
+
+            assertEquals(404, response.getStatus());
+            assertEquals("Record with id linking pruebaArea " + idPruebaArea + " and pregunta " + idPregunta + " not found",
+                    response.getHeaderString("Not-found-id"));
         }
 
         @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenThrow(new RuntimeException("DB"));
-            Response resp = resource.findOne(idPruebaArea, idPregunta);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
+        void retorna404_cuandoPreguntaNoCoincideEnLista() {
+            Pregunta otraPregunta = new Pregunta();
+            otraPregunta.setId(UUID.randomUUID());
+            pap.setIdPregunta(otraPregunta);
+
+            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenReturn(List.of(pap));
+
+            Response response = resource.findOne(idPruebaArea, idPregunta);
+
+            assertEquals(404, response.getStatus());
         }
 
         @Test
-        void retorna404_cuandoPreguntaDelRegistroEsNull() {
+        void retorna404_cuandoStreamContieneElementosConPreguntaNula() {
             PruebaAreaPregunta sinPregunta = new PruebaAreaPregunta();
-            sinPregunta.setId(2);
             sinPregunta.setIdPregunta(null);
 
-            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE))
-                    .thenReturn(List.of(sinPregunta));
+            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenReturn(List.of(sinPregunta));
 
-            Response resp = resource.findOne(idPruebaArea, idPregunta);
-            assertEquals(404, resp.getStatus());
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
-        }
+            Response response = resource.findOne(idPruebaArea, idPregunta);
 
-        @Test
-        void retorna404_cuandoIdPreguntaNoCoincide() {
-            PruebaAreaPregunta otraPregunta = new PruebaAreaPregunta();
-            Pregunta preguntaDiferente = new Pregunta();
-            preguntaDiferente.setId(UUID.randomUUID());
-            otraPregunta.setIdPregunta(preguntaDiferente);
-
-            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE))
-                    .thenReturn(List.of(otraPregunta));
-
-            Response resp = resource.findOne(idPruebaArea, idPregunta);
-            assertEquals(404, resp.getStatus());
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
-        }
-
-        @Test
-        void retorna422_cuandoSoloIdPruebaAreaEsNulo() {
-            Response resp = resource.findOne(null, idPregunta);
-            assertEquals(422, resp.getStatus());
-            assertEquals("idPruebaArea,idPregunta", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaPreguntaDAO);
-        }
-
-        @Test
-        void retorna422_cuandoSoloIdPreguntaEsNulo() {
-            Response resp = resource.findOne(idPruebaArea, null);
-            assertEquals(422, resp.getStatus());
-            assertEquals("idPruebaArea,idPregunta", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaPreguntaDAO);
+            assertEquals(404, response.getStatus());
         }
     }
 
     @Nested
     class Create {
+
         @Test
-        void retorna201_cuandoEntidadValida() {
-            entity.setId(null);
-            Pregunta bodyPreg = new Pregunta();
-            bodyPreg.setId(idPregunta);
-            entity.setIdPregunta(bodyPreg);
+        void retorna201_cuandoEntidadEsValida() {
+            entity.setIdPregunta(pregunta);
 
             when(pruebaAreaDAO.findById(idPruebaArea)).thenReturn(pruebaArea);
             when(preguntaDAO.findById(idPregunta)).thenReturn(pregunta);
             when(uriInfo.getAbsolutePathBuilder()).thenReturn(uriBuilder);
             when(uriBuilder.path(anyString())).thenReturn(uriBuilder);
-            when(uriBuilder.build()).thenReturn(URI.create("resources/v1/pruebaArea/" + idPruebaArea + "/pregunta/" + idPregunta));
+            when(uriBuilder.build()).thenReturn(URI.create("test"));
 
-            doAnswer(inv -> {
-                entity.setId(42);
-                return null;
-            }).when(pruebaAreaPreguntaDAO).create(entity);
+            Response response = resource.create(idPruebaArea, entity, uriInfo);
 
-            Response resp = resource.create(idPruebaArea, entity, uriInfo);
-            assertEquals(201, resp.getStatus());
-            assertEquals(entity, resp.getEntity());
-            verify(pruebaAreaDAO).findById(idPruebaArea);
-            verify(preguntaDAO).findById(idPregunta);
+            assertEquals(201, response.getStatus());
+            assertNull(response.getEntity());
+            assertNotNull(entity.getFechaAsignacion());
             verify(pruebaAreaPreguntaDAO).create(entity);
         }
 
         @Test
         void retorna422_cuandoIdPruebaAreaNulo() {
-            Response resp = resource.create(null, entity, uriInfo);
-            assertEquals(422, resp.getStatus());
-            assertEquals("idPruebaArea", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaDAO, preguntaDAO, pruebaAreaPreguntaDAO);
+            Response response = resource.create(null, entity, uriInfo);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("idPruebaArea", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
         }
 
         @Test
-        void retorna422_cuandoEntidadNula() {
-            Response resp = resource.create(idPruebaArea, null, uriInfo);
-            assertEquals(422, resp.getStatus());
-            assertEquals("entity must not be null", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaDAO, preguntaDAO, pruebaAreaPreguntaDAO);
+        void retorna422_cuandoEntityNulo() {
+            Response response = resource.create(idPruebaArea, null, uriInfo);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("entity must not be null", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
         }
 
         @Test
         void retorna422_cuandoEntityTieneId() {
-            entity.setId(5);
-            Response resp = resource.create(idPruebaArea, entity, uriInfo);
-            assertEquals(422, resp.getStatus());
-            assertEquals("entity.id must be null", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaDAO, preguntaDAO, pruebaAreaPreguntaDAO);
+            entity.setId(1);
+            Response response = resource.create(idPruebaArea, entity, uriInfo);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("entity.id must be null", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
         }
 
         @Test
-        void retorna422_cuandoIdPreguntaNoProvistoEnBody() {
-            entity.setId(null);
-            entity.setIdPregunta(null);
-            Response resp = resource.create(idPruebaArea, entity, uriInfo);
-            assertEquals(422, resp.getStatus());
-            assertEquals("idPregunta must be provided in body", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaDAO, preguntaDAO, pruebaAreaPreguntaDAO);
+        void retorna422_cuandoIdPreguntaNoProporcionado() {
+            Response response = resource.create(idPruebaArea, entity, uriInfo);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("idPregunta must be provided in body", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
+        }
+
+        @Test
+        void retorna422_cuandoPreguntaVieneSinIdInterno() {
+            Pregunta preguntaSinId = new Pregunta();
+            preguntaSinId.setId(null);
+            entity.setIdPregunta(preguntaSinId);
+
+            Response response = resource.create(idPruebaArea, entity, uriInfo);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("idPregunta must be provided in body", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
         }
 
         @Test
         void retorna404_cuandoPruebaAreaNoExiste() {
-            entity.setId(null);
-            Pregunta bodyPreg = new Pregunta();
-            bodyPreg.setId(idPregunta);
-            entity.setIdPregunta(bodyPreg);
-
+            entity.setIdPregunta(pregunta);
             when(pruebaAreaDAO.findById(idPruebaArea)).thenReturn(null);
-            Response resp = resource.create(idPruebaArea, entity, uriInfo);
-            assertEquals(404, resp.getStatus());
-            assertEquals("PruebaArea with id " + idPruebaArea + " not found", resp.getHeaderString("Not-found"));
-            verify(pruebaAreaDAO).findById(idPruebaArea);
-            verifyNoMoreInteractions(preguntaDAO, pruebaAreaPreguntaDAO);
+
+            Response response = resource.create(idPruebaArea, entity, uriInfo);
+
+            assertEquals(404, response.getStatus());
+            assertEquals("PruebaArea with id " + idPruebaArea + " not found", response.getHeaderString("Not-found-id"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
         }
 
         @Test
         void retorna404_cuandoPreguntaNoExiste() {
-            entity.setId(null);
-            Pregunta bodyPreg = new Pregunta();
-            bodyPreg.setId(idPregunta);
-            entity.setIdPregunta(bodyPreg);
-
+            entity.setIdPregunta(pregunta);
             when(pruebaAreaDAO.findById(idPruebaArea)).thenReturn(pruebaArea);
             when(preguntaDAO.findById(idPregunta)).thenReturn(null);
 
-            Response resp = resource.create(idPruebaArea, entity, uriInfo);
-            assertEquals(404, resp.getStatus());
-            assertEquals("Pregunta with id " + idPregunta + " not found", resp.getHeaderString("Not-found"));
-            verify(pruebaAreaDAO).findById(idPruebaArea);
-            verify(preguntaDAO).findById(idPregunta);
-            verifyNoMoreInteractions(pruebaAreaPreguntaDAO);
-        }
+            Response response = resource.create(idPruebaArea, entity, uriInfo);
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            entity.setId(null);
-            Pregunta bodyPreg = new Pregunta();
-            bodyPreg.setId(idPregunta);
-            entity.setIdPregunta(bodyPreg);
-
-            when(pruebaAreaDAO.findById(idPruebaArea)).thenReturn(pruebaArea);
-            when(preguntaDAO.findById(idPregunta)).thenReturn(pregunta);
-            doThrow(new RuntimeException("DB")).when(pruebaAreaPreguntaDAO).create(entity);
-
-            Response resp = resource.create(idPruebaArea, entity, uriInfo);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(pruebaAreaPreguntaDAO).create(entity);
-        }
-
-        @Test
-        void retorna422_cuandoIdPreguntaEnBodyEsNull() {
-            entity.setId(null);
-            Pregunta bodyPreg = new Pregunta();
-            bodyPreg.setId(null);
-            entity.setIdPregunta(bodyPreg);
-
-            Response resp = resource.create(idPruebaArea, entity, uriInfo);
-            assertEquals(422, resp.getStatus());
-            assertEquals("idPregunta must be provided in body", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaDAO, preguntaDAO, pruebaAreaPreguntaDAO);
+            assertEquals(404, response.getStatus());
+            assertEquals("Pregunta with id " + idPregunta + " not found", response.getHeaderString("Not-found-id"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
         }
     }
 
     @Nested
     class Update {
-        @Test
-        void retorna200_cuandoActualizaOrden() {
-            PruebaAreaPregunta updateBody = new PruebaAreaPregunta();
-            updateBody.setOrden((short)4);
 
-            PruebaAreaPregunta expected = new PruebaAreaPregunta();
-            expected.setId(pap.getId());
-            expected.setIdPruebaArea(pruebaArea);
-            expected.setIdPregunta(pregunta);
-            expected.setOrden((short)4);
-            expected.setFechaAsignacion(pap.getFechaAsignacion());
+        @Test
+        void retorna200_cuandoEntidadEsValida() {
+            entity.setOrden((short) 3);
+            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenReturn(List.of(pap));
+            when(pruebaAreaPreguntaDAO.update(pap)).thenReturn(pap);
+
+            Response response = resource.update(idPruebaArea, idPregunta, entity);
+
+            assertEquals(200, response.getStatus());
+            assertEquals(pap, response.getEntity());
+            assertEquals((short) 3, pap.getOrden());
+            verify(pruebaAreaPreguntaDAO).update(pap);
+        }
+
+        @Test
+        void retorna200_cuandoOrdenEsNulo() {
+            entity.setOrden(null);
+            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenReturn(List.of(pap));
+            when(pruebaAreaPreguntaDAO.update(pap)).thenReturn(pap);
+
+            Response response = resource.update(idPruebaArea, idPregunta, entity);
+
+            assertEquals(200, response.getStatus());
+        }
+
+        @Test
+        void retorna422_cuandoIdPruebaAreaNulo() {
+            Response response = resource.update(null, idPregunta, entity);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("idPruebaArea", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
+        }
+
+        @Test
+        void retorna422_cuandoIdPreguntaNulo() {
+            Response response = resource.update(idPruebaArea, null, entity);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("idPregunta", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
+        }
+
+        @Test
+        void retorna422_cuandoEntityNulo() {
+            Response response = resource.update(idPruebaArea, idPregunta, null);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("entity must not be null", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
+        }
+
+        @Test
+        void retorna404_cuandoListaVacia() {
+            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenReturn(List.of());
+
+            Response response = resource.update(idPruebaArea, idPregunta, entity);
+
+            assertEquals(404, response.getStatus());
+            verify(pruebaAreaPreguntaDAO, never()).update(any());
+        }
+
+        @Test
+        void retorna404_cuandoPreguntaNoCoincideEnLista() {
+            Pregunta otraPregunta = new Pregunta();
+            otraPregunta.setId(UUID.randomUUID());
+            pap.setIdPregunta(otraPregunta);
 
             when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenReturn(List.of(pap));
-            when(pruebaAreaPreguntaDAO.update(any(PruebaAreaPregunta.class))).thenReturn(expected);
 
-            Response resp = resource.update(idPruebaArea, idPregunta, updateBody);
-            assertEquals(200, resp.getStatus());
-            assertEquals(expected, resp.getEntity());
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
-            verify(pruebaAreaPreguntaDAO).update(any(PruebaAreaPregunta.class));
+            Response response = resource.update(idPruebaArea, idPregunta, entity);
+
+            assertEquals(404, response.getStatus());
+            verify(pruebaAreaPreguntaDAO, never()).update(any());
         }
 
         @Test
-        void retorna422_cuandoParametrosNulos() {
-            Response resp = resource.update(null, null, new PruebaAreaPregunta());
-            assertEquals(422, resp.getStatus());
-            assertEquals("idPruebaArea,idPregunta", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaPreguntaDAO);
-        }
-
-        @Test
-        void retorna422_cuandoEntidadNula() {
-            Response resp = resource.update(idPruebaArea, idPregunta, null);
-            assertEquals(422, resp.getStatus());
-            assertEquals("entity must not be null", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaPreguntaDAO);
-        }
-
-        @Test
-        void retorna404_cuandoNoSeEncuentra() {
-            PruebaAreaPregunta updateBody = new PruebaAreaPregunta();
-            updateBody.setOrden((short)4);
-
-            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenReturn(List.of());
-            Response resp = resource.update(idPruebaArea, idPregunta, updateBody);
-            assertEquals(404, resp.getStatus());
-            assertEquals("Record linking pruebaArea " + idPruebaArea + " and pregunta " + idPregunta + " not found",
-                    resp.getHeaderString("Not-found-id"));
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
-        }
-
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            PruebaAreaPregunta updateBody = new PruebaAreaPregunta();
-            updateBody.setOrden((short)4);
-
-            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenThrow(new RuntimeException("DB"));
-            Response resp = resource.update(idPruebaArea, idPregunta, updateBody);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
-        }
-
-        @Test
-        void retorna404_cuandoPreguntaDelRegistroEsNull() {
+        void retorna404_cuandoStreamContieneElementosConPreguntaNula() {
             PruebaAreaPregunta sinPregunta = new PruebaAreaPregunta();
-            sinPregunta.setId(2);
             sinPregunta.setIdPregunta(null);
 
-            PruebaAreaPregunta updateBody = new PruebaAreaPregunta();
-            updateBody.setOrden((short) 3);
+            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenReturn(List.of(sinPregunta));
 
-            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE))
-                    .thenReturn(List.of(sinPregunta));
+            Response response = resource.update(idPruebaArea, idPregunta, entity);
 
-            Response resp = resource.update(idPruebaArea, idPregunta, updateBody);
-            assertEquals(404, resp.getStatus());
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
-        }
-
-        @Test
-        void retorna404_cuandoIdPreguntaNoCoincide() {
-            PruebaAreaPregunta otraPregunta = new PruebaAreaPregunta();
-            Pregunta preguntaDiferente = new Pregunta();
-            preguntaDiferente.setId(UUID.randomUUID());
-            otraPregunta.setIdPregunta(preguntaDiferente);
-
-            PruebaAreaPregunta updateBody = new PruebaAreaPregunta();
-            updateBody.setOrden((short) 3);
-
-            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE))
-                    .thenReturn(List.of(otraPregunta));
-
-            Response resp = resource.update(idPruebaArea, idPregunta, updateBody);
-            assertEquals(404, resp.getStatus());
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
-        }
-
-        @Test
-        void retorna422_cuandoSoloIdPruebaAreaEsNulo() {
-            Response resp = resource.update(null, idPregunta, new PruebaAreaPregunta());
-            assertEquals(422, resp.getStatus());
-            assertEquals("idPruebaArea,idPregunta", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaPreguntaDAO);
-        }
-
-        @Test
-        void retorna422_cuandoSoloIdPreguntaEsNulo() {
-            Response resp = resource.update(idPruebaArea, null, new PruebaAreaPregunta());
-            assertEquals(422, resp.getStatus());
-            assertEquals("idPruebaArea,idPregunta", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaPreguntaDAO);
+            assertEquals(404, response.getStatus());
+            verify(pruebaAreaPreguntaDAO, never()).update(any());
         }
     }
 
     @Nested
     class Delete {
+
         @Test
-        void retorna204_cuandoValido() {
+        void retorna204_cuandoRegistroExiste() {
             when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenReturn(List.of(pap));
-            Response resp = resource.delete(idPruebaArea, idPregunta);
-            assertEquals(204, resp.getStatus());
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
+
+            Response response = resource.delete(idPruebaArea, idPregunta);
+
+            assertEquals(204, response.getStatus());
             verify(pruebaAreaPreguntaDAO).delete(pap);
         }
 
         @Test
-        void retorna422_cuandoParametrosNulos() {
-            Response resp = resource.delete(null, null);
-            assertEquals(422, resp.getStatus());
-            assertEquals("idPruebaArea,idPregunta", resp.getHeaderString("Missing-parameter"));
+        void retorna422_cuandoIdPruebaAreaNulo() {
+            Response response = resource.delete(null, idPregunta);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("idPruebaArea", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaPreguntaDAO);
         }
 
         @Test
-        void retorna404_cuandoNoSeEncuentra() {
+        void retorna422_cuandoIdPreguntaNulo() {
+            Response response = resource.delete(idPruebaArea, null);
+
+            assertEquals(422, response.getStatus());
+            assertEquals("idPregunta", response.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDAO);
+        }
+
+        @Test
+        void retorna404_cuandoListaVacia() {
             when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenReturn(List.of());
-            Response resp = resource.delete(idPruebaArea, idPregunta);
-            assertEquals(404, resp.getStatus());
-            assertEquals("Record linking pruebaArea " + idPruebaArea + " and pregunta " + idPregunta + " not found",
-                    resp.getHeaderString("Not-found-id"));
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
+
+            Response response = resource.delete(idPruebaArea, idPregunta);
+
+            assertEquals(404, response.getStatus());
+            verify(pruebaAreaPreguntaDAO, never()).delete(any());
         }
 
         @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenThrow(new RuntimeException("DB"));
-            Response resp = resource.delete(idPruebaArea, idPregunta);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
+        void retorna404_cuandoPreguntaNoCoincideEnLista() {
+            Pregunta otraPregunta = new Pregunta();
+            otraPregunta.setId(UUID.randomUUID());
+            pap.setIdPregunta(otraPregunta);
+
+            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenReturn(List.of(pap));
+
+            Response response = resource.delete(idPruebaArea, idPregunta);
+
+            assertEquals(404, response.getStatus());
+            verify(pruebaAreaPreguntaDAO, never()).delete(any());
         }
 
         @Test
-        void retorna404_cuandoPreguntaDelRegistroEsNull() {
+        void retorna404_cuandoStreamContieneElementosConPreguntaNula() {
             PruebaAreaPregunta sinPregunta = new PruebaAreaPregunta();
-            sinPregunta.setId(2);
             sinPregunta.setIdPregunta(null);
 
-            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE))
-                    .thenReturn(List.of(sinPregunta));
+            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE)).thenReturn(List.of(sinPregunta));
 
-            Response resp = resource.delete(idPruebaArea, idPregunta);
-            assertEquals(404, resp.getStatus());
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
-        }
+            Response response = resource.delete(idPruebaArea, idPregunta);
 
-        @Test
-        void retorna404_cuandoIdPreguntaNoCoincide() {
-            PruebaAreaPregunta otraPregunta = new PruebaAreaPregunta();
-            Pregunta preguntaDiferente = new Pregunta();
-            preguntaDiferente.setId(UUID.randomUUID());
-            otraPregunta.setIdPregunta(preguntaDiferente);
-
-            when(pruebaAreaPreguntaDAO.findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE))
-                    .thenReturn(List.of(otraPregunta));
-
-            Response resp = resource.delete(idPruebaArea, idPregunta);
-            assertEquals(404, resp.getStatus());
-            verify(pruebaAreaPreguntaDAO).findByPruebaArea(idPruebaArea, 0, Integer.MAX_VALUE);
-        }
-
-        @Test
-        void retorna422_cuandoSoloIdPruebaAreaEsNulo() {
-            Response resp = resource.delete(null, idPregunta);
-            assertEquals(422, resp.getStatus());
-            assertEquals("idPruebaArea,idPregunta", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaPreguntaDAO);
-        }
-
-        @Test
-        void retorna422_cuandoSoloIdPreguntaEsNulo() {
-            Response resp = resource.delete(idPruebaArea, null);
-            assertEquals(422, resp.getStatus());
-            assertEquals("idPruebaArea,idPregunta", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaPreguntaDAO);
+            assertEquals(404, response.getStatus());
+            verify(pruebaAreaPreguntaDAO, never()).delete(any());
         }
     }
 }
-

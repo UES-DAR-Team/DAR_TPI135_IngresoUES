@@ -198,14 +198,17 @@ public class construccionDeUnaPruebaStepDefinitions {
 
     private void agregarDistractor(Integer papId, String idDistractor, boolean correcto) {
 
+        Map<String, Object> distractorRef = new HashMap<>();
+        distractorRef.put("id", idDistractor);
+
         Map<String, Object> body = new HashMap<>();
+        body.put("idDistractor", distractorRef);
         body.put("esRespuestaCorrecta", correcto);
         body.put("fechaRegistro", java.time.OffsetDateTime.now().toString());
 
         Response r = baseTarget.path("pruebaAreaPregunta")
                 .path(papId.toString())
                 .path("distractor")
-                .path(idDistractor)
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.json(body));
 

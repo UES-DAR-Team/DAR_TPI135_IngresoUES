@@ -16,7 +16,7 @@ public class CorseResponseFilter implements ContainerResponseFilter {
     public static final String METODOS_PERMITIDOS = "GET, POST, PUT, DELETE, OPTIONS, HEAD";
     public static final int MAXIMO_CACHE = 30*60*60;
     public static final String CABECERAS_PERMITIDAS = "origin, accept, content-type";
-    public static final String CABECERAS_EXPUESTAS = "location, info";
+    public static final String CABECERAS_EXPUESTAS = "location, info, X-Total-Count, Missing-parameter, Not-found-id, Conflict-id, Server-exception";
 
 
     @Override
@@ -46,7 +46,7 @@ public class CorseResponseFilter implements ContainerResponseFilter {
         StringBuilder sb = new StringBuilder();
         for (Object cabecera : cabeceras) {
             sb.append(cabecera.toString());
-            sb.append(";");
+            sb.append(",");
         }
         sb.append(cabecerasPorDefecto);
         return sb.toString();

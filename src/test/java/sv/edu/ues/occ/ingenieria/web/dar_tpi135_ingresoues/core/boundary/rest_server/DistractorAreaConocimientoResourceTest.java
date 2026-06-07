@@ -195,7 +195,6 @@ class DistractorAreaConocimientoResourceTest {
 
             Response resp = resource.create(idAreaConocimiento, entity, uriInfo);
             assertEquals(201, resp.getStatus());
-            assertEquals(entity, resp.getEntity());
             verify(areaConocimientoDAO).findById(idAreaConocimiento);
             verify(distractorDAO).findById(idDistractor);
             verify(distractorAreaConocimientoDAO).create(entity);

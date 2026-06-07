@@ -196,7 +196,7 @@ public class PruebaAreaResourceSystem extends BaseIntegrationAbstract {
                     .post(Entity.json(body));
 
             assertEquals(404, response.getStatus());
-            assertNotNull(response.getHeaderString("Not-found"));
+            assertNotNull(response.getHeaderString("Not-found-id"));
         }
 
         @Test

@@ -16,14 +16,16 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Prueba;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaArea;
 
 import java.io.Serializable;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.Level;
+
 
 @Path("prueba/{idPrueba}/areaConocimiento")
 public class PruebaAreaResource extends AbstractResource implements Serializable {
-
     @Inject
     PruebaAreaDAO pruebaAreaDAO;
 
@@ -39,28 +41,20 @@ public class PruebaAreaResource extends AbstractResource implements Serializable
             @PathParam("idPrueba") UUID idPrueba,
             @Min(0) @DefaultValue("0") @QueryParam("first") int first,
             @Max(10) @Min(1) @DefaultValue("10") @QueryParam("max") int max
-    )
-    {
-        if (idPrueba == null) {
-            return unprocessable("idPrueba");
-        }
-        if (first < 0) {
-            return unprocessable("first");
-        }
-        if (max <= 0 || max > 10) {
-            return unprocessable("max");
-        }
+    ) {
+        if (idPrueba == null) return unprocessable("idPrueba");
+        if (first < 0 || max <= 0 || max > 10) return unprocessable("first, max");
+
+
         Prueba prueba = pruebaDAO.findById(idPrueba);
-        if (prueba == null) {
-            return notFound(idPrueba.toString(), "Prueba");
-        }
+        if (prueba == null) return notFound(idPrueba.toString(), "Prueba");
+
         List<PruebaArea> encontrados = pruebaAreaDAO.findByPrueba(idPrueba, first, max);
         int total = pruebaAreaDAO.count();
         return Response.ok(encontrados)
-                .header("X-Total-Count", total)
+                .header(X_TOTAL_COUNT, total)
                 .build();
     }
-
 
     @GET
     @Path("{idAreaConocimiento}")
@@ -68,18 +62,21 @@ public class PruebaAreaResource extends AbstractResource implements Serializable
     public Response findOne(
             @PathParam("idPrueba") UUID idPrueba,
             @PathParam("idAreaConocimiento") UUID idAreaConocimiento) {
+        if (idPrueba == null) return unprocessable("idPrueba");
+        if (idAreaConocimiento == null) return unprocessable("idAreaConocimiento");
 
-        if (idPrueba == null || idAreaConocimiento == null) {
-            return unprocessable("idPrueba,idAreaConocimiento");
-        }
-        List<PruebaArea> list = pruebaAreaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
+        List<PruebaArea> list =
+                pruebaAreaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
+
         Optional<PruebaArea> found = list.stream()
                 .filter(pa -> pa.getIdAreaConocimiento() != null && idAreaConocimiento.equals(pa.getIdAreaConocimiento().getId()))
                 .findFirst();
-        if (found.isPresent()) {
-            return Response.ok(found.get()).build();
+
+        if (found.isEmpty()) {
+            return notFound("prueba=" + idPrueba + ", areaConocimiento=" + idAreaConocimiento, "PruebaArea");
         }
-        return notFound("linking prueba " + idPrueba + " and area " + idAreaConocimiento, "Record");
+
+        return Response.ok(found.get()).build();
     }
 
     @POST
@@ -89,32 +86,27 @@ public class PruebaAreaResource extends AbstractResource implements Serializable
             @PathParam("idPrueba") UUID idPrueba,
             PruebaArea entity,
             @Context UriInfo uriInfo) {
-
         if (idPrueba == null) return unprocessable("idPrueba");
         if (entity == null) return unprocessable("entity must not be null");
         if (entity.getId() != null) return unprocessable("entity.id must be null");
-        if (entity.getIdAreaConocimiento() == null || entity.getIdAreaConocimiento().getId() == null) {
-            return unprocessable("idAreaConocimiento must be provided in body");
-        }
+        if (entity.getIdAreaConocimiento() == null || entity.getIdAreaConocimiento().getId() == null)
+            return unprocessable("entity.idAreaConocimiento must be provided in body");
+
         Prueba prueba = pruebaDAO.findById(idPrueba);
-        if (prueba == null) {
-            return notFound(idPrueba.toString(), "Prueba");
-        }
+        if (prueba == null) return notFound(idPrueba.toString(), "Prueba");
+
         AreaConocimiento area = areaConocimientoDAO.findById(entity.getIdAreaConocimiento().getId());
-        if (area == null) {
-            return notFound(entity.getIdAreaConocimiento().getId().toString(), "AreaConocimiento");
-        }
+        if (area == null) return notFound(entity.getIdAreaConocimiento().getId().toString(), "AreaConocimiento");
+
         entity.setIdPrueba(prueba);
         entity.setIdAreaConocimiento(area);
-        if (entity.getFechaAsignacion() == null) {
-            entity.setFechaAsignacion(OffsetDateTime.now());
-        }
+        entity.setFechaAsignacion(OffsetDateTime.now());
         pruebaAreaDAO.create(entity);
-
-        return Response.created(uriInfo.getAbsolutePathBuilder().path(entity.getIdAreaConocimiento().getId().toString()).build())
-                .build();
+        URI created = uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build();
+        return Response.created(created).build();
     }
 
+    // Actualizar asociación: permite actualizar numPreguntas
     @PUT
     @Path("{idAreaConocimiento}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -123,21 +115,23 @@ public class PruebaAreaResource extends AbstractResource implements Serializable
             @PathParam("idPrueba") UUID idPrueba,
             @PathParam("idAreaConocimiento") UUID idAreaConocimiento,
             PruebaArea entity) {
+        if (idPrueba == null) return unprocessable("idPrueba");
+        if (idAreaConocimiento == null) return unprocessable("idAreaConocimiento");
+        if (entity == null) return unprocessable("entity must not be null");
 
-        if (idPrueba == null || idAreaConocimiento == null) {
-            return unprocessable("idPrueba,idAreaConocimiento");
-        }
-        if (entity == null) {
-            return unprocessable("entity must not be null");
-        }
-        List<PruebaArea> list = pruebaAreaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
+        List<PruebaArea> list =
+                pruebaAreaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
+
         Optional<PruebaArea> foundOpt = list.stream()
                 .filter(pa -> pa.getIdAreaConocimiento() != null && idAreaConocimiento.equals(pa.getIdAreaConocimiento().getId()))
                 .findFirst();
+
         if (foundOpt.isEmpty()) {
-            return notFound("linking prueba " + idPrueba + " and area " + idAreaConocimiento, "Record");
+            return notFound("prueba=" + idPrueba + ", areaConocimiento=" + idAreaConocimiento, "PruebaArea");
         }
+
         PruebaArea existing = foundOpt.get();
+        // Actualizar solo campos permitidos: numPreguntas
         existing.setNumPreguntas(entity.getNumPreguntas());
         PruebaArea updated = pruebaAreaDAO.update(existing);
         return Response.ok(updated).build();
@@ -148,17 +142,20 @@ public class PruebaAreaResource extends AbstractResource implements Serializable
     public Response delete(
             @PathParam("idPrueba") UUID idPrueba,
             @PathParam("idAreaConocimiento") UUID idAreaConocimiento) {
+        if (idPrueba == null) return unprocessable("idPrueba");
+        if (idAreaConocimiento == null) return unprocessable("idAreaConocimiento");
 
-        if (idPrueba == null || idAreaConocimiento == null) {
-            return unprocessable("idPrueba,idAreaConocimiento");
-        }
-        List<PruebaArea> list = pruebaAreaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
+        List<PruebaArea> list =
+                pruebaAreaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
+
         Optional<PruebaArea> found = list.stream()
                 .filter(pa -> pa.getIdAreaConocimiento() != null && idAreaConocimiento.equals(pa.getIdAreaConocimiento().getId()))
                 .findFirst();
+
         if (found.isEmpty()) {
-            return notFound("linking prueba " + idPrueba + " and area " + idAreaConocimiento, "Record");
+            return notFound("prueba=" + idPrueba + ", areaConocimiento=" + idAreaConocimiento, "PruebaArea");
         }
+
         pruebaAreaDAO.delete(found.get());
         return Response.noContent().build();
     }

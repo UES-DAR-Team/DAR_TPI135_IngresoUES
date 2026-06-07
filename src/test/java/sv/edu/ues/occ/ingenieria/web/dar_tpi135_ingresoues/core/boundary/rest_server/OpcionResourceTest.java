@@ -78,7 +78,7 @@ class OpcionResourceTest {
             Response response = opcionResource.findRange(FIRST,INVALIDMAX);
 
             assertEquals(422,response.getStatus());
-            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(opcionDAO);
         }
 
@@ -87,7 +87,7 @@ class OpcionResourceTest {
             Response response = opcionResource.findRange(FIRST,EXCEEDMAX);
 
             assertEquals(422,response.getStatus());
-            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(opcionDAO);
         }
 
@@ -96,19 +96,8 @@ class OpcionResourceTest {
             Response response = opcionResource.findRange(INVALIDFIRST,MAX);
 
             assertEquals(422,response.getStatus());
-            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(opcionDAO);
-        }
-
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(opcionDAO.findRange(FIRST, MAX)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = opcionResource.findRange(FIRST,MAX);
-
-            assertEquals(500,response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(opcionDAO).findRange(FIRST, MAX);
         }
 
     }
@@ -142,20 +131,10 @@ class OpcionResourceTest {
             Response response = opcionResource.findById(idOpcion);
 
             assertEquals(404,response.getStatus());
-            assertEquals("Record with id " + idOpcion + " not found",response.getHeaderString("Not-found-id"));
+            assertEquals("Opcion with id " + idOpcion + " not found",response.getHeaderString("Not-found-id"));
             verify(opcionDAO).findById(idOpcion);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion(){
-            when(opcionDAO.findById(idOpcion)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = opcionResource.findById(idOpcion);
-
-            assertEquals(500,response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(opcionDAO).findById(idOpcion);
-        }
     }
 
     @Nested
@@ -187,20 +166,10 @@ class OpcionResourceTest {
             Response response = opcionResource.deleteById(idOpcion);
 
             assertEquals(404,response.getStatus());
-            assertEquals("Record with id " + idOpcion + " not found", response.getHeaderString("Not-found-id"));
+            assertEquals("Opcion with id " + idOpcion + " not found", response.getHeaderString("Not-found-id"));
             verify(opcionDAO).findById(idOpcion);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion(){
-            when(opcionDAO.findById(idOpcion)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = opcionResource.deleteById(idOpcion);
-
-            assertEquals(500,response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(opcionDAO).findById(idOpcion);
-        }
     }
 
 
@@ -220,7 +189,6 @@ class OpcionResourceTest {
             Response response = opcionResource.create(entity, uriInfo);
 
             assertEquals(201, response.getStatus());
-            assertEquals(entity, response.getEntity());
             verify(opcionDAO).create(entity);
         }
 
@@ -244,16 +212,7 @@ class OpcionResourceTest {
             verifyNoInteractions(opcionDAO);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion(){
-            doThrow(new RuntimeException("DB error")).when(opcionDAO).create(entity);
 
-            Response response = opcionResource.create(entity, uriInfo);
-
-            assertEquals(500,response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(opcionDAO).create(entity);
-        }
     }
 
     @Nested
@@ -299,21 +258,9 @@ class OpcionResourceTest {
             Response response = opcionResource.update(idOpcion, entity);
 
             assertEquals(404,response.getStatus());
-            assertEquals("Record with id " + idOpcion + " not found", response.getHeaderString("Not-found-id"));
+            assertEquals("Opcion with id " + idOpcion + " not found", response.getHeaderString("Not-found-id"));
             verify(opcionDAO).findById(idOpcion);
         }
-
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion(){
-            when(opcionDAO.findById(idOpcion)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = opcionResource.update(idOpcion, entity);
-
-            assertEquals(500,response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(opcionDAO).findById(idOpcion);
-        }
-
     }
 
 }

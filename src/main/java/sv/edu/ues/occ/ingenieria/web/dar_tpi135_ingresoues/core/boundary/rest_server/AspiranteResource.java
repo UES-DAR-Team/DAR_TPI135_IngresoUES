@@ -10,10 +10,12 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.Aspirant
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Aspirante;
 
 import java.io.Serializable;
+import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 @Path("aspirante")
-public class AspiranteResource implements Serializable {
+public class AspiranteResource extends AbstractResource implements Serializable {
 
     @Inject
     AspiranteDAO aspiranteDAO;
@@ -22,95 +24,40 @@ public class AspiranteResource implements Serializable {
     @Produces(MediaType.APPLICATION_JSON)
     public Response findRange(
             @Min(0) @DefaultValue("0") @QueryParam("first") int first,
-            @Max(100) @Min(1) @DefaultValue("100") @QueryParam("max") int max) {
+            @Max(10) @Min(1) @DefaultValue("10") @QueryParam("max") int max) {
 
-        if (first < 0 || max <= 0 || max > 100) {
-            return Response.status(422)
-                    .header("Missing-parameter", "first, max")
-                    .build();
-        }
-
-        try {
+        if (first >= 0 && max > 0 & max <= 10) {
+            List<Aspirante> encontrados = aspiranteDAO.findRange(first, max);
             int total = aspiranteDAO.count();
-            return Response.ok(aspiranteDAO.findRange(first, max))
-                    .header("Total-records", total)
-                    .build();
-
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
+            return Response.ok(encontrados)
+                    .header(X_TOTAL_COUNT, total)
                     .build();
         }
+        return unprocessable("first, max");
+
     }
 
     @GET
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(@PathParam("id") UUID id) {
+        if (id == null) return unprocessable("id");
 
-        if (id == null) {
-            return Response.status(422)
-                    .header("Missing-parameter", "id")
-                    .build();
-        }
-
-        try {
-            Aspirante resp = aspiranteDAO.findById(id);
-
-            if (resp != null) {
-                return Response.ok(resp).build();
-            }
-
-            return Response.status(Response.Status.NOT_FOUND)
-                    .header("Not-found", "Aspirante con id " + id + " no encontrado")
-                    .build();
-
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
-        }
+        Aspirante resp = aspiranteDAO.findById(id);
+        if (resp == null) return notFound(id.toString(), "Aspirante");
+        return Response.ok(resp).build();
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response create(Aspirante entity, @Context UriInfo uriInfo) {
+        if (entity == null) return unprocessable("entity must not be null");
+        if (entity.getId() != null) return unprocessable("entity.id must be null");
 
-        if (entity == null) {
-            return Response.status(422)
-                    .header("Missing-parameter", "entity must not be null")
-                    .build();
-        }
-
-        if (entity.getId() != null) {
-            return Response.status(422)
-                    .header("Missing-parameter", "entity.id must be null")
-                    .build();
-        }
-
-        try {
-            aspiranteDAO.create(entity);
-
-            return Response.created(
-                    uriInfo.getAbsolutePathBuilder()
-                            .build()
-            ).entity(entity).build();
-
-        } catch (Exception e) {
-            Throwable cause = e.getCause() != null ? e.getCause() : e;
-            String msg = cause.getMessage() != null ? cause.getMessage() : "";
-
-            if (msg.contains("duplicate key")) {
-                return Response.status(Response.Status.CONFLICT)
-                        .header("Conflict", "Ya existe un registro con esos datos")
-                        .build();
-            }
-
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
-        }
+        aspiranteDAO.create(entity);
+        URI created = uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build();
+        return Response.created(created).build();
     }
 
     @PUT
@@ -118,66 +65,26 @@ public class AspiranteResource implements Serializable {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response update(@PathParam("id") UUID id, Aspirante entity) {
+        if (id == null) return unprocessable("id");
+        if (entity == null) return unprocessable("entity must not be null");
 
-        if (id == null) {
-            return Response.status(422)
-                    .header("Missing-parameter", "id")
-                    .build();
-        }
+        Aspirante existing = aspiranteDAO.findById(id);
+        if (existing == null) return notFound(id.toString(), "Aspirante");
 
-        if (entity == null) {
-            return Response.status(422)
-                    .header("Missing-parameter", "entity")
-                    .build();
-        }
-
-        try {
-            Aspirante existing = aspiranteDAO.findById(id);
-
-            if (existing == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Aspirante con id " + id + " no encontrado")
-                        .build();
-            }
-
-            entity.setId(id);
-            Aspirante updated = aspiranteDAO.update(entity);
-
-            return Response.ok(updated).build();
-
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", e.getMessage())
-                    .build();
-        }
+        entity.setId(id);
+        Aspirante updated = aspiranteDAO.update(entity);
+        return Response.ok(updated).build();
     }
 
     @DELETE
     @Path("{id}")
     public Response delete(@PathParam("id") UUID id) {
+        if (id == null) return unprocessable("id");
 
-        if (id == null) {
-            return Response.status(422)
-                    .header("Missing-parameter", "id")
-                    .build();
-        }
-
-        try {
-            Aspirante existing = aspiranteDAO.findById(id);
-
-            if (existing == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Aspirante con id " + id + " no encontrado")
-                        .build();
-            }
-
-            aspiranteDAO.delete(existing);
-            return Response.noContent().build();
-
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
-        }
+        Aspirante existing = aspiranteDAO.findById(id);
+        if (existing == null) return notFound(id.toString(), "Aspirante");
+        aspiranteDAO.delete(existing);
+        return Response.noContent().build();
     }
+
 }

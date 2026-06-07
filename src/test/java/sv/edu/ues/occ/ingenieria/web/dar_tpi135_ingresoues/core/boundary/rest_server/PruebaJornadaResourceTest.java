@@ -18,11 +18,12 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Prueba;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaJornada;
 
 import java.net.URI;
-import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,23 +45,17 @@ class PruebaJornadaResourceTest {
     UriBuilder uriBuilder;
 
     @InjectMocks
-    PruebaJornadaResource pruebaJornadaResource;
-
-    private static final int FIRST = 0;
-    private static final int MAX = 10;
-    private static final int INVALIDFIRST = -1;
-    private static final int INVALIDMAX = 0;
-    private static final int EXCEEDMAX = 11;
+    PruebaJornadaResource resource;
 
     private UUID idPrueba;
     private UUID idJornada;
     private Prueba prueba;
     private Jornada jornada;
-    private PruebaJornada pruebaJornada;
+    private PruebaJornada pj;
     private PruebaJornada entity;
 
     @BeforeEach
-    void setUp() {
+    void setUp(){
         idPrueba = UUID.randomUUID();
         idJornada = UUID.randomUUID();
 
@@ -70,289 +65,233 @@ class PruebaJornadaResourceTest {
         jornada = new Jornada();
         jornada.setId(idJornada);
 
-        pruebaJornada = new PruebaJornada();
-        pruebaJornada.setId(1);
-        pruebaJornada.setIdPrueba(prueba);
-        pruebaJornada.setIdJornada(jornada);
+        pj = new PruebaJornada();
+        pj.setId(1);
+        pj.setIdPrueba(prueba);
+        pj.setIdJornada(jornada);
 
         entity = new PruebaJornada();
     }
 
     @Nested
-    class findRange {
-
+    class FindById{
         @Test
-        void retorna200ConListaYHeader_cuandoParametrosSonValidos() {
-            List<PruebaJornada> lista = List.of(pruebaJornada);
-            when(pruebaDAO.findById(idPrueba)).thenReturn(prueba);
-            when(pruebaJornadaDAO.findByPrueba(idPrueba, FIRST, MAX)).thenReturn(lista);
-            when(pruebaJornadaDAO.count()).thenReturn(1);
-
-            Response response = pruebaJornadaResource.findRange(idPrueba, FIRST, MAX);
-
-            assertEquals(200, response.getStatus());
-            assertEquals(lista, response.getEntity());
-            assertEquals("1", response.getHeaderString("X-Total-Count"));
-            verify(pruebaDAO).findById(idPrueba);
-            verify(pruebaJornadaDAO).findByPrueba(idPrueba, FIRST, MAX);
+        void retorna200ConEntidad_cuandoExiste(){
+            when(pruebaJornadaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE)).thenReturn(List.of(pj));
+            Response resp = resource.findById(idPrueba, idJornada);
+            assertEquals(200, resp.getStatus());
+            assertEquals(pj, resp.getEntity());
+            verify(pruebaJornadaDAO).findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
         }
 
         @Test
-        void retorna422_cuandoIdPruebaNulo() {
-            Response response = pruebaJornadaResource.findRange(null, FIRST, MAX);
-
-            assertEquals(422, response.getStatus());
-            assertEquals("idPrueba", response.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaDAO, pruebaJornadaDAO);
-        }
-
-        @Test
-        void retorna422_cuandoPaginacionEsInvalida() {
-            Response respFirst = pruebaJornadaResource.findRange(idPrueba, INVALIDFIRST, MAX);
-            assertEquals(422, respFirst.getStatus());
-
-            Response respMax = pruebaJornadaResource.findRange(idPrueba, FIRST, INVALIDMAX);
-            assertEquals(422, respMax.getStatus());
-
-            Response respExceed = pruebaJornadaResource.findRange(idPrueba, FIRST, EXCEEDMAX);
-            assertEquals(422, respExceed.getStatus());
-
-            verifyNoInteractions(pruebaDAO, pruebaJornadaDAO);
-        }
-
-        @Test
-        void retorna404_cuandoPruebaNoExiste() {
-            when(pruebaDAO.findById(idPrueba)).thenReturn(null);
-
-            Response response = pruebaJornadaResource.findRange(idPrueba, FIRST, MAX);
-
-            assertEquals(404, response.getStatus());
-            assertEquals("Prueba with id " + idPrueba + " not found", response.getHeaderString("Not-found-id"));
-            verify(pruebaDAO).findById(idPrueba);
-            verifyNoInteractions(pruebaJornadaDAO);
-        }
-    }
-
-    @Nested
-    class findOne {
-
-        @Test
-        void retorna200ConEntidad_cuandoParametrosSonValidos() {
-            List<PruebaJornada> lista = List.of(pruebaJornada);
-            when(pruebaJornadaDAO.findByPruebaAndJornada(idPrueba, idJornada, 0, 1)).thenReturn(lista);
-
-            Response response = pruebaJornadaResource.findOne(idPrueba, idJornada);
-
-            assertEquals(200, response.getStatus());
-            assertEquals(pruebaJornada, response.getEntity());
-            verify(pruebaJornadaDAO).findByPruebaAndJornada(idPrueba, idJornada, 0, 1);
-        }
-
-        @Test
-        void retorna422_cuandoIdsNulos() {
-            Response response1 = pruebaJornadaResource.findOne(null, idJornada);
-            assertEquals(422, response1.getStatus());
-
-            Response response2 = pruebaJornadaResource.findOne(idPrueba, null);
-            assertEquals(422, response2.getStatus());
-
+        void retorna422_cuandoIdPruebaNulo(){
+            Response resp = resource.findById(null, idJornada);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPrueba", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaJornadaDAO);
         }
 
         @Test
-        void retorna404_cuandoNoSeEncuentraRegistro() {
-            when(pruebaJornadaDAO.findByPruebaAndJornada(idPrueba, idJornada, 0, 1)).thenReturn(List.of());
+        void retorna422_cuandoIdJornadaNulo(){
+            Response resp = resource.findById(idPrueba, null);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idJornada", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaJornadaDAO);
+        }
 
-            Response response = pruebaJornadaResource.findOne(idPrueba, idJornada);
-
-            assertEquals(404, response.getStatus());
-            assertEquals("Record with id linking prueba " + idPrueba + " and jornada " + idJornada + " not found", response.getHeaderString("Not-found-id"));
+        @Test
+        void retorna404_cuandoNoSeEncuentra(){
+            when(pruebaJornadaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE)).thenReturn(List.of());
+            Response resp = resource.findById(idPrueba, idJornada);
+            assertEquals(404, resp.getStatus());
+            assertEquals("PruebaJornada with id prueba="+idPrueba+", jornada="+idJornada+" not found", resp.getHeaderString("Not-found-id"));
+            verify(pruebaJornadaDAO).findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
         }
     }
 
     @Nested
-    class Create {
+    class Create{
         @Test
-        void retorna201_cuandoEntidadEsValidaYAsignaFechaSiEsNula() {
-            entity.setIdJornada(jornada);
-            entity.setFechaAsignacion(null);
+        void retorna201_cuandoValido(){
+            entity.setId(null);
+            Jornada body = new Jornada();
+            body.setId(idJornada);
+            entity.setIdJornada(body);
 
             when(pruebaDAO.findById(idPrueba)).thenReturn(prueba);
             when(jornadaDAO.findById(idJornada)).thenReturn(jornada);
-
             when(uriInfo.getAbsolutePathBuilder()).thenReturn(uriBuilder);
             when(uriBuilder.path(anyString())).thenReturn(uriBuilder);
-            when(uriBuilder.build()).thenReturn(URI.create("v1/prueba/jornada/" + idJornada));
+            when(uriBuilder.build()).thenReturn(URI.create("resources/v1/prueba/" + idPrueba + "/jornada/" + idJornada));
 
             doAnswer(inv -> {
-                entity.setId(1);
+                entity.setId(99);
                 return null;
             }).when(pruebaJornadaDAO).create(entity);
 
-            Response response = pruebaJornadaResource.create(idPrueba, entity, uriInfo);
-
-            assertEquals(201, response.getStatus());
-            assertNull(response.getEntity());
-            assertNotNull(entity.getFechaAsignacion());
+            Response resp = resource.create(idPrueba, entity, uriInfo);
+            assertEquals(201, resp.getStatus());
+            verify(pruebaDAO).findById(idPrueba);
+            verify(jornadaDAO).findById(idJornada);
             verify(pruebaJornadaDAO).create(entity);
         }
 
         @Test
-        void retorna201_cuandoEntidadEsValidaYRespetaFechaExistente() {
-            entity.setIdJornada(jornada);
-            OffsetDateTime fechaPrevia = OffsetDateTime.now().minusDays(5);
-            entity.setFechaAsignacion(fechaPrevia);
-
-            when(pruebaDAO.findById(idPrueba)).thenReturn(prueba);
-            when(jornadaDAO.findById(idJornada)).thenReturn(jornada);
-
-            when(uriInfo.getAbsolutePathBuilder()).thenReturn(uriBuilder);
-            when(uriBuilder.path(anyString())).thenReturn(uriBuilder);
-            when(uriBuilder.build()).thenReturn(URI.create("v1/prueba/jornada/" + idJornada));
-
-            Response response = pruebaJornadaResource.create(idPrueba, entity, uriInfo);
-
-            assertEquals(201, response.getStatus());
-            assertEquals(fechaPrevia, entity.getFechaAsignacion());
-            verify(pruebaJornadaDAO).create(entity);
+        void retorna422_cuandoIdPruebaNulo(){
+            Response resp = resource.create(null, entity, uriInfo);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPrueba", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaDAO, jornadaDAO, pruebaJornadaDAO);
         }
 
         @Test
-        void retorna422_cuandoDatosInvalidos() {
-            Response resp1 = pruebaJornadaResource.create(null, entity, uriInfo);
-            assertEquals(422, resp1.getStatus());
+        void retorna422_cuandoEntidadNula(){
+            Response resp = resource.create(idPrueba, null, uriInfo);
+            assertEquals(422, resp.getStatus());
+            assertEquals("entity must not be null", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaDAO, jornadaDAO, pruebaJornadaDAO);
+        }
 
-            Response resp2 = pruebaJornadaResource.create(idPrueba, null, uriInfo);
-            assertEquals(422, resp2.getStatus());
+        @Test
+        void retorna422_cuandoEntityTieneId(){
+            entity.setId(5);
+            Response resp = resource.create(idPrueba, entity, uriInfo);
+            assertEquals(422, resp.getStatus());
+            assertEquals("entity.id must be null", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaDAO, jornadaDAO, pruebaJornadaDAO);
+        }
 
-            entity.setId(1);
-            Response resp3 = pruebaJornadaResource.create(idPrueba, entity, uriInfo);
-            assertEquals(422, resp3.getStatus());
-
+        @Test
+        void retorna422_cuandoIdJornadaNoProvistoEnBody(){
             entity.setId(null);
             entity.setIdJornada(null);
-            Response resp4 = pruebaJornadaResource.create(idPrueba, entity, uriInfo);
-            assertEquals(422, resp4.getStatus());
-
-            verifyNoInteractions(pruebaJornadaDAO);
+            Response resp = resource.create(idPrueba, entity, uriInfo);
+            assertEquals(422, resp.getStatus());
+            assertEquals("entity.idJornada must be provided in body", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaDAO, jornadaDAO, pruebaJornadaDAO);
         }
 
         @Test
-        void retorna404_cuandoPadresNoExisten() {
-            entity.setIdJornada(jornada);
+        void retorna404_cuandoPruebaNoExiste(){
+            entity.setId(null);
+            Jornada body = new Jornada();
+            body.setId(idJornada);
+            entity.setIdJornada(body);
 
             when(pruebaDAO.findById(idPrueba)).thenReturn(null);
-            Response response1 = pruebaJornadaResource.create(idPrueba, entity, uriInfo);
-            assertEquals(404, response1.getStatus());
+            Response resp = resource.create(idPrueba, entity, uriInfo);
+            assertEquals(404, resp.getStatus());
+            assertEquals("Prueba with id " + idPrueba + " not found", resp.getHeaderString("Not-found-id"));
+            verify(pruebaDAO).findById(idPrueba);
+            verifyNoMoreInteractions(jornadaDAO, pruebaJornadaDAO);
+        }
+
+        @Test
+        void retorna404_cuandoJornadaNoExiste(){
+            entity.setId(null);
+            Jornada body = new Jornada();
+            body.setId(idJornada);
+            entity.setIdJornada(body);
 
             when(pruebaDAO.findById(idPrueba)).thenReturn(prueba);
             when(jornadaDAO.findById(idJornada)).thenReturn(null);
-            Response response2 = pruebaJornadaResource.create(idPrueba, entity, uriInfo);
-            assertEquals(404, response2.getStatus());
 
-            verifyNoInteractions(pruebaJornadaDAO);
-        }
-
-        @Test
-        void retorna422_cuandoJornadaVieneSinId() {
-            Jornada jornadaSinId = new Jornada();
-            jornadaSinId.setId(null);
-            entity.setIdJornada(jornadaSinId);
-
-            Response response = pruebaJornadaResource.create(idPrueba, entity, uriInfo);
-
-            assertEquals(422, response.getStatus());
-            verifyNoInteractions(pruebaJornadaDAO);
+            Response resp = resource.create(idPrueba, entity, uriInfo);
+            assertEquals(404, resp.getStatus());
+            assertEquals("Jornada with id " + idJornada + " not found", resp.getHeaderString("Not-found-id"));
+            verify(pruebaDAO).findById(idPrueba);
+            verify(jornadaDAO).findById(idJornada);
+            verifyNoMoreInteractions(pruebaJornadaDAO);
         }
     }
 
     @Nested
-    class Update {
-
+    class Update{
         @Test
-        void retorna200_cuandoEntidadEsValida() {
-            List<PruebaJornada> lista = List.of(pruebaJornada);
-            entity.setFechaAsignacion(OffsetDateTime.now());
+        void retorna200_cuandoValido(){
+            PruebaJornada existing = new PruebaJornada();
+            existing.setId(1);
+            existing.setIdJornada(jornada);
+            when(pruebaJornadaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE)).thenReturn(List.of(existing));
 
-            when(pruebaJornadaDAO.findByPruebaAndJornada(idPrueba, idJornada, 0, 1)).thenReturn(lista);
-            when(pruebaJornadaDAO.update(pruebaJornada)).thenReturn(pruebaJornada);
+            PruebaJornada update = new PruebaJornada();
+            when(pruebaJornadaDAO.update(any())).thenReturn(update);
 
-            Response response = pruebaJornadaResource.update(idPrueba, idJornada, entity);
-
-            assertEquals(200, response.getStatus());
-            assertEquals(pruebaJornada, response.getEntity());
-            verify(pruebaJornadaDAO).update(pruebaJornada);
+            Response resp = resource.update(idPrueba, idJornada, update);
+            assertEquals(200, resp.getStatus());
+            verify(pruebaJornadaDAO).findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
+            verify(pruebaJornadaDAO).update(any());
         }
 
         @Test
-        void retorna422_cuandoFaltanParametros() {
-            Response resp1 = pruebaJornadaResource.update(null, idJornada, entity);
-            assertEquals(422, resp1.getStatus());
-
-            Response resp2 = pruebaJornadaResource.update(idPrueba, null, entity);
-            assertEquals(422, resp2.getStatus());
-
-            Response resp3 = pruebaJornadaResource.update(idPrueba, idJornada, null);
-            assertEquals(422, resp3.getStatus());
+        void retorna422_cuandoIdPruebaNulo(){
+            Response resp = resource.update(null, idJornada, entity);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPrueba", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaJornadaDAO);
         }
 
         @Test
-        void retorna404_cuandoRegistroNoExiste() {
-            when(pruebaJornadaDAO.findByPruebaAndJornada(idPrueba, idJornada, 0, 1)).thenReturn(List.of());
-
-            Response response = pruebaJornadaResource.update(idPrueba, idJornada, entity);
-
-            assertEquals(404, response.getStatus());
-            verify(pruebaJornadaDAO, never()).update(any());
+        void retorna422_cuandoIdJornadaNulo(){
+            Response resp = resource.update(idPrueba, null, entity);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idJornada", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaJornadaDAO);
         }
 
         @Test
-        void retorna200_cuandoEntidadEsValidaYNoSeEnviaFecha() {
-            List<PruebaJornada> lista = List.of(pruebaJornada);
-            entity.setFechaAsignacion(null);
+        void retorna422_cuandoEntidadNula(){
+            Response resp = resource.update(idPrueba, idJornada, null);
+            assertEquals(422, resp.getStatus());
+            assertEquals("entity must not be null", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaJornadaDAO);
+        }
 
-            when(pruebaJornadaDAO.findByPruebaAndJornada(idPrueba, idJornada, 0, 1)).thenReturn(lista);
-            when(pruebaJornadaDAO.update(pruebaJornada)).thenReturn(pruebaJornada);
-
-            Response response = pruebaJornadaResource.update(idPrueba, idJornada, entity);
-
-            assertEquals(200, response.getStatus());
-            assertEquals(pruebaJornada, response.getEntity());
-            verify(pruebaJornadaDAO).update(pruebaJornada);
+        @Test
+        void retorna404_cuandoNoSeEncuentra(){
+            when(pruebaJornadaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE)).thenReturn(List.of());
+            Response resp = resource.update(idPrueba, idJornada, entity);
+            assertEquals(404, resp.getStatus());
+            assertEquals("PruebaJornada with id prueba="+idPrueba+", jornada="+idJornada+" not found", resp.getHeaderString("Not-found-id"));
+            verify(pruebaJornadaDAO).findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
         }
     }
 
     @Nested
-    class Delete {
-
+    class Delete{
         @Test
-        void retorna204_cuandoRegistroExiste() {
-            List<PruebaJornada> lista = List.of(pruebaJornada);
-            when(pruebaJornadaDAO.findByPruebaAndJornada(idPrueba, idJornada, 0, 1)).thenReturn(lista);
-
-            Response response = pruebaJornadaResource.delete(idPrueba, idJornada);
-
-            assertEquals(204, response.getStatus());
-            verify(pruebaJornadaDAO).delete(pruebaJornada);
+        void retorna204_cuandoValido(){
+            when(pruebaJornadaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE)).thenReturn(List.of(pj));
+            Response resp = resource.update(idPrueba, idJornada);
+            assertEquals(204, resp.getStatus());
+            verify(pruebaJornadaDAO).findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
+            verify(pruebaJornadaDAO).delete(pj);
         }
 
         @Test
-        void retorna422_cuandoIdsNulos() {
-            Response resp1 = pruebaJornadaResource.delete(null, idJornada);
-            assertEquals(422, resp1.getStatus());
-
-            Response resp2 = pruebaJornadaResource.delete(idPrueba, null);
-            assertEquals(422, resp2.getStatus());
+        void retorna422_cuandoIdPruebaNulo(){
+            Response resp = resource.update(null, idJornada);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPrueba", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaJornadaDAO);
         }
 
         @Test
-        void retorna404_cuandoRegistroNoExiste() {
-            when(pruebaJornadaDAO.findByPruebaAndJornada(idPrueba, idJornada, 0, 1)).thenReturn(List.of());
+        void retorna422_cuandoIdJornadaNulo(){
+            Response resp = resource.update(idPrueba, null);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idJornada", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaJornadaDAO);
+        }
 
-            Response response = pruebaJornadaResource.delete(idPrueba, idJornada);
-
-            assertEquals(404, response.getStatus());
-            verify(pruebaJornadaDAO, never()).delete(any());
+        @Test
+        void retorna404_cuandoNoSeEncuentra(){
+            when(pruebaJornadaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE)).thenReturn(List.of());
+            Response resp = resource.update(idPrueba, idJornada);
+            assertEquals(404, resp.getStatus());
+            assertEquals("PruebaJornada with id prueba="+idPrueba+", jornada="+idJornada+" not found", resp.getHeaderString("Not-found-id"));
+            verify(pruebaJornadaDAO).findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
         }
     }
 }

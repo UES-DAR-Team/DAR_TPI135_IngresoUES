@@ -25,7 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Path("aspirante/{idAspirante}/opcion")
-public class AspiranteOpcionResource implements Serializable {
+public class AspiranteOpcionResource extends AbstractResource implements Serializable {
     @Inject
     AspiranteOpcionDAO aspiranteOpcionDAO;
 
@@ -35,8 +35,6 @@ public class AspiranteOpcionResource implements Serializable {
     @Inject
     OpcionDAO opcionDAO;
 
-    private static final Logger LOG = Logger.getLogger(TurnoResource.class.getName());
-
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response findRange(
@@ -44,29 +42,17 @@ public class AspiranteOpcionResource implements Serializable {
             @Min(0) @DefaultValue("0") @QueryParam("first") int first,
             @Max(10) @Min(1) @DefaultValue("10") @QueryParam("max") int max
     ) {
-        if (idAspirante == null) {
-            return Response.status(422).header("Missing-parameter", "idAspirante").build();
-        }
-        if (first < 0 || max <= 0 || max > 10) {
-            return Response.status(422).header("Missing-parameter", "first,max").build();
-        }
-        try {
-            Aspirante aspirante = aspiranteDAO.findById(idAspirante);
-            if (aspirante == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Aspirante with id " + idAspirante + " not found").build();
-            }
-            List<AspiranteOpcion> List = aspiranteOpcionDAO.findOpcionByIdAspirante(idAspirante, first, max);
-            int total = aspiranteOpcionDAO.count();
-            return Response.ok(List)
-                    .header("X-Total-Count", total)
-                    .build();
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error retrieving AspiranteOpcion range", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
-        }
+        if (idAspirante == null) return unprocessable("idAspirante");
+        if (first < 0 || max <= 0 || max > 10) return unprocessable("first, max");
+
+        Aspirante aspirante = aspiranteDAO.findById(idAspirante);
+        if (aspirante == null) return notFound(idAspirante.toString(), "Aspirante");
+
+        List<AspiranteOpcion> List = aspiranteOpcionDAO.findOpcionByIdAspirante(idAspirante, first, max);
+        int total = aspiranteOpcionDAO.count();
+        return Response.ok(List)
+                .header(X_TOTAL_COUNT, total)
+                .build();
     }
 
     @GET
@@ -76,27 +62,21 @@ public class AspiranteOpcionResource implements Serializable {
             @PathParam("idAspirante") UUID idAspirante,
             @PathParam("idOpcion") UUID idOpcion
     ) {
-        if (idAspirante == null || idOpcion == null) {
-            return Response.status(422).header("Missing-parameter", "idAspirante,idOpcion").build();
-        }
-        try {
-            List<AspiranteOpcion> list = aspiranteOpcionDAO.findOpcionByIdAspirante(idAspirante, 0, Integer.MAX_VALUE);
+        if (idAspirante == null) return unprocessable("idAspirante");
+        if (idOpcion == null) return unprocessable("idOpcion");
 
-            Optional<AspiranteOpcion> found = list.stream()
-                    .filter(ao -> ao.getIdOpcion() != null && idOpcion.equals(ao.getIdOpcion().getId()))
-                    .findFirst();
-            if (found.isPresent()) {
-                return Response.ok(found.get()).build();
-            } else {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record linking aspirante " + idAspirante + " and opcion " + idOpcion + " not found").build();
-            }
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error retrieving AspiranteOpcion", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
+        List<AspiranteOpcion> list =
+                aspiranteOpcionDAO.findOpcionByIdAspirante(idAspirante, 0, Integer.MAX_VALUE);
+
+        Optional<AspiranteOpcion> found = list.stream()
+                .filter(ao -> ao.getIdOpcion() != null
+                        && idOpcion.equals(ao.getIdOpcion().getId()))
+                .findFirst();
+
+        if (found.isEmpty()) {
+            return notFound("aspirante=" + idAspirante + ", opcion=" + idOpcion, "AspiranteOpcion");
         }
+        return Response.ok(found.get()).build();
     }
 
     @POST
@@ -106,42 +86,24 @@ public class AspiranteOpcionResource implements Serializable {
             @PathParam("idAspirante") UUID idAspirante,
             AspiranteOpcion entity,
             @Context UriInfo uriInfo) {
-        if (idAspirante == null) {
-            return Response.status(422).header("Missing-parameter", "idAspirante").build();
-        }
-        if (entity == null) {
-            return Response.status(422).header("Missing-parameter", "entity must not be null").build();
-        }
-        if (entity.getId() != null) {
-            return Response.status(422).header("Missing-parameter", "entity.id must be null").build();
-        }
-        if (entity.getIdOpcion() == null) {
-            return Response.status(422).header("Missing-parameter", "idOpcion must be provider in body").build();
-        }
-        try {
+        if (idAspirante == null) return unprocessable("idAspirante");
+        if (entity == null)  return unprocessable("entity must not be null");
+        if (entity.getId() != null) return unprocessable("entity.id must be null");
+        if (entity.getIdOpcion() == null) return unprocessable("entity.idOpcion must be provided in body");
+
             Aspirante aspirante = aspiranteDAO.findById(idAspirante);
-            if (aspirante == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Aspirante with id " + idAspirante + " not found").build();
-            }
+            if (aspirante == null) return notFound(idAspirante.toString(), "Aspirante");
+
             Opcion opcion = opcionDAO.findById(entity.getIdOpcion().getId());
-            if (opcion == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Opcion with id " + entity.getIdOpcion().getId() + " not found").build();
-            }
+            if (opcion == null) return notFound(entity.getIdOpcion().getId().toString(), "Opcion");
 
             entity.setIdAspirante(aspirante);
             entity.setIdOpcion(opcion);
 
             aspiranteOpcionDAO.create(entity);
-            URI created = uriInfo.getAbsolutePathBuilder().path(opcion.getId().toString()).build();
-            return Response.created(created).entity(entity).build();
 
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error creating AspiranteOpcion", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db").build();
-        }
+            URI created = uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build();
+            return Response.created(created).build();
     }
 
     @Delete
@@ -149,28 +111,21 @@ public class AspiranteOpcionResource implements Serializable {
     public Response delete(
             @PathParam("idAspirante") UUID idAspirante,
             @PathParam("idOpcion") UUID idOpcion) {
-        if (idAspirante == null || idOpcion == null) {
-            return Response.status(422).header("Missing-parameter", "idAspirante,idOpcion").build();
-        }
-        try {
-            List<AspiranteOpcion> list = aspiranteOpcionDAO.findOpcionByIdAspirante(idAspirante, 0, Integer.MAX_VALUE);
+        if (idAspirante == null) return unprocessable("idAspirante");
+        if (idOpcion == null) return unprocessable("idOpcion");
 
-            Optional<AspiranteOpcion> found = list.stream()
-                    .filter(ao -> ao.getIdOpcion() != null && idOpcion.equals(ao.getIdOpcion().getId()))
-                    .findFirst();
-            if (found.isEmpty()) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record linking aspirante " + idAspirante + " and opcion " + idOpcion + " not found").build();
-            }
-            aspiranteOpcionDAO.delete(found.get());
-            return Response.noContent().build();
+        List<AspiranteOpcion> list =
+                aspiranteOpcionDAO.findOpcionByIdAspirante(idAspirante, 0, Integer.MAX_VALUE);
 
-        }catch (Exception ex){
-            LOG.log(Level.SEVERE, "Error deleting AspiranteOpcion", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db").build();
+        Optional<AspiranteOpcion> found = list.stream()
+                .filter(ao -> ao.getIdOpcion() != null
+                        && idOpcion.equals(ao.getIdOpcion().getId()))
+                .findFirst();
+
+        if (found.isEmpty()) {
+            return notFound("aspirante=" + idAspirante + ", opcion=" + idOpcion, "AspiranteOpcion");
         }
+        aspiranteOpcionDAO.delete(found.get());
+        return Response.noContent().build();
     }
-
-
 }

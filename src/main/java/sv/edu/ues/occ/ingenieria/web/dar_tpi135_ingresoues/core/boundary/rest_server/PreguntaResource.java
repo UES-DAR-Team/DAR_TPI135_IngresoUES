@@ -13,17 +13,16 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Pregunta;
 
 import javax.print.attribute.standard.Media;
 import java.io.Serializable;
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Path("pregunta")
-public class PreguntaResource implements Serializable {
+public class PreguntaResource extends AbstractResource implements Serializable {
     @Inject
     PreguntaDAO preguntaDAO;
-
-    private static final Logger LOG = Logger.getLogger(PreguntaResource.class.getName());
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -32,87 +31,51 @@ public class PreguntaResource implements Serializable {
             @Max(10) @Min(1) @DefaultValue("10") @QueryParam("max") int max
     ) {
         if (first >= 0 && max > 0 && max <= 10) {
-            try {
-                List<Pregunta> encontrados = preguntaDAO.findRange(first, max);
-                int total = preguntaDAO.count();
-                return Response.ok(encontrados)
-                        .header("X-Total-Count", total)
-                        .build();
-            } catch (Exception ex) {
-                LOG.log(Level.SEVERE, "Error retrieving Pregunta range", ex);
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db").build();
-            }
+            List<Pregunta> encontrados = preguntaDAO.findRange(first, max);
+            int total = preguntaDAO.count();
+            return Response.ok(encontrados)
+                    .header(X_TOTAL_COUNT, total)
+                    .build();
         }
-        return Response.status(422).header("Missing-parameter", "first,max").build();
+        return unprocessable("first, max");
     }
 
     @GET
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(@PathParam("id") UUID id) {
-        if (id != null) {
-            try {
-                Pregunta encontrados = preguntaDAO.findById(id);
-                if (encontrados != null) {
-                    return Response.ok(encontrados).build();
-                }
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record with id " + id + " not found").build();
-            } catch (Exception ex) {
-                LOG.log(Level.SEVERE, "Error retrieving Pregunta by id", ex);
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db").build();
-            }
+        if (id == null) return unprocessable("id");
+
+        Pregunta encontrados = preguntaDAO.findById(id);
+        if (encontrados != null) {
+            return Response.ok(encontrados).build();
         }
-        return Response.status(422).header("Missing-parameter", "id").build();
+        return notFound(id.toString(), "Pregunta");
     }
 
     @DELETE
     @Path("{id}")
     public Response deleteById(@PathParam("id") UUID id) {
-        if (id != null) {
-            try {
-                Pregunta encontrados = preguntaDAO.findById(id);
-                if (encontrados != null) {
-                    preguntaDAO.delete(encontrados);
-                    return Response.noContent().build();
-                }
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record with id " + id + " not found").build();
-            } catch (Exception ex) {
-                LOG.log(Level.SEVERE, "Error deleting Pregunta by id", ex);
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db").build();
-            }
+        if (id == null) return unprocessable("id");
+
+        Pregunta encontrados = preguntaDAO.findById(id);
+        if (encontrados == null) {
+            return notFound(id.toString(), "Pregunta");
         }
-        return Response.status(422).header("Missing-parameter", "id").build();
+        preguntaDAO.delete(encontrados);
+        return Response.noContent().build();
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response create(Pregunta entity, @Context UriInfo uriInfo) {
-        if(entity != null){
-            if(entity.getId() == null){
-                try {
-                    preguntaDAO.create(entity);
-                    return Response.created(uriInfo.getAbsolutePathBuilder()
-                            .path(entity.getId().toString()).build())
-                            .entity(entity).build();
-                }catch (Exception ex){
-                    LOG.log(Level.SEVERE, "Error creating Pregunta", ex);
-                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                            .header("Server-exception", "Cannot access db").build();
-                }
-            }
-            return Response.status(422)
-                    .header("Missing-parameter", "entity.id must be null")
-                    .build();
-        }
-        return Response.status(422)
-                .header("Missing-parameter", "entity must not be null")
-                .build();
+        if (entity == null) return unprocessable("entity must not be null");
+        if (entity.getId() != null) return unprocessable("entity.id must be null");
+
+        preguntaDAO.create(entity);
+        URI created = uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build();
+        return Response.created(created).build();
     }
 
     @PUT
@@ -120,27 +83,16 @@ public class PreguntaResource implements Serializable {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response update(@PathParam("id") UUID id, Pregunta entity) {
-        if(id != null){
-            if(entity != null){
-                try{
-                    Pregunta existing = preguntaDAO.findById(id);
-                    if(existing != null){
-                        entity.setId(id);
-                        preguntaDAO.update(entity);
-                        return Response.ok(entity).build();
-                    }
-                    return Response.status(Response.Status.NOT_FOUND)
-                            .header("Not-found-id", "Record with id " + id + " not found").build();
-                }catch (Exception ex){
-                    LOG.log(Level.SEVERE, "Error updating Pregunta", ex);
-                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                            .header("Server-exception", "Cannot access db").build();
-                }
-            }
-            return Response.status(422)
-                    .header("Missing-parameter", "entity must not be null")
-                    .build();
+        if (id == null) return unprocessable("id");
+        if (entity == null) return unprocessable("entity must not be null");
+
+        Pregunta existing = preguntaDAO.findById(id);
+        if (existing == null) {
+            return notFound(id.toString(), "Pregunta");
         }
-        return Response.status(422).header("Missing-parameter", "id").build();
+
+        entity.setId(id);
+        preguntaDAO.update(entity);
+        return Response.ok(entity).build();
     }
 }

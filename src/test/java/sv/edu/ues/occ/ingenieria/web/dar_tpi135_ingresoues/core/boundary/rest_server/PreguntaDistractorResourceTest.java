@@ -113,21 +113,21 @@ class PreguntaDistractorResourceTest {
         void retorna422_cuandoFirstInvalido(){
             Response resp = resource.findByPregunta(idPregunta, INVALIDFIRST, MAX);
             assertEquals(422, resp.getStatus());
-            assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDAO, preguntaDistractorDAO);
         }
         @Test
         void retorna422_cuandoMaxEsInvalido(){
             Response resp = resource.findByPregunta(idPregunta, FIRST, INVALIDMAX);
             assertEquals(422, resp.getStatus());
-            assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDAO, preguntaDistractorDAO);
         }
         @Test
         void retorna422_cuandoMaxEsInvalidoPorMas(){
             Response resp = resource.findByPregunta(idPregunta, FIRST, EXCEEDMAX);
             assertEquals(422, resp.getStatus());
-            assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDAO, preguntaDistractorDAO);
         }
 
@@ -141,16 +141,6 @@ class PreguntaDistractorResourceTest {
             verifyNoMoreInteractions(preguntaDistractorDAO);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(preguntaDAO.findById(idPregunta)).thenReturn(pregunta);
-            when(preguntaDistractorDAO.findByIdPregunta(idPregunta, FIRST, MAX)).thenThrow(new RuntimeException("DB"));
-            var resp = resource.findByPregunta(idPregunta, FIRST, MAX);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(preguntaDAO).findById(idPregunta);
-            verify(preguntaDistractorDAO).findByIdPregunta(idPregunta, FIRST, MAX);
-        }
     }
 
     @Nested
@@ -168,14 +158,14 @@ class PreguntaDistractorResourceTest {
         void retorna422_cuandoIdDistractorNoEsNull() {
             var resp = resource.findOne(null, idDistractor);
             assertEquals(422, resp.getStatus());
-            assertEquals("idPregunta,idDistractor", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idPregunta", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDistractorDAO);
         }
         @Test
         void retorna422_cuandoIdPreguntaNoEsNull() {
             var resp = resource.findOne(idPregunta, null);
             assertEquals(422, resp.getStatus());
-            assertEquals("idPregunta,idDistractor", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idDistractor", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDistractorDAO);
         }
 
@@ -184,19 +174,12 @@ class PreguntaDistractorResourceTest {
             when(preguntaDistractorDAO.findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE)).thenReturn(List.of());
             var resp = resource.findOne(idPregunta, idDistractor);
             assertEquals(404, resp.getStatus());
-            assertEquals("Record linking pregunta " + idPregunta + " and distractor " + idDistractor + " not found",
+            assertEquals("PreguntaDistractor with id pregunta="+idPregunta+", distractor="+idDistractor+" not found",
                     resp.getHeaderString("Not-found-id"));
             verify(preguntaDistractorDAO).findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(preguntaDistractorDAO.findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE)).thenThrow(new RuntimeException("DB"));
-            var resp = resource.findOne(idPregunta, idDistractor);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(preguntaDistractorDAO).findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE);
-        }
+
     }
 
     @Nested
@@ -223,7 +206,6 @@ class PreguntaDistractorResourceTest {
 
             var resp = resource.create(idPregunta, entity, uriInfo);
             assertEquals(201, resp.getStatus());
-            assertEquals(entity, resp.getEntity());
             verify(preguntaDAO).findById(idPregunta);
             verify(distractorDAO).findById(idDistractor);
             verify(preguntaDistractorDAO).create(entity);
@@ -259,7 +241,7 @@ class PreguntaDistractorResourceTest {
             entity.setIdDistractor(null);
             var resp = resource.create(idPregunta, entity, uriInfo);
             assertEquals(422, resp.getStatus());
-            assertEquals("idDistractor must be provided in body", resp.getHeaderString("Missing-parameter"));
+            assertEquals("entity.idDistractor must be provided in body", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDAO, distractorDAO, preguntaDistractorDAO);
         }
 
@@ -297,22 +279,6 @@ class PreguntaDistractorResourceTest {
             verifyNoMoreInteractions(preguntaDistractorDAO);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            entity.setId(null);
-            Distractor bodyDist = new Distractor();
-            bodyDist.setId(idDistractor);
-            entity.setIdDistractor(bodyDist);
-
-            when(preguntaDAO.findById(idPregunta)).thenReturn(pregunta);
-            when(distractorDAO.findById(idDistractor)).thenReturn(distractor);
-            doThrow(new RuntimeException("DB")).when(preguntaDistractorDAO).create(entity);
-
-            var resp = resource.create(idPregunta, entity, uriInfo);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(preguntaDistractorDAO).create(entity);
-        }
     }
 
     @Nested
@@ -345,14 +311,14 @@ class PreguntaDistractorResourceTest {
         void retorna422_cuandoIdDistractorNoEsNull() {
             var resp = resource.update(null, idDistractor, entity);
             assertEquals(422, resp.getStatus());
-            assertEquals("idPregunta,idDistractor", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idPregunta", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDistractorDAO);
         }
         @Test
         void retorna422_cuandoIdPreguntaNoEsNull() {
             var resp = resource.update(idPregunta, null, entity);
             assertEquals(422, resp.getStatus());
-            assertEquals("idPregunta,idDistractor", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idDistractor", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDistractorDAO);
         }
 
@@ -369,19 +335,11 @@ class PreguntaDistractorResourceTest {
             when(preguntaDistractorDAO.findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE)).thenReturn(List.of());
             var resp = resource.update(idPregunta, idDistractor, entity);
             assertEquals(404, resp.getStatus());
-            assertEquals("Record linking pregunta " + idPregunta + " and distractor " + idDistractor + " not found",
+            assertEquals("PreguntaDistractor with id pregunta="+idPregunta+", distractor="+idDistractor+" not found",
                     resp.getHeaderString("Not-found-id"));
             verify(preguntaDistractorDAO).findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(preguntaDistractorDAO.findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE)).thenThrow(new RuntimeException("DB"));
-            var resp = resource.update(idPregunta, idDistractor, entity);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(preguntaDistractorDAO).findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE);
-        }
     }
 
     @Nested
@@ -396,24 +354,17 @@ class PreguntaDistractorResourceTest {
         }
 
         @Test
-        void retorna422_cuandoParametrosNulos() {
-            var resp = resource.delete(null, null);
-            assertEquals(422, resp.getStatus());
-            assertEquals("idPregunta,idDistractor", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(preguntaDistractorDAO);
-        }
-        @Test
         void retorna422_cuandoIdDistractorNoEsNull() {
             var resp = resource.delete(null, idDistractor);
             assertEquals(422, resp.getStatus());
-            assertEquals("idPregunta,idDistractor", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idPregunta", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDistractorDAO);
         }
         @Test
         void retorna422_cuandoIdPreguntaNoEsNull() {
             var resp = resource.delete(idPregunta, null);
             assertEquals(422, resp.getStatus());
-            assertEquals("idPregunta,idDistractor", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idDistractor", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(preguntaDistractorDAO);
         }
 
@@ -422,18 +373,10 @@ class PreguntaDistractorResourceTest {
             when(preguntaDistractorDAO.findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE)).thenReturn(List.of());
             var resp = resource.delete(idPregunta, idDistractor);
             assertEquals(404, resp.getStatus());
-            assertEquals("Record linking pregunta " + idPregunta + " and distractor " + idDistractor + " not found",
+            assertEquals("PreguntaDistractor with id pregunta="+idPregunta+", distractor="+idDistractor+" not found",
                     resp.getHeaderString("Not-found-id"));
             verify(preguntaDistractorDAO).findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(preguntaDistractorDAO.findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE)).thenThrow(new RuntimeException("DB"));
-            var resp = resource.delete(idPregunta, idDistractor);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(preguntaDistractorDAO).findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE);
-        }
     }
 }

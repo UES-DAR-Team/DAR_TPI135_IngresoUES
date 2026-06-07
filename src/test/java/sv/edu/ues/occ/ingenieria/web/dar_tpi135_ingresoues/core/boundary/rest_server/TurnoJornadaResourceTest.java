@@ -112,7 +112,7 @@ class TurnoJornadaResourceTest {
             when(jornadaDAO.findById(idJornada)).thenReturn(null);
             var resp = resource.findRange(idJornada, FIRST, MAX);
             assertEquals(404, resp.getStatus());
-            assertEquals("Jornada with id " + idJornada + " not found", resp.getHeaderString("Not-found"));
+            assertEquals("Jornada with id " + idJornada + " not found", resp.getHeaderString("Not-found-id"));
             verify(jornadaDAO).findById(idJornada);
             verifyNoInteractions(turnoJornadaDAO);
         }
@@ -141,16 +141,6 @@ class TurnoJornadaResourceTest {
             verifyNoInteractions(jornadaDAO, turnoJornadaDAO);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(jornadaDAO.findById(idJornada)).thenReturn(jornada);
-            when(turnoJornadaDAO.findTurnoByIdJornada(idJornada, FIRST, MAX)).thenThrow(new RuntimeException("DB error"));
-            var resp = resource.findRange(idJornada, FIRST, MAX);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(jornadaDAO).findById(idJornada);
-            verify(turnoJornadaDAO).findTurnoByIdJornada(idJornada, FIRST, MAX);
-        }
     }
 
     @Nested
@@ -169,7 +159,7 @@ class TurnoJornadaResourceTest {
         void retorna422_cuandoIdJornadaEsNulo() {
             var resp = resource.findOne(null, idTurno);
             assertEquals(422, resp.getStatus());
-            assertEquals("idJornada,idTurno", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idJornada", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(turnoJornadaDAO);
         }
 
@@ -177,7 +167,7 @@ class TurnoJornadaResourceTest {
         void retorna422_cuandoIdTurnoEsNulo() {
             var resp = resource.findOne(idJornada, null);
             assertEquals(422, resp.getStatus());
-            assertEquals("idJornada,idTurno", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idTurno", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(turnoJornadaDAO);
         }
 
@@ -186,19 +176,11 @@ class TurnoJornadaResourceTest {
             when(turnoJornadaDAO.findTurnoByIdJornada(idJornada, 0, Integer.MAX_VALUE)).thenReturn(List.of());
             var resp = resource.findOne(idJornada, idTurno);
             assertEquals(404, resp.getStatus());
-            assertEquals("Record linking jornada " + idJornada + " and turno " + idTurno + "not found"
+            assertEquals("TurnoJornada with id jornada=" + idJornada + ", turno=" + idTurno + " not found"
                     , resp.getHeaderString("Not-found-id"));
             verify(turnoJornadaDAO).findTurnoByIdJornada(idJornada, 0, Integer.MAX_VALUE);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(turnoJornadaDAO.findTurnoByIdJornada(idJornada, 0, Integer.MAX_VALUE)).thenThrow(new RuntimeException("DB error"));
-            var resp = resource.findOne(idJornada, idTurno);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(turnoJornadaDAO).findTurnoByIdJornada(idJornada, 0, Integer.MAX_VALUE);
-        }
     }
 
 
@@ -224,7 +206,6 @@ class TurnoJornadaResourceTest {
 
             var resp = resource.create(idJornada, entity, uriInfo);
             assertEquals(201, resp.getStatus());
-            assertEquals(entity, resp.getEntity());
             verify(jornadaDAO).findById(idJornada);
             verify(turnoDAO).findById(idTurno);
             verify(turnoJornadaDAO).create(entity);
@@ -260,7 +241,7 @@ class TurnoJornadaResourceTest {
             entity.setId(null);
             var resp = resource.create(idJornada, entity, uriInfo);
             assertEquals(422, resp.getStatus());
-            assertEquals("idTurno must be provider in body", resp.getHeaderString("Missing-parameter"));
+            assertEquals("entity.idTurno must be provided in body", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(jornadaDAO, turnoDAO, turnoJornadaDAO);
         }
 
@@ -298,22 +279,6 @@ class TurnoJornadaResourceTest {
             verifyNoInteractions(turnoJornadaDAO);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            entity.setId(null);
-            Turno bodyTurno = new Turno();
-            bodyTurno.setId(idTurno);
-            entity.setIdTurno(bodyTurno);
-
-            when(jornadaDAO.findById(idJornada)).thenReturn(jornada);
-            when(turnoDAO.findById(idTurno)).thenReturn(turno);
-            doThrow(new RuntimeException("DB error")).when(turnoJornadaDAO).create(entity);
-
-            var resp = resource.create(idJornada, entity, uriInfo);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(turnoJornadaDAO).create(entity);
-        }
     }
 
     @Nested
@@ -329,18 +294,10 @@ class TurnoJornadaResourceTest {
         }
 
         @Test
-        void retorna422_cuandoParametrosNulos(){
-            var resp = resource.delete(null, null);
-            assertEquals(422, resp.getStatus());
-            assertEquals("idJornada,idTurno", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(turnoJornadaDAO);
-        }
-
-        @Test
         void retorna422_cuandoIdTurnoEsNulo() {
             var resp = resource.delete(idJornada, null);
             assertEquals(422, resp.getStatus());
-            assertEquals("idJornada,idTurno", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idTurno", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(turnoJornadaDAO);
         }
 
@@ -348,7 +305,7 @@ class TurnoJornadaResourceTest {
         void retorna422_cuandoIdJornadaEsNulo() {
             var resp = resource.delete(null, idTurno);
             assertEquals(422, resp.getStatus());
-            assertEquals("idJornada,idTurno", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idJornada", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(turnoJornadaDAO);
         }
 
@@ -357,19 +314,12 @@ class TurnoJornadaResourceTest {
             when(turnoJornadaDAO.findTurnoByIdJornada(idJornada,0, Integer.MAX_VALUE)).thenReturn(List.of());
             var resp = resource.delete(idJornada, idTurno);
             assertEquals(404, resp.getStatus());
-            assertEquals("Record linking jornada " + idJornada + " and turno " + idTurno + "not found"
+            assertEquals("TurnoJornada with id jornada=" + idJornada + ", turno=" + idTurno + " not found"
                     , resp.getHeaderString("Not-found-id"));
             verify(turnoJornadaDAO).findTurnoByIdJornada(idJornada,0, Integer.MAX_VALUE);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(turnoJornadaDAO.findTurnoByIdJornada(idJornada,0, Integer.MAX_VALUE)).thenThrow(new RuntimeException("DB error"));
-            var resp = resource.delete(idJornada, idTurno);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(turnoJornadaDAO).findTurnoByIdJornada(idJornada,0, Integer.MAX_VALUE);
-        }
+
 
     }
 

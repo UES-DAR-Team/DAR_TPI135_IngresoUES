@@ -10,6 +10,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.JornadaD
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Jornada;
 
 import java.io.Serializable;
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,10 +44,10 @@ public class JornadaResource extends AbstractResource implements Serializable {
             return unprocessable("id");
         }
         Jornada resp = jornadaDAO.findById(id);
-        if (resp != null) {
-            return Response.ok(resp).build();
+        if (resp == null) {
+            return notFound(id.toString(), "Jornada");
         }
-        return notFound(id.toString(), "Jornada");
+        return Response.ok(resp).build();
     }
 
     @POST
@@ -57,9 +58,8 @@ public class JornadaResource extends AbstractResource implements Serializable {
         if (entity.getId() != null) return unprocessable("entity.id must be null");
 
         jornadaDAO.create(entity);
-        return Response.created(uriInfo.getAbsolutePathBuilder()
-                        .path(entity.getId().toString()).build())
-                .entity(entity).build();
+        URI created = uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build();
+        return Response.created(created).build();
     }
 
     @PUT
@@ -89,7 +89,6 @@ public class JornadaResource extends AbstractResource implements Serializable {
         if (encontrados == null) {
             return notFound(id.toString(), "Jornada");
         }
-
         jornadaDAO.delete(encontrados);
         return Response.noContent().build();
     }

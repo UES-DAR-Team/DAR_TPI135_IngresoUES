@@ -18,10 +18,12 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAre
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PruebaAreaPreguntaDistractor;
 
 import java.net.URI;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,431 +49,256 @@ class PruebaAreaPreguntaDistractorResourceTest {
 
     private Integer idPruebaAreaPregunta;
     private UUID idDistractor;
-    private Integer id;
-    private PruebaAreaPregunta pruebaAreaPregunta;
+    private PruebaAreaPregunta pap;
     private Distractor distractor;
+    private PruebaAreaPreguntaDistractor papd;
     private PruebaAreaPreguntaDistractor entity;
 
     @BeforeEach
-    void setUp() {
-        idPruebaAreaPregunta = 1;
+    void setUp(){
+        idPruebaAreaPregunta = 33;
         idDistractor = UUID.randomUUID();
-        id = 100;
 
-        pruebaAreaPregunta = new PruebaAreaPregunta();
-        pruebaAreaPregunta.setId(idPruebaAreaPregunta);
+        pap = new PruebaAreaPregunta();
+        pap.setId(idPruebaAreaPregunta);
 
         distractor = new Distractor();
         distractor.setId(idDistractor);
 
+        papd = new PruebaAreaPreguntaDistractor();
+        papd.setId(1);
+        papd.setIdPruebaAreaPregunta(pap);
+        papd.setIdDistractor(distractor);
+        papd.setEsRespuestaCorrecta(Boolean.TRUE);
+
         entity = new PruebaAreaPreguntaDistractor();
-        entity.setId(id);
-        entity.setIdPruebaAreaPregunta(pruebaAreaPregunta);
-        entity.setIdDistractor(distractor);
     }
 
     @Nested
-    class FindById {
-
+    class FindById{
         @Test
-        void retorna200_cuandoParametrosValidos() {
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenReturn(entity);
-
-            Response response = resource.findById(idPruebaAreaPregunta, idDistractor, id);
-
-            assertEquals(200, response.getStatus());
-            assertEquals(entity, response.getEntity());
-            verify(pruebaAreaPreguntaDistractorDAO).findById(id);
+        void retorna200ConEntidad_cuandoExiste(){
+            when(pruebaAreaPreguntaDistractorDAO.findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE)).thenReturn(List.of(papd));
+            Response resp = resource.findById(idPruebaAreaPregunta, idDistractor);
+            assertEquals(200, resp.getStatus());
+            assertEquals(papd, resp.getEntity());
+            verify(pruebaAreaPreguntaDistractorDAO).findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE);
         }
 
         @Test
-        void retorna422_cuandoIdPruebaAreaPreguntaEsNull() {
-            Response response = resource.findById(null, idDistractor, id);
-
-            assertEquals(422, response.getStatus());
-            assertEquals("idPruebaAreaPregunta,idDistractor,id",
-                    response.getHeaderString("Missing-parameter"));
+        void retorna422_cuandoIdPruebaAreaPreguntaNulo(){
+            Response resp = resource.findById(null, idDistractor);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPruebaAreaPregunta", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaPreguntaDistractorDAO);
         }
 
         @Test
-        void retorna422_cuandoIdDistractorEsNull() {
-            Response response = resource.findById(idPruebaAreaPregunta, null, id);
-
-            assertEquals(422, response.getStatus());
-            assertEquals("idPruebaAreaPregunta,idDistractor,id",
-                    response.getHeaderString("Missing-parameter"));
+        void retorna422_cuandoIdDistractorNulo(){
+            Response resp = resource.findById(idPruebaAreaPregunta, null);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idDistractor", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaPreguntaDistractorDAO);
         }
 
         @Test
-        void retorna422_cuandoIdEsNull() {
-            Response response = resource.findById(idPruebaAreaPregunta, idDistractor, null);
-
-            assertEquals(422, response.getStatus());
-            assertEquals("idPruebaAreaPregunta,idDistractor,id",
-                    response.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(pruebaAreaPreguntaDistractorDAO);
-        }
-
-        @Test
-        void retorna404_cuandoNoExisteRegistro() {
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenReturn(null);
-
-            Response response = resource.findById(idPruebaAreaPregunta, idDistractor, id);
-
-            assertEquals(404, response.getStatus());
-            assertEquals("Record not found", response.getHeaderString("Not-found"));
-            verify(pruebaAreaPreguntaDistractorDAO).findById(id);
-        }
-
-        @Test
-        void retorna404_cuandoPruebaAreaPreguntaNoCoincide() {
-            PruebaAreaPregunta otraPAP = new PruebaAreaPregunta();
-            otraPAP.setId(999);
-            entity.setIdPruebaAreaPregunta(otraPAP);
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenReturn(entity);
-
-            Response response = resource.findById(idPruebaAreaPregunta, idDistractor, id);
-
-            assertEquals(404, response.getStatus());
-            assertEquals("Record not found", response.getHeaderString("Not-found"));
-        }
-
-        @Test
-        void retorna404_cuandoDistractorNoCoincide() {
-            Distractor otroDistractor = new Distractor();
-            otroDistractor.setId(UUID.randomUUID());
-            entity.setIdDistractor(otroDistractor);
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenReturn(entity);
-
-            Response response = resource.findById(idPruebaAreaPregunta, idDistractor, id);
-
-            assertEquals(404, response.getStatus());
-            assertEquals("Record not found", response.getHeaderString("Not-found"));
-        }
-
-        @Test
-        void retorna404_cuandoPruebaAreaPreguntaEsNullEnEntity() {
-            entity.setIdPruebaAreaPregunta(null);
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenReturn(entity);
-
-            Response response = resource.findById(idPruebaAreaPregunta, idDistractor, id);
-
-            assertEquals(404, response.getStatus());
-        }
-
-        @Test
-        void retorna404_cuandoDistractorEsNullEnEntity() {
-            entity.setIdDistractor(null);
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenReturn(entity);
-
-            Response response = resource.findById(idPruebaAreaPregunta, idDistractor, id);
-
-            assertEquals(404, response.getStatus());
-        }
-
-        @Test
-        void retorna500_cuandoDAOExcepcion() {
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = resource.findById(idPruebaAreaPregunta, idDistractor, id);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
+        void retorna404_cuandoNoSeEncuentra(){
+            when(pruebaAreaPreguntaDistractorDAO.findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE)).thenReturn(List.of());
+            Response resp = resource.findById(idPruebaAreaPregunta, idDistractor);
+            assertEquals(404, resp.getStatus());
+            assertEquals("PuebaAreaPreguntaDistractor with id pruebaAreaPregunta="+idPruebaAreaPregunta+", distractor="+idDistractor+" not found",
+                    resp.getHeaderString("Not-found-id"));
+            verify(pruebaAreaPreguntaDistractorDAO).findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE);
         }
     }
 
     @Nested
-    class Create {
-
+    class Create{
         @Test
-        void retorna201_cuandoEntidadValida() {
-            PruebaAreaPreguntaDistractor newEntity = new PruebaAreaPreguntaDistractor();
-            newEntity.setId(null);
+        void retorna201_cuandoValido(){
+            entity.setId(null);
+            Distractor body = new Distractor();
+            body.setId(idDistractor);
+            entity.setIdDistractor(body);
 
-            when(pruebaAreaPreguntaDAO.findById(idPruebaAreaPregunta)).thenReturn(pruebaAreaPregunta);
+            when(pruebaAreaPreguntaDAO.findById(idPruebaAreaPregunta)).thenReturn(pap);
             when(distractorDAO.findById(idDistractor)).thenReturn(distractor);
             when(uriInfo.getAbsolutePathBuilder()).thenReturn(uriBuilder);
             when(uriBuilder.path(anyString())).thenReturn(uriBuilder);
-            when(uriBuilder.build()).thenReturn(URI.create("http://test/" + id));
+            when(uriBuilder.build()).thenReturn(URI.create("resources/v1/pruebaAreaPregunta/" + idPruebaAreaPregunta + "/distractor/" + idDistractor));
 
             doAnswer(inv -> {
-                PruebaAreaPreguntaDistractor entityToSave = inv.getArgument(0);
-                entityToSave.setId(id);
+                entity.setId(99);
                 return null;
-            }).when(pruebaAreaPreguntaDistractorDAO).create(any(PruebaAreaPreguntaDistractor.class));
+            }).when(pruebaAreaPreguntaDistractorDAO).create(entity);
 
-            Response response = resource.create(idPruebaAreaPregunta, idDistractor, newEntity, uriInfo);
-
-            assertEquals(201, response.getStatus());
-            assertNotNull(response.getEntity());
-            assertNotNull(response.getHeaderString("Location"));
+            Response resp = resource.create(idPruebaAreaPregunta, entity, uriInfo);
+            assertEquals(201, resp.getStatus());
             verify(pruebaAreaPreguntaDAO).findById(idPruebaAreaPregunta);
             verify(distractorDAO).findById(idDistractor);
-            verify(pruebaAreaPreguntaDistractorDAO).create(any(PruebaAreaPreguntaDistractor.class));
+            verify(pruebaAreaPreguntaDistractorDAO).create(entity);
         }
 
         @Test
-        void retorna422_cuandoIdPruebaAreaPreguntaEsNull() {
-            Response response = resource.create(null, idDistractor, entity, uriInfo);
-
-            assertEquals(422, response.getStatus());
-            assertEquals("idPruebaAreaPregunta,idDistractor,entity",
-                    response.getHeaderString("Missing-parameter"));
+        void retorna422_cuandoIdPruebaAreaPreguntaNulo(){
+            Response resp = resource.create(null, entity, uriInfo);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPruebaAreaPregunta", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaPreguntaDAO, distractorDAO, pruebaAreaPreguntaDistractorDAO);
         }
 
         @Test
-        void retorna422_cuandoIdDistractorEsNull() {
-            Response response = resource.create(idPruebaAreaPregunta, null, entity, uriInfo);
-
-            assertEquals(422, response.getStatus());
-            assertEquals("idPruebaAreaPregunta,idDistractor,entity",
-                    response.getHeaderString("Missing-parameter"));
+        void retorna422_cuandoEntidadNula(){
+            Response resp = resource.create(idPruebaAreaPregunta, null, uriInfo);
+            assertEquals(422, resp.getStatus());
+            assertEquals("entity must not be null", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaPreguntaDAO, distractorDAO, pruebaAreaPreguntaDistractorDAO);
         }
 
         @Test
-        void retorna422_cuandoEntityEsNull() {
-            Response response = resource.create(idPruebaAreaPregunta, idDistractor, null, uriInfo);
-
-            assertEquals(422, response.getStatus());
-            assertEquals("idPruebaAreaPregunta,idDistractor,entity",
-                    response.getHeaderString("Missing-parameter"));
+        void retorna422_cuandoEntityTieneId(){
+            entity.setId(5);
+            Response resp = resource.create(idPruebaAreaPregunta, entity, uriInfo);
+            assertEquals(422, resp.getStatus());
+            assertEquals("entity.id must be null", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaPreguntaDAO, distractorDAO, pruebaAreaPreguntaDistractorDAO);
         }
 
         @Test
-        void retorna422_cuandoEntityTieneId() {
-            Response response = resource.create(idPruebaAreaPregunta, idDistractor, entity, uriInfo);
-
-            assertEquals(422, response.getStatus());
-            assertEquals("idPruebaAreaPregunta,idDistractor,entity",
-                    response.getHeaderString("Missing-parameter"));
+        void retorna422_cuandoIdDistractorNoProvistoEnBody(){
+            entity.setId(null);
+            entity.setIdDistractor(null);
+            Response resp = resource.create(idPruebaAreaPregunta, entity, uriInfo);
+            assertEquals(422, resp.getStatus());
+            assertEquals("entity.idDistractor.id must be provided in body", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaPreguntaDAO, distractorDAO, pruebaAreaPreguntaDistractorDAO);
         }
 
         @Test
-        void retorna404_cuandoPruebaAreaPreguntaNoExiste() {
-            PruebaAreaPreguntaDistractor newEntity = new PruebaAreaPreguntaDistractor();
-            newEntity.setId(null);
+        void retorna404_cuandoPruebaAreaPreguntaNoExiste(){
+            entity.setId(null);
+            Distractor body = new Distractor();
+            body.setId(idDistractor);
+            entity.setIdDistractor(body);
 
             when(pruebaAreaPreguntaDAO.findById(idPruebaAreaPregunta)).thenReturn(null);
-
-            Response response = resource.create(idPruebaAreaPregunta, idDistractor, newEntity, uriInfo);
-
-            assertEquals(404, response.getStatus());
-            assertEquals("PruebaAreaPregunta not found", response.getHeaderString("Not-found"));
+            Response resp = resource.create(idPruebaAreaPregunta, entity, uriInfo);
+            assertEquals(404, resp.getStatus());
+            assertEquals("PruebaAreaPreguntaDistractor with id " + idPruebaAreaPregunta + " not found", resp.getHeaderString("Not-found-id"));
             verify(pruebaAreaPreguntaDAO).findById(idPruebaAreaPregunta);
-            verifyNoInteractions(distractorDAO, pruebaAreaPreguntaDistractorDAO);
+            verifyNoMoreInteractions(distractorDAO, pruebaAreaPreguntaDistractorDAO);
         }
 
         @Test
-        void retorna404_cuandoDistractorNoExiste() {
-            PruebaAreaPreguntaDistractor newEntity = new PruebaAreaPreguntaDistractor();
-            newEntity.setId(null);
+        void retorna404_cuandoDistractorNoExiste(){
+            entity.setId(null);
+            Distractor body = new Distractor();
+            body.setId(idDistractor);
+            entity.setIdDistractor(body);
 
-            when(pruebaAreaPreguntaDAO.findById(idPruebaAreaPregunta)).thenReturn(pruebaAreaPregunta);
+            when(pruebaAreaPreguntaDAO.findById(idPruebaAreaPregunta)).thenReturn(pap);
             when(distractorDAO.findById(idDistractor)).thenReturn(null);
 
-            Response response = resource.create(idPruebaAreaPregunta, idDistractor, newEntity, uriInfo);
-
-            assertEquals(404, response.getStatus());
-            assertEquals("Distractor not found", response.getHeaderString("Not-found"));
+            Response resp = resource.create(idPruebaAreaPregunta, entity, uriInfo);
+            assertEquals(404, resp.getStatus());
+            assertEquals("Distractor with id " + idDistractor + " not found", resp.getHeaderString("Not-found-id"));
             verify(pruebaAreaPreguntaDAO).findById(idPruebaAreaPregunta);
             verify(distractorDAO).findById(idDistractor);
-            verifyNoInteractions(pruebaAreaPreguntaDistractorDAO);
-        }
-
-        @Test
-        void retorna500_cuandoDAOExcepcion() {
-            PruebaAreaPreguntaDistractor newEntity = new PruebaAreaPreguntaDistractor();
-            newEntity.setId(null);
-
-            when(pruebaAreaPreguntaDAO.findById(idPruebaAreaPregunta)).thenReturn(pruebaAreaPregunta);
-            when(distractorDAO.findById(idDistractor)).thenReturn(distractor);
-            doThrow(new RuntimeException("DB error")).when(pruebaAreaPreguntaDistractorDAO)
-                    .create(any(PruebaAreaPreguntaDistractor.class));
-
-            Response response = resource.create(idPruebaAreaPregunta, idDistractor, newEntity, uriInfo);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
+            verifyNoMoreInteractions(pruebaAreaPreguntaDistractorDAO);
         }
     }
 
     @Nested
-    class Update {
-
+    class Update{
         @Test
-        void retorna200_cuandoEntidadValida() {
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenReturn(entity);
-            when(pruebaAreaPreguntaDAO.findById(idPruebaAreaPregunta)).thenReturn(pruebaAreaPregunta);
-            when(distractorDAO.findById(idDistractor)).thenReturn(distractor);
-            when(pruebaAreaPreguntaDistractorDAO.update(any(PruebaAreaPreguntaDistractor.class)))
-                    .thenReturn(entity);
+        void retorna200_cuandoValido(){
+            PruebaAreaPreguntaDistractor existing = new PruebaAreaPreguntaDistractor();
+            existing.setId(1);
+            existing.setIdDistractor(distractor);
+            when(pruebaAreaPreguntaDistractorDAO.findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE)).thenReturn(List.of(existing));
 
-            Response response = resource.update(idPruebaAreaPregunta, idDistractor, id, entity);
+            PruebaAreaPreguntaDistractor update = new PruebaAreaPreguntaDistractor();
+            update.setEsRespuestaCorrecta(Boolean.FALSE);
 
-            assertEquals(200, response.getStatus());
-            assertEquals(entity, response.getEntity());
-            verify(pruebaAreaPreguntaDistractorDAO).findById(id);
-            verify(pruebaAreaPreguntaDAO).findById(idPruebaAreaPregunta);
-            verify(distractorDAO).findById(idDistractor);
-            verify(pruebaAreaPreguntaDistractorDAO).update(any(PruebaAreaPreguntaDistractor.class));
+            when(pruebaAreaPreguntaDistractorDAO.update(any())).thenReturn(update);
+
+            Response resp = resource.update(idPruebaAreaPregunta, idDistractor, update);
+            assertEquals(200, resp.getStatus());
+            verify(pruebaAreaPreguntaDistractorDAO).findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE);
+            verify(pruebaAreaPreguntaDistractorDAO).update(any());
         }
 
         @Test
-        void retorna422_cuandoIdPruebaAreaPreguntaEsNull() {
-            Response response = resource.update(null, idDistractor, id, entity);
-
-            assertEquals(422, response.getStatus());
-            assertEquals("idPruebaAreaPregunta,idDistractor,id,entity",
-                    response.getHeaderString("Missing-parameter"));
+        void retorna422_cuandoIdPruebaAreaPreguntaNulo(){
+            Response resp = resource.update(null, idDistractor, entity);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPruebaAreaPregunta", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaPreguntaDistractorDAO);
         }
 
         @Test
-        void retorna422_cuandoIdDistractorEsNull() {
-            Response response = resource.update(idPruebaAreaPregunta, null, id, entity);
-
-            assertEquals(422, response.getStatus());
-            assertEquals("idPruebaAreaPregunta,idDistractor,id,entity",
-                    response.getHeaderString("Missing-parameter"));
+        void retorna422_cuandoIdDistractorNulo(){
+            Response resp = resource.update(idPruebaAreaPregunta, null, entity);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idDistractor", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaPreguntaDistractorDAO);
         }
 
         @Test
-        void retorna422_cuandoIdEsNull() {
-            Response response = resource.update(idPruebaAreaPregunta, idDistractor, null, entity);
-
-            assertEquals(422, response.getStatus());
-            assertEquals("idPruebaAreaPregunta,idDistractor,id,entity",
-                    response.getHeaderString("Missing-parameter"));
+        void retorna422_cuandoEntidadNula(){
+            Response resp = resource.update(idPruebaAreaPregunta, idDistractor, null);
+            assertEquals(422, resp.getStatus());
+            assertEquals("entity must not be null", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaPreguntaDistractorDAO);
         }
 
         @Test
-        void retorna422_cuandoEntityEsNull() {
-            Response response = resource.update(idPruebaAreaPregunta, idDistractor, id, null);
+        void retorna404_cuandoNoSeEncuentra(){
+            when(pruebaAreaPreguntaDistractorDAO.findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE)).thenReturn(List.of());
+            Response resp = resource.update(idPruebaAreaPregunta, idDistractor, entity);
+            assertEquals(404, resp.getStatus());
+            assertEquals("PuebaAreaPreguntaDistractor with id pruebaAreaPregunta="+idPruebaAreaPregunta+", distractor="+idDistractor+" not found",
+                    resp.getHeaderString("Not-found-id"));
+            verify(pruebaAreaPreguntaDistractorDAO).findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE);
+        }
+    }
 
-            assertEquals(422, response.getStatus());
-            assertEquals("idPruebaAreaPregunta,idDistractor,id,entity",
-                    response.getHeaderString("Missing-parameter"));
+    @Nested
+    class Delete{
+        @Test
+        void retorna204_cuandoValido(){
+            when(pruebaAreaPreguntaDistractorDAO.findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE)).thenReturn(List.of(papd));
+            Response resp = resource.delete(idPruebaAreaPregunta, idDistractor);
+            assertEquals(204, resp.getStatus());
+            verify(pruebaAreaPreguntaDistractorDAO).findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE);
+            verify(pruebaAreaPreguntaDistractorDAO).delete(papd);
+        }
+
+        @Test
+        void retorna422_cuandoIdPruebaAreaPreguntaNulo(){
+            Response resp = resource.delete(null, idDistractor);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idPruebaAreaPregunta", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaPreguntaDistractorDAO);
         }
 
         @Test
-        void retorna404_cuandoNoExisteRegistro() {
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenReturn(null);
-
-            Response response = resource.update(idPruebaAreaPregunta, idDistractor, id, entity);
-
-            assertEquals(404, response.getStatus());
-            assertEquals("Record not found", response.getHeaderString("Not-found"));
-            verify(pruebaAreaPreguntaDistractorDAO).findById(id);
+        void retorna422_cuandoIdDistractorNulo(){
+            Response resp = resource.delete(idPruebaAreaPregunta, null);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idDistractor", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaPreguntaDistractorDAO);
         }
 
         @Test
-        void retorna404_cuandoPruebaAreaPreguntaNoCoincide() {
-            PruebaAreaPregunta otraPAP = new PruebaAreaPregunta();
-            otraPAP.setId(999);
-            entity.setIdPruebaAreaPregunta(otraPAP);
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenReturn(entity);
-
-            Response response = resource.update(idPruebaAreaPregunta, idDistractor, id, entity);
-
-            assertEquals(404, response.getStatus());
-            assertEquals("Record not found", response.getHeaderString("Not-found"));
-        }
-
-        @Test
-        void retorna404_cuandoDistractorNoCoincide() {
-            Distractor otroDistractor = new Distractor();
-            otroDistractor.setId(UUID.randomUUID());
-            entity.setIdDistractor(otroDistractor);
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenReturn(entity);
-
-            Response response = resource.update(idPruebaAreaPregunta, idDistractor, id, entity);
-
-            assertEquals(404, response.getStatus());
-            assertEquals("Record not found", response.getHeaderString("Not-found"));
-        }
-
-        @Test
-        void retorna404_cuandoPruebaAreaPreguntaNoExisteEnUpdate() {
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenReturn(entity);
-            when(pruebaAreaPreguntaDAO.findById(idPruebaAreaPregunta)).thenReturn(null);
-
-            Response response = resource.update(idPruebaAreaPregunta, idDistractor, id, entity);
-
-            assertEquals(404, response.getStatus());
-            assertEquals("PruebaAreaPregunta or Distractor not found",
-                    response.getHeaderString("Not-found"));
-        }
-
-        @Test
-        void retorna404_cuandoDistractorNoExisteEnUpdate() {
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenReturn(entity);
-            when(pruebaAreaPreguntaDAO.findById(idPruebaAreaPregunta)).thenReturn(pruebaAreaPregunta);
-            when(distractorDAO.findById(idDistractor)).thenReturn(null);
-
-            Response response = resource.update(idPruebaAreaPregunta, idDistractor, id, entity);
-
-            assertEquals(404, response.getStatus());
-            assertEquals("PruebaAreaPregunta or Distractor not found",
-                    response.getHeaderString("Not-found"));
-        }
-
-        @Test
-        void retorna500_cuandoDAOFindByIdExcepcion() {
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = resource.update(idPruebaAreaPregunta, idDistractor, id, entity);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-        }
-
-        @Test
-        void retorna500_cuandoDAOUpdateExcepcion() {
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenReturn(entity);
-            when(pruebaAreaPreguntaDAO.findById(idPruebaAreaPregunta)).thenReturn(pruebaAreaPregunta);
-            when(distractorDAO.findById(idDistractor)).thenReturn(distractor);
-            when(pruebaAreaPreguntaDistractorDAO.update(any(PruebaAreaPreguntaDistractor.class)))
-                    .thenThrow(new RuntimeException("DB error"));
-
-            Response response = resource.update(idPruebaAreaPregunta, idDistractor, id, entity);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-        }
-
-        @Test
-        void retorna404_cuandoPruebaAreaPreguntaEsNullEnExisting_Update() {
-            entity.setIdPruebaAreaPregunta(null);
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenReturn(entity);
-
-            Response response = resource.update(idPruebaAreaPregunta, idDistractor, id, entity);
-
-            assertEquals(404, response.getStatus());
-            assertEquals("Record not found", response.getHeaderString("Not-found"));
-            verify(pruebaAreaPreguntaDistractorDAO).findById(id);
-            verifyNoMoreInteractions(pruebaAreaPreguntaDAO, distractorDAO, pruebaAreaPreguntaDistractorDAO);
-        }
-
-        @Test
-        void retorna404_cuandoDistractorEsNullEnExisting_Update() {
-            entity.setIdDistractor(null);
-            when(pruebaAreaPreguntaDistractorDAO.findById(id)).thenReturn(entity);
-
-            Response response = resource.update(idPruebaAreaPregunta, idDistractor, id, entity);
-
-            assertEquals(404, response.getStatus());
-            assertEquals("Record not found", response.getHeaderString("Not-found"));
-            verify(pruebaAreaPreguntaDistractorDAO).findById(id);
-            verifyNoMoreInteractions(pruebaAreaPreguntaDAO, distractorDAO, pruebaAreaPreguntaDistractorDAO);
+        void retorna404_cuandoNoSeEncuentra(){
+            when(pruebaAreaPreguntaDistractorDAO.findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE)).thenReturn(List.of());
+            Response resp = resource.delete(idPruebaAreaPregunta, idDistractor);
+            assertEquals(404, resp.getStatus());
+            assertEquals("PuebaAreaPreguntaDistractor with id pruebaAreaPregunta="+idPruebaAreaPregunta+", distractor="+idDistractor+" not found",
+                    resp.getHeaderString("Not-found-id"));
+            verify(pruebaAreaPreguntaDistractorDAO).findByPruebaAreaPregunta(idPruebaAreaPregunta, 0, Integer.MAX_VALUE);
         }
     }
 }
+

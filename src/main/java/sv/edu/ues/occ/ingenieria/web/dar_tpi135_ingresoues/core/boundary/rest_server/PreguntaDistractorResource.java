@@ -28,7 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Path("pregunta/{idPregunta}/distractor")
-public class PreguntaDistractorResource implements Serializable {
+public class PreguntaDistractorResource extends AbstractResource implements Serializable {
     @Inject
     PreguntaDistractorDAO preguntaDistractorDAO;
 
@@ -38,77 +38,49 @@ public class PreguntaDistractorResource implements Serializable {
     @Inject
     DistractorDAO distractorDAO;
 
-    private static final Logger LOG = Logger.getLogger(PreguntaDistractorResource.class.getName());
-
-
-    // Listar distractores asignados a una pregunta (paginado)
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response findByPregunta(
             @PathParam("idPregunta") UUID idPregunta,
             @Min(0) @DefaultValue("0") @QueryParam("first") int first,
             @Max(10) @Min(1) @DefaultValue("10") @QueryParam("max") int max) {
-        if (idPregunta == null) {
-            return Response.status(422).header("Missing-parameter", "idPregunta").build();
-        }
-        if (first < 0 || max <= 0 || max > 10) {
-            return Response.status(422).header("Missing-parameter", "first,max").build();
-        }
-        try {
-            // validar existencia de pregunta padre
-            Pregunta preg = preguntaDAO.findById(idPregunta);
-            if (preg == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Pregunta with id " + idPregunta + " not found")
-                        .build();
-            }
-            List<PreguntaDistractor> list = preguntaDistractorDAO.findByIdPregunta(idPregunta, first, max);
-            int total = preguntaDistractorDAO.count(); // nota: count global (si necesita count filtrado, agregar DAO)
-            return Response.ok(list)
-                    .header("X-Total-Count", total)
-                    .build();
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error retrieving PreguntaDistractor range", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
-        }
+        if (idPregunta == null) return unprocessable("idPregunta");
+        if (first < 0 || max <= 0 || max > 10) return unprocessable("first, max");
+
+        Pregunta preg = preguntaDAO.findById(idPregunta);
+        if (preg == null) return notFound(idPregunta.toString(), "Pregunta");
+
+        List<PreguntaDistractor> list = preguntaDistractorDAO.findByIdPregunta(idPregunta, first, max);
+        int total = preguntaDistractorDAO.count();
+        return Response.ok(list)
+                .header(X_TOTAL_COUNT, total)
+                .build();
     }
 
-    // Obtener una asociación específica por idDistractor
     @GET
     @Path("{idDistractor}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findOne(
             @PathParam("idPregunta") UUID idPregunta,
             @PathParam("idDistractor") UUID idDistractor) {
+        if (idPregunta == null) return unprocessable("idPregunta");
+        if (idDistractor == null) return unprocessable("idDistractor");
 
-        if (idPregunta == null || idDistractor == null) {
-            return Response.status(422).header("Missing-parameter", "idPregunta,idDistractor").build();
-        }
+        List<PreguntaDistractor> list =
+                preguntaDistractorDAO.findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE);
 
-        try {
-            List<PreguntaDistractor> list = preguntaDistractorDAO.findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE);
-            Optional<PreguntaDistractor> found = list.stream()
-                    .filter(pd -> pd.getIdDistractor() != null && idDistractor.equals(pd.getIdDistractor().getId()))
-                    .findFirst();
-            if (found.isPresent()) {
-                return Response.ok(found.get()).build();
-            } else {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record linking pregunta " + idPregunta + " and distractor " + idDistractor + " not found")
-                        .build();
-            }
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error retrieving PreguntaDistractor", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
+        Optional<PreguntaDistractor> found = list.stream()
+                .filter(pd -> pd.getIdDistractor() != null
+                        && idDistractor.equals(pd.getIdDistractor().getId()))
+                .findFirst();
+
+        if (found.isEmpty()) {
+            return notFound("pregunta=" + idPregunta + ", distractor=" + idDistractor, "PreguntaDistractor");
         }
+        return Response.ok(found.get()).build();
     }
 
 
-    // Crear asociación: POST /pregunta/{idPregunta}/distractor
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -117,49 +89,27 @@ public class PreguntaDistractorResource implements Serializable {
             PreguntaDistractor entity,
             @Context UriInfo uriInfo) {
 
-        if (idPregunta == null) {
-            return Response.status(422).header("Missing-parameter", "idPregunta").build();
-        }
-        if (entity == null) {
-            return Response.status(422).header("Missing-parameter", "entity must not be null").build();
-        }
-        if (entity.getId() != null) {
-            return Response.status(422).header("Missing-parameter", "entity.id must be null").build();
-        }
-        if (entity.getIdDistractor() == null ) {
-            return Response.status(422).header("Missing-parameter", "idDistractor must be provided in body").build();
-        }
+        if (idPregunta == null) return unprocessable("idPregunta");
+        if (entity == null) return unprocessable("entity must not be null");
+        if (entity.getId() != null) return unprocessable("entity.id must be null");
+        if (entity.getIdDistractor() == null) return unprocessable("entity.idDistractor must be provided in body");
 
-        try {
-            Pregunta preg = preguntaDAO.findById(idPregunta);
-            if (preg == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Pregunta with id " + idPregunta + " not found")
-                        .build();
-            }
-            Distractor dist = distractorDAO.findById(entity.getIdDistractor().getId());
-            if (dist == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Distractor with id " + entity.getIdDistractor().getId() + " not found")
-                        .build();
-            }
+        Pregunta preg = preguntaDAO.findById(idPregunta);
+        if (preg == null) return notFound(idPregunta.toString(), "Pregunta");
 
-            // Setear referencias y campos necesarios
-            entity.setIdPregunta(preg);
-            entity.setIdDistractor(dist);
+        Distractor dist = distractorDAO.findById(entity.getIdDistractor().getId());
+        if (dist == null) return notFound(entity.getIdDistractor().getId().toString(), "Distractor");
 
-            preguntaDistractorDAO.create(entity);
-            URI created = uriInfo.getAbsolutePathBuilder().path(dist.getId().toString()).build();
-            return Response.created(created).entity(entity).build();
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error creating PreguntaDistractor", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
-        }
+        // Setear referencias y campos necesarios
+        entity.setIdPregunta(preg);
+        entity.setIdDistractor(dist);
+
+        preguntaDistractorDAO.create(entity);
+
+        URI created = uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build();
+        return Response.created(created).build();
     }
 
-    // Actualizar asociación (por ejemplo: EsCorrecto)
     @PUT
     @Path("{idDistractor}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -169,37 +119,29 @@ public class PreguntaDistractorResource implements Serializable {
             @PathParam("idDistractor") UUID idDistractor,
             PreguntaDistractor entity) {
 
-        if (idPregunta == null || idDistractor == null) {
-            return Response.status(422).header("Missing-parameter", "idPregunta,idDistractor").build();
+        if (idPregunta == null) return unprocessable("idPregunta");
+        if (idDistractor == null) return unprocessable("idDistractor");
+        if (entity == null) return unprocessable("entity must not be null");
+
+        List<PreguntaDistractor> list =
+                preguntaDistractorDAO.findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE);
+
+        Optional<PreguntaDistractor> foundOpt = list.stream()
+                .filter(pd -> pd.getIdDistractor() != null
+                        && idDistractor.equals(pd.getIdDistractor().getId()))
+                .findFirst();
+
+        if (foundOpt.isEmpty()) {
+            return notFound("pregunta=" + idPregunta + ", distractor=" + idDistractor,
+                    "PreguntaDistractor");
         }
-        if (entity == null) {
-            return Response.status(422).header("Missing-parameter", "entity must not be null").build();
-        }
 
-        try {
-            List<PreguntaDistractor> list = preguntaDistractorDAO.findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE);
-            Optional<PreguntaDistractor> foundOpt = list.stream()
-                    .filter(pd -> pd.getIdDistractor() != null && idDistractor.equals(pd.getIdDistractor().getId()))
-                    .findFirst();
+        PreguntaDistractor existing = foundOpt.get();
+        // Solo actualizar campos permitidos (ejemplo: EsCorrecto)
+        existing.setEsCorrecto(entity.getEsCorrecto());
+        PreguntaDistractor updated = preguntaDistractorDAO.update(existing);
+        return Response.ok(updated).build();
 
-            if (foundOpt.isEmpty()) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record linking pregunta " + idPregunta + " and distractor " + idDistractor + " not found")
-                        .build();
-            }
-
-            PreguntaDistractor existing = foundOpt.get();
-            // Solo actualizar campos permitidos (ejemplo: EsCorrecto)
-            existing.setEsCorrecto(entity.getEsCorrecto());
-            PreguntaDistractor updated = preguntaDistractorDAO.update(existing);
-            return Response.ok(updated).build();
-
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error updating PreguntaDistractor", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
-        }
     }
 
     // Eliminar asociación entre pregunta y distractor
@@ -209,31 +151,24 @@ public class PreguntaDistractorResource implements Serializable {
             @PathParam("idPregunta") UUID idPregunta,
             @PathParam("idDistractor") UUID idDistractor) {
 
-        if (idPregunta == null || idDistractor == null) {
-            return Response.status(422).header("Missing-parameter", "idPregunta,idDistractor").build();
+        if (idPregunta == null) return unprocessable("idPregunta");
+        if (idDistractor == null) return unprocessable("idDistractor");
+
+        List<PreguntaDistractor> list =
+                preguntaDistractorDAO.findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE);
+
+        Optional<PreguntaDistractor> found = list.stream()
+                .filter(pd -> pd.getIdDistractor() != null &&
+                        idDistractor.equals(pd.getIdDistractor().getId()))
+                .findFirst();
+
+        if (found.isEmpty()) {
+            return notFound("pregunta="+idPregunta+", distractor="+idDistractor,
+                    "PreguntaDistractor");
         }
 
-        try {
-            List<PreguntaDistractor> list = preguntaDistractorDAO.findByIdPregunta(idPregunta, 0, Integer.MAX_VALUE);
-            Optional<PreguntaDistractor> found = list.stream()
-                    .filter(pd -> pd.getIdDistractor() != null && idDistractor.equals(pd.getIdDistractor().getId()))
-                    .findFirst();
-
-            if (found.isEmpty()) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record linking pregunta " + idPregunta + " and distractor " + idDistractor + " not found")
-                        .build();
-            }
-
-            preguntaDistractorDAO.delete(found.get());
-            return Response.noContent().build();
-
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error deleting PreguntaDistractor", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
-        }
+        preguntaDistractorDAO.delete(found.get());
+        return Response.noContent().build();
     }
 
 }

@@ -12,17 +12,15 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.control.TurnoDAO
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Turno;
 
 import java.io.Serializable;
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 @Path("turno")
-public class TurnoResource implements Serializable {
+public class TurnoResource extends AbstractResource implements Serializable {
     @Inject
     TurnoDAO turnoDAO;
-
-    private static final Logger LOG = Logger.getLogger(TurnoResource.class.getName());
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -31,95 +29,36 @@ public class TurnoResource implements Serializable {
             @Max(10) @Min(1) @DefaultValue("10") @QueryParam("max") int max) {
 
         if (first >= 0 && max > 0 && max <= 10) {
-            try {
-                List<Turno> encontrados = turnoDAO.findRange(first, max);
-                int total = turnoDAO.count();
-                return Response.ok(encontrados)
-                        .header("X-Total-Count", total)
-                        .build();
-
-            } catch (Exception ex) {
-                LOG.log(Level.SEVERE, "Error retrieving Turno range", ex);
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db")
-                        .build();
-            }
+            List<Turno> encontrados = turnoDAO.findRange(first, max);
+            int total = turnoDAO.count();
+            return Response.ok(encontrados)
+                    .header(X_TOTAL_COUNT, total)
+                    .build();
         }
-        return Response.status(422).header("Missing-parameter", "first,max").build();
+        return unprocessable("first, max");
     }
 
     @GET
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(@PathParam("id") UUID id) {
-        if (id != null) {
-            try {
-                Turno encontrados = turnoDAO.findById(id);
-                if (encontrados != null) {
-                    return Response.ok(encontrados).build();
-                }
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record with id " + id + " not found")
-                        .build();
-            } catch (Exception ex) {
-                LOG.log(Level.SEVERE, "Error retrieving Turno by id", ex);
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db")
-                        .build();
-            }
+        if (id == null) return unprocessable("id");
 
-        }
-        return Response.status(422).header("Missing-parameter", "id").build();
+        Turno encontrados = turnoDAO.findById(id);
+        if (encontrados == null) return notFound(id.toString(), "Turno");
+        return Response.ok(encontrados).build();
     }
-
-    @DELETE
-    @Path("{id}")
-    public Response deleteById(@PathParam("id") UUID id) {
-        if (id != null) {
-            try {
-                Turno encontrados = turnoDAO.findById(id);
-                if (encontrados != null) {
-                    turnoDAO.delete(encontrados);
-                    return Response.noContent().build();
-                }
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record with id " + id + " not found")
-                        .build();
-            } catch (Exception ex) {
-                LOG.log(Level.SEVERE, "Error deleting Turno by id", ex);
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .header("Server-exception", "Cannot access db")
-                        .build();
-            }
-        }
-        return Response.status(422).header("Missing-parameter", "id").build();
-    }
-
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response create(Turno entity, @Context UriInfo uriInfo) {
-        if (entity != null) {
-            if (entity.getId() == null) {
-                try {
-                    turnoDAO.create(entity);
-                    return Response.created(
-                                    uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build())
-                            .entity(entity)
-                            .build();
-                } catch (Exception ex) {
-                    LOG.log(Level.SEVERE, "Error creating Turno", ex);
-                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                            .header("Server-exception", "Cannot access db")
-                            .build();
-                }
-            }
-            return Response.status(422)
-                    .header("Missing-parameter", "entity.id must be null")
-                    .build();
-        }
-        return Response.status(422).header("Missing-parameter", "entity must not be null").build();
+        if (entity == null) return unprocessable("entity must not be null");
+        if (entity.getId() != null) return unprocessable("entity.id must be null");
+
+        turnoDAO.create(entity);
+        URI created = uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build();
+        return Response.created(created).build();
     }
 
     @PUT
@@ -127,32 +66,25 @@ public class TurnoResource implements Serializable {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response update(@PathParam("id") UUID id, Turno entity) {
-        if(id != null){
-            if(entity != null){
-                try {
-                    Turno existing = turnoDAO.findById(id);
-                    if(existing != null){
-                        entity.setId(id);
-                        Turno updated = turnoDAO.update(entity);
-                        return Response.ok(updated).build();
-                    }
-                    return Response.status(Response.Status.NOT_FOUND)
-                            .header("Not-found-id", "Record with id " + id + " not found")
-                            .build();
-                }catch (Exception ex) {
-                    LOG.log(Level.SEVERE, "Error updating Turno", ex);
-                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                            .header("Server-exception", "Cannot access db")
-                            .build();
-                }
-            }
-            return Response.status(422)
-                    .header("Missing-parameter", "entity must not be null")
-                    .build();
-        }
-        return Response.status(422)
-                .header("Missing-parameter", "id")
-                .build();
+        if (id == null) return unprocessable("id");
+        if (entity == null) return unprocessable("entity must not be null");
+
+        Turno existing = turnoDAO.findById(id);
+        if (existing == null) return notFound(id.toString(), "Turno");
+
+        entity.setId(id);
+        Turno updated = turnoDAO.update(entity);
+        return Response.ok(updated).build();
     }
 
+    @DELETE
+    @Path("{id}")
+    public Response deleteById(@PathParam("id") UUID id) {
+        if (id == null) return unprocessable("id");
+
+        Turno encontrados = turnoDAO.findById(id);
+        if (encontrados == null) return notFound(id.toString(), "Turno");
+        turnoDAO.delete(encontrados);
+        return Response.noContent().build();
+    }
 }

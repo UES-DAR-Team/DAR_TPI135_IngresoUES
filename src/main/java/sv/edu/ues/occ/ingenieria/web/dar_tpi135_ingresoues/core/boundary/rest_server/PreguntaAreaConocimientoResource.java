@@ -16,6 +16,7 @@ import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.Pregunta;
 import sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity.PreguntaAreaConocimiento;
 
 import java.io.Serializable;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +26,7 @@ import java.util.logging.Logger;
 
 
 @Path("areaConocimiento/{idAreaConocimiento}/pregunta")
-public class PreguntaAreaConocimientoResource implements Serializable {
+public class PreguntaAreaConocimientoResource extends AbstractResource implements Serializable {
     @Inject
     PreguntaAreaConocimientoDAO preguntaAreaConocimientoDAO;
 
@@ -35,9 +36,7 @@ public class PreguntaAreaConocimientoResource implements Serializable {
     @Inject
     PreguntaDAO preguntaDAO;
 
-    private static final Logger LOG= Logger.getLogger(PreguntaAreaConocimientoResource.class.getName());
 
-    // Obtener preguntas asociadas a un area de conocimiento con paginacion
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response findRange(
@@ -45,31 +44,18 @@ public class PreguntaAreaConocimientoResource implements Serializable {
             @Min(0) @DefaultValue("0") @QueryParam("first") int first,
             @Max(10) @Min(1) @DefaultValue("10") @QueryParam("max") int max
     ) {
-        if (idAreaConocimiento == null) {
-            return Response.status(422).header("Missing-parameter", "idAreaConocimiento").build();
-        }
-        if (first < 0 || max <= 0 || max > 10) {
-            return Response.status(422).header("Missing-parameter", "first,max").build();
-        }
-        try {
-            // validar existencia de area conocimiento padre
-            AreaConocimiento area = areaConocimientoDAO.findById(idAreaConocimiento);
-            if (area == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "AreaConocimiento with id " + idAreaConocimiento + " not found")
-                        .build();
-            }
-            List<PreguntaAreaConocimiento> encontrados = preguntaAreaConocimientoDAO.findPreguntaByIdAreaConocimiento(idAreaConocimiento, first, max);
-            int total = preguntaAreaConocimientoDAO.count();
-            return Response.ok(encontrados)
-                    .header("X-Total-Count", total)
-                    .build();
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error retrieving PreguntaAreaConocimiento range", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
-        }
+        if (idAreaConocimiento == null) return unprocessable("idAreaConocimiento");
+        if (first < 0 || max <= 0 || max > 10) return unprocessable("first,max");
+
+        // validar existencia de area conocimiento padre
+        AreaConocimiento area = areaConocimientoDAO.findById(idAreaConocimiento);
+        if (area == null) return notFound(idAreaConocimiento.toString(), "AreaConocimiento");
+
+        List<PreguntaAreaConocimiento> encontrados = preguntaAreaConocimientoDAO.findPreguntaByIdAreaConocimiento(idAreaConocimiento, first, max);
+        int total = preguntaAreaConocimientoDAO.count();
+        return Response.ok(encontrados)
+                .header(X_TOTAL_COUNT, total)
+                .build();
     }
 
     // Obtener una asociación pregunta-area por idPregunta
@@ -79,27 +65,21 @@ public class PreguntaAreaConocimientoResource implements Serializable {
     public Response findOne(
             @PathParam("idAreaConocimiento") UUID idAreaConocimiento,
             @PathParam("idPregunta") UUID idPregunta) {
-        if (idAreaConocimiento == null || idPregunta == null) {
-            return Response.status(422).header("Missing-parameter", "idAreaConocimiento,idPregunta").build();
+        if (idAreaConocimiento == null) return unprocessable("idAreaConocimiento");
+        if (idPregunta == null) return unprocessable("idPregunta");
+
+        List<PreguntaAreaConocimiento> list =
+                preguntaAreaConocimientoDAO.findPreguntaByIdAreaConocimiento(idAreaConocimiento, 0, Integer.MAX_VALUE);
+
+        Optional<PreguntaAreaConocimiento> found = list.stream()
+                .filter(pac -> pac.getIdPregunta() != null && idPregunta.equals(pac.getIdPregunta().getId()))
+                .findFirst();
+
+        if (found.isEmpty()) {
+            return notFound("areaConocimiento=" + idAreaConocimiento + ", pregunta=" + idPregunta, "PreguntaAreaConocimiento");
         }
-        try {
-            List<PreguntaAreaConocimiento> list = preguntaAreaConocimientoDAO.findPreguntaByIdAreaConocimiento(idAreaConocimiento, 0, Integer.MAX_VALUE);
-            Optional<PreguntaAreaConocimiento> found = list.stream()
-                    .filter(pac -> pac.getIdPregunta() != null && idPregunta.equals(pac.getIdPregunta().getId()))
-                    .findFirst();
-            if (found.isPresent()) {
-                return Response.ok(found.get()).build();
-            } else {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record linking area " + idAreaConocimiento + " and pregunta " + idPregunta + " not found")
-                        .build();
-            }
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error retrieving PreguntaAreaConocimiento", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
-        }
+        return Response.ok(found.get()).build();
+
     }
 
     // Crear asociación: POST /areaConocimiento/{idAreaConocimiento}/pregunta
@@ -111,44 +91,25 @@ public class PreguntaAreaConocimientoResource implements Serializable {
             PreguntaAreaConocimiento entity,
             @Context UriInfo uriInfo) {
 
-        if (idAreaConocimiento == null) {
-            return Response.status(422).header("Missing-parameter", "idAreaConocimiento").build();
-        }
-        if (entity == null) {
-            return Response.status(422).header("Missing-parameter", "entity must not be null").build();
-        }
-        if (entity.getId() != null) {
-            return Response.status(422).header("Missing-parameter", "entity.id must be null").build();
-        }
-        if (entity.getIdPregunta() == null || entity.getIdPregunta().getId() == null) {
-            return Response.status(422).header("Missing-parameter", "idPregunta must be provided in body").build();
-        }
-        try {
-            AreaConocimiento area = areaConocimientoDAO.findById(idAreaConocimiento);
-            if (area == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "AreaConocimiento with id " + idAreaConocimiento + " not found")
-                        .build();
-            }
-            Pregunta pregunta = preguntaDAO.findById(entity.getIdPregunta().getId());
-            if (pregunta == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found", "Pregunta with id " + entity.getIdPregunta().getId() + " not found")
-                        .build();
-            }
-            entity.setIdAreaConocimiento(area);
-            entity.setIdPregunta(pregunta);
-            entity.setFechaAsignacion(OffsetDateTime.now());
-            preguntaAreaConocimientoDAO.create(entity);
-            return Response.created(uriInfo.getAbsolutePathBuilder().path(entity.getIdPregunta().getId().toString()).build())
-                    .entity(entity)
-                    .build();
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error creating PreguntaAreaConocimiento", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
-        }
+        if (idAreaConocimiento == null) return unprocessable("idAreaConocimiento");
+        if (entity == null) return unprocessable("entity must not be null");
+        if (entity.getId() != null) return unprocessable("entity.id must be null");
+        if (entity.getIdPregunta() == null || entity.getIdPregunta().getId() == null)
+            return unprocessable("entity.idPregunta must be provided in body");
+
+        AreaConocimiento area = areaConocimientoDAO.findById(idAreaConocimiento);
+        if (area == null) return notFound(idAreaConocimiento.toString(), "AreaConocimiento");
+
+        Pregunta pregunta = preguntaDAO.findById(entity.getIdPregunta().getId());
+        if (pregunta == null) return notFound(entity.getIdPregunta().getId().toString(), "Pregunta");
+
+        entity.setIdAreaConocimiento(area);
+        entity.setIdPregunta(pregunta);
+        entity.setFechaAsignacion(OffsetDateTime.now());
+        preguntaAreaConocimientoDAO.create(entity);
+
+        URI created = uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build();
+        return Response.created(created).build();
     }
 
     // Eliminar asociación pregunta-area
@@ -157,26 +118,23 @@ public class PreguntaAreaConocimientoResource implements Serializable {
     public Response delete(
             @PathParam("idAreaConocimiento") UUID idAreaConocimiento,
             @PathParam("idPregunta") UUID idPregunta) {
-        if (idAreaConocimiento == null || idPregunta == null) {
-            return Response.status(422).header("Missing-parameter", "idAreaConocimiento,idPregunta").build();
+        if (idAreaConocimiento == null) return unprocessable("idAreaConocimiento");
+        if (idPregunta == null) return unprocessable("idPregunta");
+
+
+        List<PreguntaAreaConocimiento> list =
+                preguntaAreaConocimientoDAO.findPreguntaByIdAreaConocimiento(idAreaConocimiento, 0, Integer.MAX_VALUE);
+
+        Optional<PreguntaAreaConocimiento> found = list.stream()
+                .filter(pac -> pac.getIdPregunta() != null && idPregunta.equals(pac.getIdPregunta().getId()))
+                .findFirst();
+
+        if (found.isEmpty()) {
+            return notFound("areaConocimiento=" + idAreaConocimiento + ", pregunta=" + idPregunta, "PreguntaAreaConocimiento");
         }
-        try {
-            List<PreguntaAreaConocimiento> list = preguntaAreaConocimientoDAO.findPreguntaByIdAreaConocimiento(idAreaConocimiento, 0, Integer.MAX_VALUE);
-            Optional<PreguntaAreaConocimiento> found = list.stream()
-                    .filter(pac -> pac.getIdPregunta() != null && idPregunta.equals(pac.getIdPregunta().getId()))
-                    .findFirst();
-            if (found.isEmpty()) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .header("Not-found-id", "Record linking area " + idAreaConocimiento + " and pregunta " + idPregunta + " not found")
-                        .build();
-            }
-            preguntaAreaConocimientoDAO.delete(found.get());
-            return Response.noContent().build();
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "Error deleting PreguntaAreaConocimiento", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Server-exception", "Cannot access db")
-                    .build();
-        }
+
+        preguntaAreaConocimientoDAO.delete(found.get());
+        return Response.noContent().build();
+
     }
 }

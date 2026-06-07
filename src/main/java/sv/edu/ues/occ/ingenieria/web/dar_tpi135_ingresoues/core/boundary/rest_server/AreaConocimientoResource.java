@@ -87,9 +87,8 @@ public class AreaConocimientoResource extends AbstractResource implements Serial
         }
 
         areaConocimientoDAO.create(entity);
-        return Response.created(uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build())
-                .entity(entity)
-                .build();
+        return Response.created(
+                uriInfo.getAbsolutePathBuilder().path(entity.getId().toString()).build()).build();
     }
 
     @PUT

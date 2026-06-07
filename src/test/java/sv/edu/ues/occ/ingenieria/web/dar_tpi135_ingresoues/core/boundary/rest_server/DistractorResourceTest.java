@@ -100,17 +100,6 @@ class DistractorResourceTest {
             verifyNoInteractions(distractorDAO);
         }
 
-
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(distractorDAO.findRange(FIRST, MAX)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = distractorResource.findRange(FIRST, MAX);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(distractorDAO).findRange(FIRST, MAX);
-        }
     }
 
     @Nested
@@ -142,20 +131,10 @@ class DistractorResourceTest {
             Response response = distractorResource.findById(id);
 
             assertEquals(404, response.getStatus());
-            assertEquals("Record with id " + id + " not found", response.getHeaderString("Not-found-id"));
+            assertEquals("Distractor with id " + id + " not found", response.getHeaderString("Not-found-id"));
             verify(distractorDAO).findById(id);
         }
 
-        @Test
-        void retorna500_cuandoDAOlanzaExcepcion() {
-            when(distractorDAO.findById(id)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = distractorResource.findById(id);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(distractorDAO).findById(id);
-        }
     }
 
     @Nested
@@ -187,20 +166,10 @@ class DistractorResourceTest {
             Response response = distractorResource.deleteById(id);
 
             assertEquals(404, response.getStatus());
-            assertEquals("Record with id " + id + " not found", response.getHeaderString("Not-found-id"));
+            assertEquals("Distractor with id " + id + " not found", response.getHeaderString("Not-found-id"));
             verify(distractorDAO).findById(id);
         }
 
-        @Test
-        void retorna500_cuandoDAOlanzaExcepcion() {
-            when(distractorDAO.findById(id)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = distractorResource.deleteById(id);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(distractorDAO).findById(id);
-        }
     }
 
     @Nested
@@ -218,7 +187,7 @@ class DistractorResourceTest {
             Response response = distractorResource.create(entity, uriInfo);
 
             assertEquals(201, response.getStatus());
-            assertEquals(entity, response.getEntity());
+
             verify(distractorDAO).create(entity);
         }
 
@@ -242,16 +211,6 @@ class DistractorResourceTest {
             verifyNoInteractions(distractorDAO);
         }
 
-        @Test
-        void retorna500_cuandoDAOlanzaExcepcion() {
-            doThrow(new RuntimeException("DB error")).when(distractorDAO).create(entity);
-
-            Response response = distractorResource.create(entity, uriInfo);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(distractorDAO).create(entity);
-        }
     }
 
     @Nested
@@ -298,19 +257,9 @@ class DistractorResourceTest {
             Response response = distractorResource.update(id, entity);
 
             assertEquals(404, response.getStatus());
-            assertEquals("Record with id " + id + " not found", response.getHeaderString("Not-found-id"));
+            assertEquals("Distractor with id " + id + " not found", response.getHeaderString("Not-found-id"));
             verify(distractorDAO).findById(id);
         }
 
-        @Test
-        void retorna500_cuandoDAOlanzaExcepcion() {
-            when(distractorDAO.findById(id)).thenThrow( new RuntimeException("DB error"));;
-
-            Response response = distractorResource.update(id, entity);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(distractorDAO).findById(id);
-        }
     }
 }

@@ -109,7 +109,7 @@ class PruebaAreaResourceTest {
         void retorna422_cuandoParametrosInvalidos() {
             Response resp = resource.findRange(idPrueba, -1, 0);
             assertEquals(422, resp.getStatus());
-            assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaDAO, pruebaAreaDAO);
         }
 
@@ -118,21 +118,11 @@ class PruebaAreaResourceTest {
             when(pruebaDAO.findById(idPrueba)).thenReturn(null);
             Response resp = resource.findRange(idPrueba, FIRST, MAX);
             assertEquals(404, resp.getStatus());
-            assertEquals("Prueba with id " + idPrueba + " not found", resp.getHeaderString("Not-found"));
+            assertEquals("Prueba with id " + idPrueba + " not found", resp.getHeaderString("Not-found-id"));
             verify(pruebaDAO).findById(idPrueba);
             verifyNoMoreInteractions(pruebaAreaDAO);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(pruebaDAO.findById(idPrueba)).thenReturn(prueba);
-            when(pruebaAreaDAO.findByPrueba(idPrueba, FIRST, MAX)).thenThrow(new RuntimeException("DB"));
-            Response resp = resource.findRange(idPrueba, FIRST, MAX);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(pruebaDAO).findById(idPrueba);
-            verify(pruebaAreaDAO).findByPrueba(idPrueba, FIRST, MAX);
-        }
     }
 
     @Nested
@@ -147,10 +137,17 @@ class PruebaAreaResourceTest {
         }
 
         @Test
-        void retorna422_cuandoParametrosNulos() {
-            Response resp = resource.findOne(null, null);
+        void retorna422_cuandoIdPruebaNulos() {
+            Response resp = resource.findOne(null, idAreaConocimiento);
             assertEquals(422, resp.getStatus());
-            assertEquals("idPrueba,idAreaConocimiento", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idPrueba", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaDAO);
+        }
+        @Test
+        void retorna422_cuandoIdAreaNulos() {
+            Response resp = resource.findOne(idPrueba, null);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idAreaConocimiento", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaDAO);
         }
 
@@ -159,19 +156,11 @@ class PruebaAreaResourceTest {
             when(pruebaAreaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE)).thenReturn(List.of());
             Response resp = resource.findOne(idPrueba, idAreaConocimiento);
             assertEquals(404, resp.getStatus());
-            assertEquals("Record linking prueba " + idPrueba + " and area " + idAreaConocimiento + " not found",
+            assertEquals("PruebaArea with id prueba=" + idPrueba + ", areaConocimiento=" + idAreaConocimiento + " not found",
                     resp.getHeaderString("Not-found-id"));
             verify(pruebaAreaDAO).findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(pruebaAreaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE)).thenThrow(new RuntimeException("DB"));
-            Response resp = resource.findOne(idPrueba, idAreaConocimiento);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(pruebaAreaDAO).findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
-        }
     }
 
     @Nested
@@ -196,7 +185,6 @@ class PruebaAreaResourceTest {
 
             Response resp = resource.create(idPrueba, entity, uriInfo);
             assertEquals(201, resp.getStatus());
-            assertEquals(entity, resp.getEntity());
             verify(pruebaDAO).findById(idPrueba);
             verify(areaConocimientoDAO).findById(idAreaConocimiento);
             verify(pruebaAreaDAO).create(entity);
@@ -233,7 +221,7 @@ class PruebaAreaResourceTest {
             entity.setIdAreaConocimiento(null);
             Response resp = resource.create(idPrueba, entity, uriInfo);
             assertEquals(422, resp.getStatus());
-            assertEquals("idAreaConocimiento must be provided in body", resp.getHeaderString("Missing-parameter"));
+            assertEquals("entity.idAreaConocimiento must be provided in body", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaDAO, areaConocimientoDAO, pruebaAreaDAO);
         }
 
@@ -247,7 +235,7 @@ class PruebaAreaResourceTest {
             when(pruebaDAO.findById(idPrueba)).thenReturn(null);
             Response resp = resource.create(idPrueba, entity, uriInfo);
             assertEquals(404, resp.getStatus());
-            assertEquals("Prueba with id " + idPrueba + " not found", resp.getHeaderString("Not-found"));
+            assertEquals("Prueba with id " + idPrueba + " not found", resp.getHeaderString("Not-found-id"));
             verify(pruebaDAO).findById(idPrueba);
             verifyNoMoreInteractions(areaConocimientoDAO, pruebaAreaDAO);
         }
@@ -264,28 +252,13 @@ class PruebaAreaResourceTest {
 
             Response resp = resource.create(idPrueba, entity, uriInfo);
             assertEquals(404, resp.getStatus());
-            assertEquals("AreaConocimiento with id " + idAreaConocimiento + " not found", resp.getHeaderString("Not-found"));
+            assertEquals("AreaConocimiento with id " + idAreaConocimiento + " not found", resp.getHeaderString("Not-found-id"));
             verify(pruebaDAO).findById(idPrueba);
             verify(areaConocimientoDAO).findById(idAreaConocimiento);
             verifyNoMoreInteractions(pruebaAreaDAO);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            entity.setId(null);
-            AreaConocimiento bodyArea = new AreaConocimiento();
-            bodyArea.setId(idAreaConocimiento);
-            entity.setIdAreaConocimiento(bodyArea);
 
-            when(pruebaDAO.findById(idPrueba)).thenReturn(prueba);
-            when(areaConocimientoDAO.findById(idAreaConocimiento)).thenReturn(areaConocimiento);
-            doThrow(new RuntimeException("DB")).when(pruebaAreaDAO).create(entity);
-
-            Response resp = resource.create(idPrueba, entity, uriInfo);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(pruebaAreaDAO).create(entity);
-        }
     }
 
     @Nested
@@ -313,10 +286,18 @@ class PruebaAreaResourceTest {
         }
 
         @Test
-        void retorna422_cuandoParametrosNulos() {
-            Response resp = resource.update(null, null, new PruebaArea());
+        void retorna422_cuandoIdPruebaNulo() {
+            Response resp = resource.update(null, idAreaConocimiento, new PruebaArea());
             assertEquals(422, resp.getStatus());
-            assertEquals("idPrueba,idAreaConocimiento", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idPrueba", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaDAO);
+        }
+
+        @Test
+        void retorna422_cuandoIdAreaNulo() {
+            Response resp = resource.update(idPrueba, null, new PruebaArea());
+            assertEquals(422, resp.getStatus());
+            assertEquals("idAreaConocimiento", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaDAO);
         }
 
@@ -336,22 +317,12 @@ class PruebaAreaResourceTest {
             when(pruebaAreaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE)).thenReturn(List.of());
             Response resp = resource.update(idPrueba, idAreaConocimiento, updateBody);
             assertEquals(404, resp.getStatus());
-            assertEquals("Record linking prueba " + idPrueba + " and area " + idAreaConocimiento + " not found",
+            assertEquals("PruebaArea with id prueba=" + idPrueba + ", areaConocimiento=" + idAreaConocimiento + " not found",
                     resp.getHeaderString("Not-found-id"));
             verify(pruebaAreaDAO).findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            PruebaArea updateBody = new PruebaArea();
-            updateBody.setNumPreguntas((short)7);
 
-            when(pruebaAreaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE)).thenThrow(new RuntimeException("DB"));
-            Response resp = resource.update(idPrueba, idAreaConocimiento, updateBody);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(pruebaAreaDAO).findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
-        }
     }
 
     @Nested
@@ -366,10 +337,18 @@ class PruebaAreaResourceTest {
         }
 
         @Test
-        void retorna422_cuandoParametrosNulos() {
-            Response resp = resource.delete(null, null);
+        void retorna422_cuandoidPruebaNulo() {
+            Response resp = resource.delete(null, idAreaConocimiento);
             assertEquals(422, resp.getStatus());
-            assertEquals("idPrueba,idAreaConocimiento", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idPrueba", resp.getHeaderString("Missing-parameter"));
+            verifyNoInteractions(pruebaAreaDAO);
+        }
+
+        @Test
+        void retorna422_cuandoidAreaNulo() {
+            Response resp = resource.delete(idPrueba, null);
+            assertEquals(422, resp.getStatus());
+            assertEquals("idAreaConocimiento", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(pruebaAreaDAO);
         }
 
@@ -378,19 +357,11 @@ class PruebaAreaResourceTest {
             when(pruebaAreaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE)).thenReturn(List.of());
             Response resp = resource.delete(idPrueba, idAreaConocimiento);
             assertEquals(404, resp.getStatus());
-            assertEquals("Record linking prueba " + idPrueba + " and area " + idAreaConocimiento + " not found",
+            assertEquals("PruebaArea with id prueba=" + idPrueba + ", areaConocimiento=" + idAreaConocimiento + " not found",
                     resp.getHeaderString("Not-found-id"));
             verify(pruebaAreaDAO).findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(pruebaAreaDAO.findByPrueba(idPrueba, 0, Integer.MAX_VALUE)).thenThrow(new RuntimeException("DB"));
-            Response resp = resource.delete(idPrueba, idAreaConocimiento);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(pruebaAreaDAO).findByPrueba(idPrueba, 0, Integer.MAX_VALUE);
-        }
     }
 }
 

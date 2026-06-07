@@ -81,7 +81,7 @@ class TurnoResourceTest {
             Response response = turnoResource.findRange(FIRST, INVALIDMAX);
 
             assertEquals(422, response.getStatus());
-            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(turnoDAO);
         }
 
@@ -90,7 +90,7 @@ class TurnoResourceTest {
             Response response = turnoResource.findRange(FIRST, EXCEEDMAX);
 
             assertEquals(422, response.getStatus());
-            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(turnoDAO);
         }
 
@@ -99,19 +99,8 @@ class TurnoResourceTest {
             Response response = turnoResource.findRange(INVALIDFIRST, MAX);
 
             assertEquals(422, response.getStatus());
-            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(turnoDAO);
-        }
-
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(turnoDAO.findRange(FIRST, MAX)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = turnoResource.findRange(FIRST, MAX);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(turnoDAO).findRange(FIRST, MAX);
         }
 
     }
@@ -146,20 +135,10 @@ class TurnoResourceTest {
             Response response = turnoResource.findById(idTurno);
 
             assertEquals(404, response.getStatus());
-            assertEquals("Record with id " + idTurno + " not found", response.getHeaderString("Not-found-id"));
+            assertEquals("Turno with id " + idTurno + " not found", response.getHeaderString("Not-found-id"));
             verify(turnoDAO).findById(idTurno);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(turnoDAO.findById(idTurno)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = turnoResource.findById(idTurno);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(turnoDAO).findById(idTurno);
-        }
     }
 
     @Nested
@@ -192,18 +171,7 @@ class TurnoResourceTest {
             Response response = turnoResource.deleteById(idTurno);
 
             assertEquals(404, response.getStatus());
-            assertEquals("Record with id " + idTurno + " not found", response.getHeaderString("Not-found-id"));
-            verify(turnoDAO).findById(idTurno);
-        }
-
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(turnoDAO.findById(idTurno)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = turnoResource.deleteById(idTurno);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
+            assertEquals("Turno with id " + idTurno + " not found", response.getHeaderString("Not-found-id"));
             verify(turnoDAO).findById(idTurno);
         }
 
@@ -224,7 +192,7 @@ class TurnoResourceTest {
             Response response = turnoResource.create(entity, uriInfo);
 
             assertEquals(201, response.getStatus());
-            assertEquals(entity, response.getEntity());
+
             verify(turnoDAO).create(entity);
         }
 
@@ -247,16 +215,6 @@ class TurnoResourceTest {
             verifyNoInteractions(turnoDAO);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            doThrow(new RuntimeException("DB error")).when(turnoDAO).create(entity);
-
-            Response response = turnoResource.create(entity, uriInfo);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(turnoDAO).create(entity);
-        }
     }
 
     @Nested
@@ -304,18 +262,7 @@ class TurnoResourceTest {
             Response response = turnoResource.update(idTurno, entity);
 
             assertEquals(404, response.getStatus());
-            assertEquals("Record with id " + idTurno + " not found", response.getHeaderString("Not-found-id"));
-            verify(turnoDAO).findById(idTurno);
-        }
-
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(turnoDAO.findById(idTurno)).thenThrow(new RuntimeException("DB error"));
-
-            Response response = turnoResource.update(idTurno, entity);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
+            assertEquals("Turno with id " + idTurno + " not found", response.getHeaderString("Not-found-id"));
             verify(turnoDAO).findById(idTurno);
         }
 

@@ -44,7 +44,7 @@ class AspiranteResourceTest {
             Response response = resource.findRange(0, 10);
 
             assertEquals(200, response.getStatus());
-            assertEquals("1", response.getHeaderString("Total-records"));
+            assertEquals("1", response.getHeaderString("X-Total-Count"));
         }
 
         @Test
@@ -65,15 +65,6 @@ class AspiranteResourceTest {
             assertEquals(422, response.getStatus());
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            when(dao.count()).thenThrow(new RuntimeException());
-
-            Response response = resource.findRange(0, 10);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-        }
     }
 
     @Nested
@@ -107,15 +98,6 @@ class AspiranteResourceTest {
             assertEquals(422, response.getStatus());
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            UUID id = UUID.randomUUID();
-            when(dao.findById(id)).thenThrow(new RuntimeException());
-
-            Response response = resource.findById(id);
-
-            assertEquals(500, response.getStatus());
-        }
     }
 
     @Nested
@@ -154,60 +136,6 @@ class AspiranteResourceTest {
             assertEquals(422, response.getStatus());
         }
 
-        @Test
-        void retorna409_cuandoHayDuplicateKey() {
-            Aspirante a = new Aspirante();
-            UriInfo uriInfo = mock(UriInfo.class);
-
-            RuntimeException cause = new RuntimeException("duplicate key value violates unique constraint");
-            doThrow(new RuntimeException(cause)).when(dao).create(a);
-
-            Response response = resource.create(a, uriInfo);
-
-            assertEquals(409, response.getStatus());
-            assertEquals("Ya existe un registro con esos datos",
-                    response.getHeaderString("Conflict"));
-        }
-
-        @Test
-        void retorna500_cuandoExcepcionConMensaje() {
-            // e.getCause() != null pero mensaje no contiene duplicate key
-            Aspirante a = new Aspirante();
-            UriInfo uriInfo = mock(UriInfo.class);
-
-            RuntimeException cause = new RuntimeException("otro error de BD");
-            doThrow(new RuntimeException(cause)).when(dao).create(a);
-
-            Response response = resource.create(a, uriInfo);
-
-            assertEquals(500, response.getStatus());
-        }
-
-        @Test
-        void retorna500_cuandoExcepcionSinCause() {
-            Aspirante a = new Aspirante();
-            UriInfo uriInfo = mock(UriInfo.class);
-
-            doThrow(new RuntimeException("error generico")).when(dao).create(a);
-
-            Response response = resource.create(a, uriInfo);
-
-            assertEquals(500, response.getStatus());
-        }
-
-        @Test
-        void retorna500_cuandoExcepcionSinMensaje() {
-            // cause.getMessage() == null → msg queda como ""
-            Aspirante a = new Aspirante();
-            UriInfo uriInfo = mock(UriInfo.class);
-
-            RuntimeException cause = new RuntimeException((String) null);
-            doThrow(new RuntimeException(cause)).when(dao).create(a);
-
-            Response response = resource.create(a, uriInfo);
-
-            assertEquals(500, response.getStatus());
-        }
     }
 
 
@@ -242,16 +170,6 @@ class AspiranteResourceTest {
         void retorna422_cuandoParametrosSonNulos() {
             Response response = resource.update(null, null);
             assertEquals(422, response.getStatus());
-        }
-
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            UUID id = UUID.randomUUID();
-            when(dao.findById(id)).thenThrow(new RuntimeException("boom"));
-
-            Response response = resource.update(id, new Aspirante());
-
-            assertEquals(500, response.getStatus());
         }
 
         @Test
@@ -291,16 +209,6 @@ class AspiranteResourceTest {
         void retorna422_cuandoIdEsNulo() {
             Response response = resource.delete(null);
             assertEquals(422, response.getStatus());
-        }
-
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion() {
-            UUID id = UUID.randomUUID();
-            when(dao.findById(id)).thenThrow(new RuntimeException());
-
-            Response response = resource.delete(id);
-
-            assertEquals(500, response.getStatus());
         }
 
     }

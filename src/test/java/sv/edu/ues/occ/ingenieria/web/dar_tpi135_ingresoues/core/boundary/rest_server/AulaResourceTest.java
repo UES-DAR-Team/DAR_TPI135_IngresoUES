@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,18 +39,18 @@ class AulaResourceTest {
     private static final int MAX = 10;
     private static final int INVALIDFIRST = -1;
     private static final int INVALIDMAX = 0;
-    private static final List<Aula> LISTA = List.of(
-            new Aula(), new Aula()
-    );
-    private UUID id;
+    private static final int EXCEEDMAX = 11;
+    private static final List<Aula> LISTA = List.of(new Aula(), new Aula());
+
+    private UUID idAula;
     private Aula aula;
     private Aula entity;
 
     @BeforeEach
     void setUp() {
-        id = UUID.randomUUID();
+        idAula = UUID.randomUUID();
         aula = new Aula();
-        aula.setId(id);
+        aula.setId(idAula);
         entity = new Aula();
     }
 
@@ -59,7 +58,7 @@ class AulaResourceTest {
     class FindRange {
 
         @Test
-        void retorna200ConListaYHeaderParametrosValidos() {
+        void retorna200ConListaYHeader_cuandoParametrosSonValidos() {
             when(aulaDAO.findRange(FIRST, MAX)).thenReturn(LISTA);
             when(aulaDAO.count()).thenReturn(2);
 
@@ -68,66 +67,56 @@ class AulaResourceTest {
             assertEquals(200, response.getStatus());
             List<?> entidad = (List<?>) response.getEntity();
             assertEquals(2, entidad.size());
-            assertEquals("2", response.getHeaderString("Total-records"));
+            assertEquals("2", response.getHeaderString("X-Total-Count"));
             verify(aulaDAO).findRange(FIRST, MAX);
             verify(aulaDAO).count();
         }
 
         @Test
-        void retorna422ParametrosInvalidos() {
-            Response response = aulaResource.findRange(INVALIDFIRST, INVALIDMAX);
+        void retorna422_cuandoMaxEsInvalido() {
+            Response response = aulaResource.findRange(FIRST, INVALIDMAX);
 
             assertEquals(422, response.getStatus());
-            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(aulaDAO);
         }
 
         @Test
-        void retorna422CuandoMaxExcedeLimite() {
-            Response response = aulaResource.findRange(0, 11);
+        void retorna422_cuandoMaxEsExcedido() {
+            Response response = aulaResource.findRange(FIRST, EXCEEDMAX);
 
             assertEquals(422, response.getStatus());
-            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(aulaDAO);
         }
 
         @Test
-        void retorna422CuandoMaxEsCero() {
-            Response response = aulaResource.findRange(0, 0);
+        void retorna422_cuandoFirstEsInvalido() {
+            Response response = aulaResource.findRange(INVALIDFIRST, MAX);
 
             assertEquals(422, response.getStatus());
-            assertEquals("first,max", response.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(aulaDAO);
         }
 
-        @Test
-        void retorna500CuandoDAOLanzaExcepcion() {
-            when(aulaDAO.findRange(FIRST, MAX)).thenThrow(new RuntimeException("Error en la BD"));
-
-            Response response = aulaResource.findRange(FIRST, MAX);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(aulaDAO).findRange(FIRST, MAX);
-        }
     }
 
     @Nested
     class FindById {
 
         @Test
-        void retorna200ConEntidadCuandoIdEsValido() {
-            when(aulaDAO.findById(id)).thenReturn(aula);
+        void retorna200ConEntidad_cuandoIdEsValido() {
+            when(aulaDAO.findById(idAula)).thenReturn(aula);
 
-            Response response = aulaResource.findById(id);
+            Response response = aulaResource.findById(idAula);
 
             assertEquals(200, response.getStatus());
             assertEquals(aula, response.getEntity());
-            verify(aulaDAO).findById(id);
+            verify(aulaDAO).findById(idAula);
         }
 
         @Test
-        void retorna422IdEsNulo() {
+        void retorna422_cuandoIdEsNulo() {
             Response response = aulaResource.findById(null);
 
             assertEquals(422, response.getStatus());
@@ -136,44 +125,34 @@ class AulaResourceTest {
         }
 
         @Test
-        void retorna404NoSeEncuentraRegistro() {
-            when(aulaDAO.findById(id)).thenReturn(null);
+        void retorna404_cuandoNoSeEncuentraRegistro() {
+            when(aulaDAO.findById(idAula)).thenReturn(null);
 
-            Response response = aulaResource.findById(id);
+            Response response = aulaResource.findById(idAula);
 
             assertEquals(404, response.getStatus());
-            assertEquals("Record with id " + id + " not found", response.getHeaderString("Not-found-id"));
-            verify(aulaDAO).findById(id);
+            assertEquals("Aula with id " + idAula + " not found", response.getHeaderString("Not-found-id"));
+            verify(aulaDAO).findById(idAula);
         }
 
-        @Test
-        void retorna500DAOlanzaExcepcion() {
-            when(aulaDAO.findById(id)).thenThrow(new RuntimeException("Error en la BD"));
-
-            Response response = aulaResource.findById(id);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(aulaDAO).findById(id);
-        }
     }
 
     @Nested
     class Delete {
 
         @Test
-        void retorna204IdEsValido() {
-            when(aulaDAO.findById(id)).thenReturn(aula);
+        void retorna204_cuandoIdEsValido() {
+            when(aulaDAO.findById(idAula)).thenReturn(aula);
 
-            Response response = aulaResource.delete(id);
+            Response response = aulaResource.delete(idAula);
 
             assertEquals(204, response.getStatus());
-            verify(aulaDAO).findById(id);
+            verify(aulaDAO).findById(idAula);
             verify(aulaDAO).delete(aula);
         }
 
         @Test
-        void retorna422IdEsNulo() {
+        void retorna422_cuandoIdEsNulo() {
             Response response = aulaResource.delete(null);
 
             assertEquals(422, response.getStatus());
@@ -182,50 +161,39 @@ class AulaResourceTest {
         }
 
         @Test
-        void retorna404NoSeEncuentraRegistro() {
-            when(aulaDAO.findById(id)).thenReturn(null);
+        void retorna404_cuandoNoSeEncuentraRegistro() {
+            when(aulaDAO.findById(idAula)).thenReturn(null);
 
-            Response response = aulaResource.delete(id);
+            Response response = aulaResource.delete(idAula);
 
             assertEquals(404, response.getStatus());
-            assertEquals("Record with id " + id + " not found", response.getHeaderString("Not-found-id"));
-            verify(aulaDAO).findById(id);
+            assertEquals("Aula with id " + idAula + " not found", response.getHeaderString("Not-found-id"));
+            verify(aulaDAO).findById(idAula);
         }
 
-        @Test
-        void retorna500DAOlanzaExcepcion() {
-            when(aulaDAO.findById(id)).thenThrow(new RuntimeException("Error en la BD"));
-
-            Response response = aulaResource.delete(id);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(aulaDAO).findById(id);
-        }
     }
 
     @Nested
     class Create {
-
         @Test
-        void retorna201EntidadEsValida() {
+        void retorna201_cuandoEntidadEsValida() {
             when(uriInfo.getAbsolutePathBuilder()).thenReturn(uriBuilder);
             when(uriBuilder.path(anyString())).thenReturn(uriBuilder);
-            when(uriBuilder.build()).thenReturn(URI.create("resources/v1/aula"));
-            doAnswer(invocationOnMock -> {
-                entity.setId(id);
+            when(uriBuilder.build()).thenReturn(URI.create("resources/v1/aula/"));
+            doAnswer(inv -> {
+                entity.setId(idAula);
                 return null;
             }).when(aulaDAO).create(entity);
 
             Response response = aulaResource.create(entity, uriInfo);
 
             assertEquals(201, response.getStatus());
-            assertEquals(entity, response.getEntity());
+
             verify(aulaDAO).create(entity);
         }
 
         @Test
-        void retorna422EntidadEsNula() {
+        void retorna422_cuandoEntidadEsNula() {
             Response response = aulaResource.create(null, uriInfo);
 
             assertEquals(422, response.getStatus());
@@ -234,50 +202,39 @@ class AulaResourceTest {
         }
 
         @Test
-        void retorna422EntidadTieneId() {
-            entity.setId(id);
+        void retorna422_cuandoEntidadTieneId() {
+            entity.setId(idAula);
 
             Response response = aulaResource.create(entity, uriInfo);
-
             assertEquals(422, response.getStatus());
             assertEquals("entity.id must be null", response.getHeaderString("Missing-parameter"));
             verifyNoInteractions(aulaDAO);
         }
 
-        @Test
-        void retorna500DAOlanzaExcepcion() {
-            doThrow(new RuntimeException("Error en la BD")).when(aulaDAO).create(entity);
-
-            Response response = aulaResource.create(entity, uriInfo);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(aulaDAO).create(entity);
-        }
     }
 
     @Nested
     class Update {
 
         @Test
-        void retorna200EntidadEsValida() {
+        void retorna200_cuandoEntidadEsValida() {
             Aula existing = new Aula();
-            existing.setId(id);
-            Aula updated = new Aula();
-            updated.setId(id);
-            when(aulaDAO.findById(id)).thenReturn(existing);
-            when(aulaDAO.update(updated)).thenReturn(updated);
+            existing.setId(idAula);
+            Aula update = new Aula();
+            update.setId(idAula);
+            when(aulaDAO.findById(idAula)).thenReturn(existing);
+            when(aulaDAO.update(update)).thenReturn(update);
 
-            Response response = aulaResource.update(id, updated);
+            Response response = aulaResource.update(idAula, update);
 
             assertEquals(200, response.getStatus());
-            assertEquals(updated, response.getEntity());
-            verify(aulaDAO).findById(id);
-            verify(aulaDAO).update(updated);
+            assertEquals(update, response.getEntity());
+            verify(aulaDAO).findById(idAula);
+            verify(aulaDAO).update(update);
         }
 
         @Test
-        void retorna422IdEsNulo() {
+        void retorna422_cuandoIdEsNulo() {
             Response response = aulaResource.update(null, entity);
 
             assertEquals(422, response.getStatus());
@@ -286,8 +243,8 @@ class AulaResourceTest {
         }
 
         @Test
-        void retorna422EntidadEsNula() {
-            Response response = aulaResource.update(id, null);
+        void retorna422_cuandoEntidadEsNula() {
+            Response response = aulaResource.update(idAula, null);
 
             assertEquals(422, response.getStatus());
             assertEquals("entity must not be null", response.getHeaderString("Missing-parameter"));
@@ -295,25 +252,17 @@ class AulaResourceTest {
         }
 
         @Test
-        void retorna404NoSeEncuentraRegistro() {
-            when(aulaDAO.findById(id)).thenReturn(null);
+        void retorna404_cuandoNoSeEncuentraRegistro() {
+            when(aulaDAO.findById(idAula)).thenReturn(null);
 
-            Response response = aulaResource.update(id, entity);
+            Response response = aulaResource.update(idAula, entity);
 
             assertEquals(404, response.getStatus());
-            assertEquals("Record with id " + id + " not found", response.getHeaderString("Not-found-id"));
-            verify(aulaDAO).findById(id);
+            assertEquals("Aula with id " + idAula + " not found", response.getHeaderString("Not-found-id"));
+            verify(aulaDAO).findById(idAula);
         }
 
-        @Test
-        void retorna500DAOlanzaExcepcion() {
-            when(aulaDAO.findById(id)).thenThrow(new RuntimeException("Error en la BD"));
-
-            Response response = aulaResource.update(id, entity);
-
-            assertEquals(500, response.getStatus());
-            assertEquals("Cannot access db", response.getHeaderString("Server-exception"));
-            verify(aulaDAO).findById(id);
-        }
     }
+
 }
+

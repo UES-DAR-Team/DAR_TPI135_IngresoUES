@@ -113,7 +113,7 @@ class AspiranteOpcionResourceTest {
 
             var resp = resource.findRange(idAspirante, FIRST, MAX);
             assertEquals(404, resp.getStatus());
-            assertEquals("Aspirante with id " + idAspirante + " not found", resp.getHeaderString("Not-found"));
+            assertEquals("Aspirante with id " + idAspirante + " not found", resp.getHeaderString("Not-found-id"));
             verify(aspiranteDAO).findById(idAspirante);
             verifyNoMoreInteractions(aspiranteOpcionDAO);
         }
@@ -122,7 +122,7 @@ class AspiranteOpcionResourceTest {
         void retorna422_cuandoMaxEsInvalido(){
             Response resp = resource.findRange(idAspirante, FIRST, INVALIDMAX);
             assertEquals(422, resp.getStatus());
-            assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(aspiranteDAO, aspiranteOpcionDAO);
         }
 
@@ -130,7 +130,7 @@ class AspiranteOpcionResourceTest {
         void retorna422_cuandoMaxEsExcedido(){
             Response resp = resource.findRange(idAspirante, FIRST, EXCEEDMAX);
             assertEquals(422, resp.getStatus());
-            assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(aspiranteDAO, aspiranteOpcionDAO);
         }
 
@@ -138,21 +138,11 @@ class AspiranteOpcionResourceTest {
         void retorna422_cuandoFirstEsInvalido(){
             Response resp = resource.findRange(idAspirante, INVALIDFIRST, MAX);
             assertEquals(422, resp.getStatus());
-            assertEquals("first,max", resp.getHeaderString("Missing-parameter"));
+            assertEquals("first, max", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(aspiranteDAO, aspiranteOpcionDAO);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion(){
-            when(aspiranteDAO.findById(idAspirante)).thenReturn(aspirante);
-            when(aspiranteOpcionDAO.findOpcionByIdAspirante(idAspirante, FIRST, MAX)).thenThrow(new RuntimeException("DB error"));
 
-            var resp = resource.findRange(idAspirante, FIRST, MAX);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(aspiranteDAO).findById(idAspirante);
-            verify(aspiranteOpcionDAO).findOpcionByIdAspirante(idAspirante, FIRST, MAX);
-        }
 
     }
 
@@ -173,7 +163,7 @@ class AspiranteOpcionResourceTest {
         void retorna422_cuandoIdAspiranteEsNulo(){
             var resp = resource.findOne(null, idOpcion);
             assertEquals(422, resp.getStatus());
-            assertEquals("idAspirante,idOpcion", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idAspirante", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(aspiranteOpcionDAO);
         }
 
@@ -181,7 +171,7 @@ class AspiranteOpcionResourceTest {
         void retorna422_cuandoIdOpcionEsNulo(){
             var resp = resource.findOne(idAspirante, null);
             assertEquals(422, resp.getStatus());
-            assertEquals("idAspirante,idOpcion", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idOpcion", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(aspiranteOpcionDAO);
         }
 
@@ -191,20 +181,12 @@ class AspiranteOpcionResourceTest {
 
                 var resp = resource.findOne(idAspirante, idOpcion);
                 assertEquals(404, resp.getStatus());
-                assertEquals("Record linking aspirante " + idAspirante + " and opcion " + idOpcion + " not found"
+                assertEquals("AspiranteOpcion with id aspirante=" + idAspirante + ", opcion=" + idOpcion + " not found"
                         , resp.getHeaderString("Not-found-id"));
                 verify(aspiranteOpcionDAO).findOpcionByIdAspirante(idAspirante, 0, Integer.MAX_VALUE);
         }
 
-        @Test
-        void  retorna500_cuandoDAOLanzaExcepcion(){
-            when(aspiranteOpcionDAO.findOpcionByIdAspirante(idAspirante, 0, Integer.MAX_VALUE)).thenThrow(new RuntimeException("DB error"));
 
-            var resp = resource.findOne(idAspirante, idOpcion);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(aspiranteOpcionDAO).findOpcionByIdAspirante(idAspirante, 0, Integer.MAX_VALUE);
-        }
 
     }
 
@@ -230,7 +212,6 @@ class AspiranteOpcionResourceTest {
 
             var resp = resource.create(idAspirante, entity, uriInfo);
             assertEquals(201, resp.getStatus());
-            assertEquals(entity, resp.getEntity());
             verify(aspiranteDAO).findById(idAspirante);
             verify(opcionDAO).findById(idOpcion);
             verify(aspiranteOpcionDAO).create(entity);
@@ -266,7 +247,7 @@ class AspiranteOpcionResourceTest {
             entity.setId(null);
             var resp = resource.create(idAspirante, entity, uriInfo);
             assertEquals(422, resp.getStatus());
-            assertEquals("idOpcion must be provider in body", resp.getHeaderString("Missing-parameter"));
+            assertEquals("entity.idOpcion must be provided in body", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(aspiranteDAO, opcionDAO, aspiranteOpcionDAO);
         }
 
@@ -304,22 +285,7 @@ class AspiranteOpcionResourceTest {
             verifyNoMoreInteractions(aspiranteOpcionDAO);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion(){
-            entity.setId(null);
-            Opcion bodyOpcion = new Opcion();
-            bodyOpcion.setId(idOpcion);
-            entity.setIdOpcion(bodyOpcion);
 
-            when(aspiranteDAO.findById(idAspirante)).thenReturn(aspirante);
-            when(opcionDAO.findById(idOpcion)).thenReturn(opcion);
-            doThrow(new RuntimeException("DB error")).when(aspiranteOpcionDAO).create(entity);
-
-            var resp = resource.create(idAspirante, entity, uriInfo);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(aspiranteOpcionDAO).create(entity);
-        }
 
     }
 
@@ -336,18 +302,10 @@ class AspiranteOpcionResourceTest {
         }
 
         @Test
-        void retorna422_cuandoParametrosNulos(){
-            var resp = resource.delete(null, null);
-            assertEquals(422, resp.getStatus());
-            assertEquals("idAspirante,idOpcion", resp.getHeaderString("Missing-parameter"));
-            verifyNoInteractions(aspiranteOpcionDAO);
-        }
-
-        @Test
         void retorna422_cuandoIdOpcionEsNulo(){
             var resp = resource.delete(idAspirante, null);
             assertEquals(422, resp.getStatus());
-            assertEquals("idAspirante,idOpcion", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idOpcion", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(aspiranteOpcionDAO);
         }
 
@@ -355,7 +313,7 @@ class AspiranteOpcionResourceTest {
         void retorna422_cuandoIdAspiranteEsNulo(){
             var resp = resource.delete(null, idOpcion);
             assertEquals(422, resp.getStatus());
-            assertEquals("idAspirante,idOpcion", resp.getHeaderString("Missing-parameter"));
+            assertEquals("idAspirante", resp.getHeaderString("Missing-parameter"));
             verifyNoInteractions(aspiranteOpcionDAO);
         }
 
@@ -365,18 +323,11 @@ class AspiranteOpcionResourceTest {
 
             var resp = resource.delete(idAspirante, idOpcion);
             assertEquals(404, resp.getStatus());
-            assertEquals("Record linking aspirante " + idAspirante + " and opcion " + idOpcion + " not found"
+            assertEquals("AspiranteOpcion with id aspirante=" + idAspirante + ", opcion=" + idOpcion + " not found"
                     , resp.getHeaderString("Not-found-id"));
             verify(aspiranteOpcionDAO).findOpcionByIdAspirante(idAspirante, 0, Integer.MAX_VALUE);
         }
 
-        @Test
-        void retorna500_cuandoDAOLanzaExcepcion(){
-            when(aspiranteOpcionDAO.findOpcionByIdAspirante(idAspirante, 0, Integer.MAX_VALUE)).thenThrow(new RuntimeException("DB error"));
-            var resp = resource.delete(idAspirante, idOpcion);
-            assertEquals(500, resp.getStatus());
-            assertEquals("Cannot access db", resp.getHeaderString("Server-exception"));
-            verify(aspiranteOpcionDAO).findOpcionByIdAspirante(idAspirante, 0, Integer.MAX_VALUE);
-        }
+
     }
 }

@@ -219,7 +219,6 @@ class AreaConocimientoResourceTest {
             Response response = areaConocimientoResource.create(entity, uriInfo);
 
             assertEquals(201, response.getStatus());
-            assertEquals(entity, response.getEntity());
             verify(areaConocimientoDAO).create(entity);
         }
 

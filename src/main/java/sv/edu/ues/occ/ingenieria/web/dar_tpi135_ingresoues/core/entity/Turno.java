@@ -9,6 +9,7 @@ import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
+import jakarta.json.bind.annotation.JsonbTransient;
 
 @Entity
 @Table(name = "turno", schema = "public")
@@ -78,6 +79,7 @@ public class Turno {
         this.fechaCreacion = fechaCreacion;
     }
 
+    @JsonbTransient
     public Set<TurnoJornada> getTurnoJornadas() {
         return turnoJornadas;
     }
@@ -85,5 +87,4 @@ public class Turno {
     public void setTurnoJornadas(Set<TurnoJornada> turnoJornadas) {
         this.turnoJornadas = turnoJornadas;
     }
-
 }

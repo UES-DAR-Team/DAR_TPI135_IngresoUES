@@ -1,5 +1,6 @@
 package sv.edu.ues.occ.ingenieria.web.dar_tpi135_ingresoues.core.entity;
 
+import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -37,6 +38,7 @@ public class Opcion {
     @Column(name = "fecha_creacion", nullable = false)
     private OffsetDateTime fechaCreacion;
 
+    @JsonbTransient
     @OneToMany(mappedBy = "idOpcion")
     private Set<AspiranteOpcion> aspiranteOpcions = new LinkedHashSet<>();
 
